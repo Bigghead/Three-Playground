@@ -14,9 +14,10 @@
     "three": "^0.174.0"
   },
   "devDependencies": {
+    "@types/node": "^22.13.14",
+    "lil-gui": "^0.20.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.2",
-    "vite-plugin-restart": "^0.4.2",
-    "lil-gui": "^0.20.0"
+    "vite-plugin-restart": "^0.4.2"
   }
 }
