@@ -1,6 +1,7 @@
 import * as three from 'three'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from 'lil-gui'
+import { HDRJPGLoader } from '@monogrid/gainmap-js'
 import { createSphere } from './utils';
 
 
@@ -10,7 +11,9 @@ const sizes = {
   height: window.innerHeight
 }
 const scene = new three.Scene()
-const gui = new GUI()
+const gui = new GUI({
+  closeFolders: true
+})
 gui.add(document, 'title')
 
 const debugGui = {}
@@ -26,7 +29,7 @@ scene.add(axes)
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height)
-camera.position.set(1, 1, 3)
+camera.position.set(-4, 1, 5)
 scene.add(camera)
 
 /**
@@ -61,6 +64,9 @@ const textureMap = {
   blue_metal: textureLoader.load('/textures/blue_metal.jpg'),
   coast_land: textureLoader.load('/textures/coast_land.jpg'),
   rock_wall: textureLoader.load('/textures/rock_wall.jpg'),
+  blue_metal_normal: textureLoader.load('/textures/blue_plate_normal.png'),
+  coast_land_normal: textureLoader.load('/textures/coast_land_normal.png'),
+  mud_normal: textureLoader.load('/textures/mud_cracked.png')
 }
 textureMap.door.colorSpace = three.SRGBColorSpace
 textureMap.metal_sheet.colorSpace = three.SRGBColorSpace
@@ -76,9 +82,24 @@ textureMap.rock_wall.colorSpace = three.SRGBColorSpace
  * Objects
  */
 
-const metalSphere = createSphere(textureMap.blue_metal, [-2, 2, 0], 'Metal Sphere')
-const rockSphere = createSphere(textureMap.rock_wall, [-2, -1, 0], 'Rock Sphere')
-scene.add(metalSphere, rockSphere)
+const blueMetalSphere = createSphere(textureMap.blue_metal, [-2, 1.5, 0], 'Blue Metal Sphere', textureMap.blue_metal_normal)
+const rockSphere = createSphere(textureMap.rock_wall, [-2, -1.5, 0], 'Rock Sphere', textureMap.blue_metal_normal)
+const coastSphere = createSphere(textureMap.coast_land, [2, -1.5, 0], 'Coast Land Sphere', textureMap.coast_land_normal)
+const redSphere = createSphere(textureMap.metal_sheet, [2, 1.5, 0], 'Red Sphere', textureMap.mud_normal)
+const metalSphere = new three.Mesh(
+  new three.SphereGeometry(),
+  new three.MeshStandardMaterial({
+    metalness: 0.7,
+    roughness: 0.02,
+    map: textureLoader.load('/textures/metal_plate.png')
+  })
+)
+gui.add(metalSphere.material, 'metalness', 0, 5, 0.01)
+gui.add(metalSphere.material, 'roughness', 0, 5, 0.01)
+
+
+
+scene.add(blueMetalSphere, rockSphere, coastSphere, redSphere, metalSphere)
 
 
 /**
@@ -89,6 +110,17 @@ const renderer = new three.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+
+/**
+ * Environment Map
+ */
+const loader = new HDRJPGLoader(renderer)
+
+const result = await loader.loadAsync('/environment/rogland_clear_night_4k.jpg')
+console.log(result)
+scene.background = result.renderTarget.texture
+scene.background.mapping = three.EquirectangularReflectionMapping;
 
 
 (function animate() {
