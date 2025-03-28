@@ -27,3 +27,7 @@ export const createSphere = (texture: three.Texture, position: [number, number, 
 
   return sphere;
 };
+
+export const rotateGeometry = (geometry: three.Mesh, rotation: [number, number, number]) => {
+  geometry.rotation.set(...rotation)
+}

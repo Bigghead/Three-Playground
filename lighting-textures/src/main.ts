@@ -2,7 +2,7 @@ import * as three from 'three'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from 'lil-gui'
 import { HDRJPGLoader } from '@monogrid/gainmap-js'
-import { createSphere } from './utils';
+import { createSphere, rotateGeometry } from './utils';
 
 
 const canvas = document.querySelector('.webgl') as HTMLCanvasElement
@@ -29,7 +29,7 @@ scene.add(axes)
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height)
-camera.position.set(-4, 1, 5)
+camera.position.set(-4, -0.5, 4.5)
 scene.add(camera)
 
 /**
@@ -122,9 +122,19 @@ console.log(result)
 scene.background = result.renderTarget.texture
 scene.background.mapping = three.EquirectangularReflectionMapping;
 
+const clock = new three.Clock();
 
 (function animate() {
+  const elapsedTime = clock.getElapsedTime()
   controls.update()
+
+  rotateGeometry(blueMetalSphere, [elapsedTime * 0.15, 0, elapsedTime * 0.15])
+  rotateGeometry(rockSphere, [elapsedTime * 0.1, elapsedTime * 0.15, 0])
+  rotateGeometry(metalSphere, [elapsedTime * 0.2, elapsedTime * 0.15, elapsedTime * 0.1])
+  rotateGeometry(coastSphere, [0, elapsedTime * 0.1, elapsedTime * 0.15])
+  rotateGeometry(redSphere, [elapsedTime * 0.1, elapsedTime * 0.15, 0])
+
+
   renderer.render(scene, camera);
   requestAnimationFrame(animate)
 })()
