@@ -1,4 +1,6 @@
 import * as three from 'three'
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
 
 const canvas = document.querySelector('.webgl') as HTMLCanvasElement
 
@@ -9,13 +11,45 @@ const sizes = {
 
 const scene = new three.Scene()
 
+/**
+ * Utils
+ */
+const axes = new three.AxesHelper(5)
+scene.add(axes)
+
 
 /**
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height)
+camera.position.set(1, 1, 2)
 scene.add(camera)
 
+/**
+ * Controls
+ */
+const controls = new OrbitControls(camera, canvas)
+controls.enableDamping = true;
+
+
+/**
+ * Lighting
+ */
+const ambientLight = new three.AmbientLight()
+scene.add(ambientLight)
+
+
+/**
+ * Objects
+ */
+const geometry = new three.SphereGeometry()
+
+// need lighting?
+const material = new three.MeshPhysicalMaterial({
+  color: 'red'
+})
+scene.add(new three.Mesh(geometry, material))
+console.log(scene)
 
 
 /**
@@ -26,8 +60,13 @@ const renderer = new three.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-console.log('test')
-renderer.render(scene, camera)
+
+
+(function animate() {
+  controls.update()
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate)
+})()
 
 /**
  * Browser Events
