@@ -1,15 +1,18 @@
 import * as three from 'three'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import GUI from 'lil-gui'
 
 
 const canvas = document.querySelector('.webgl') as HTMLCanvasElement
-
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight
 }
-
 const scene = new three.Scene()
+const gui = new GUI()
+gui.add(document, 'title')
+
+const debugGui = {}
 
 /**
  * Utils
@@ -22,7 +25,7 @@ scene.add(axes)
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height)
-camera.position.set(1, 1, 2)
+camera.position.set(1, 1, 3)
 scene.add(camera)
 
 /**
@@ -39,6 +42,12 @@ const ambientLight = new three.AmbientLight()
 const pointLight = new three.PointLight(0xffffff, 50)
 pointLight.position.set(2, 3, 4)
 scene.add(ambientLight, pointLight)
+
+const pointLightTweaks = gui.addFolder('Point Light')
+pointLightTweaks.add(pointLight, 'intensity', 0, 150, 5)
+pointLightTweaks.add(pointLight.position, 'x', -20, 20, 0.5)
+pointLightTweaks.add(pointLight.position, 'y', -20, 20, 0.5)
+pointLightTweaks.add(pointLight.position, 'z', -20, 20, 0.5)
 
 
 /**
@@ -69,12 +78,27 @@ const geometry = new three.SphereGeometry(1, 64)
 
 // need lighting?
 const material = new three.MeshPhysicalMaterial({
-  // color: 'red'
-  map: textureMap.metal_sheet,
-  sheen: 1
+  sheen: 10
 })
-scene.add(new three.Mesh(geometry, material))
-console.log(scene)
+const metalSphere = new three.Mesh(geometry, material)
+metalSphere.material.map = textureMap.blue_metal
+metalSphere.position.set(-2, 2, 0)
+const metalSphereTweaks = gui.addFolder('Metal Sphere')
+metalSphereTweaks.add(metalSphere.position, 'x', -20, 20, 0.5)
+metalSphereTweaks.add(metalSphere.position, 'y', -20, 20, 0.5)
+metalSphereTweaks.add(metalSphere.position, 'z', -20, 20, 0.5)
+
+// have to clone the same material instance to reuse
+const rockSphere = new three.Mesh(geometry, material.clone())
+rockSphere.material.map = textureMap.rock_wall
+rockSphere.position.set(-2, -1, 0)
+const rockSphereTweaks = gui.addFolder('Rock Sphere')
+rockSphereTweaks.add(rockSphere.position, 'x', -20, 20, 0.5)
+rockSphereTweaks.add(rockSphere.position, 'y', -20, 20, 0.5)
+rockSphereTweaks.add(rockSphere.position, 'z', -20, 20, 0.5)
+
+
+scene.add(metalSphere, rockSphere)
 
 
 /**
