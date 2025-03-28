@@ -1,6 +1,7 @@
 import * as three from 'three'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from 'lil-gui'
+import { createSphere } from './utils';
 
 
 const canvas = document.querySelector('.webgl') as HTMLCanvasElement
@@ -74,30 +75,9 @@ textureMap.rock_wall.colorSpace = three.SRGBColorSpace
 /**
  * Objects
  */
-const geometry = new three.SphereGeometry(1, 64)
 
-// need lighting?
-const material = new three.MeshPhysicalMaterial({
-  sheen: 10
-})
-const metalSphere = new three.Mesh(geometry, material)
-metalSphere.material.map = textureMap.blue_metal
-metalSphere.position.set(-2, 2, 0)
-const metalSphereTweaks = gui.addFolder('Metal Sphere')
-metalSphereTweaks.add(metalSphere.position, 'x', -20, 20, 0.5)
-metalSphereTweaks.add(metalSphere.position, 'y', -20, 20, 0.5)
-metalSphereTweaks.add(metalSphere.position, 'z', -20, 20, 0.5)
-
-// have to clone the same material instance to reuse
-const rockSphere = new three.Mesh(geometry, material.clone())
-rockSphere.material.map = textureMap.rock_wall
-rockSphere.position.set(-2, -1, 0)
-const rockSphereTweaks = gui.addFolder('Rock Sphere')
-rockSphereTweaks.add(rockSphere.position, 'x', -20, 20, 0.5)
-rockSphereTweaks.add(rockSphere.position, 'y', -20, 20, 0.5)
-rockSphereTweaks.add(rockSphere.position, 'z', -20, 20, 0.5)
-
-
+const metalSphere = createSphere(textureMap.blue_metal, [-2, 2, 0], 'Metal Sphere')
+const rockSphere = createSphere(textureMap.rock_wall, [-2, -1, 0], 'Rock Sphere')
 scene.add(metalSphere, rockSphere)
 
 
@@ -125,7 +105,6 @@ window.addEventListener('resize', () => {
   const { innerHeight: height, innerWidth: width } = window
   sizes.height = height
   sizes.width = width
-  console.log(sizes)
 
   camera.aspect = width / height
   camera.updateProjectionMatrix()
