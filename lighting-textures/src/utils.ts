@@ -22,7 +22,8 @@ export const createSphere = (texture: three.Texture, position: [number, number, 
   // GUI Tweaks
   const folder = gui.addFolder(name);
   (['x', 'y', 'z'] as const).forEach(axis =>
-    folder.add(sphere.position, axis, -20, 20, 0.5)
+    folder.add(sphere.position, axis, -20, 20, 0.5),
+    folder.close()
   );
 
   return sphere;
