@@ -12,6 +12,11 @@ export default {
     emptyOutDir: true, // Empty the folder first
     sourcemap: true, // Add sourcemap
   },
+  esbuild: {
+    supported: {
+      "top-level-await": true, //browsers can handle top-level-await features
+    },
+  },
   plugins: [
     restart({ restart: ["../public/**"] }), // Restart server on static file change
   ],

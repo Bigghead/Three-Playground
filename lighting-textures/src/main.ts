@@ -16,8 +16,6 @@ const gui = new GUI({
 gui.add(document, "title");
 gui.close();
 
-const debugGui = {};
-
 /**
  * Utils
  */
