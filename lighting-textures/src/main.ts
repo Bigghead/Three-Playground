@@ -19,8 +19,8 @@ gui.close();
 /**
  * Utils
  */
-const axes = new three.AxesHelper(5);
-scene.add(axes);
+// const axes = new three.AxesHelper(5);
+// scene.add(axes);
 
 /**
  * Camera
