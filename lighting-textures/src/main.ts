@@ -16,19 +16,17 @@ const gui = new GUI({
 gui.add(document, "title");
 gui.close();
 
-const debugGui = {};
-
 /**
  * Utils
  */
-const axes = new three.AxesHelper(5);
-scene.add(axes);
+// const axes = new three.AxesHelper(5);
+// scene.add(axes);
 
 /**
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.set(1, 1, 6);
+camera.position.set(3, -0.5, 5.5);
 scene.add(camera);
 
 /**
@@ -41,9 +39,10 @@ controls.enableDamping = true;
  * Lighting
  */
 const ambientLight = new three.AmbientLight();
-const pointLight = new three.PointLight(0xffffff, 70);
+const pointLight = new three.PointLight(0xffa500, 80);
 pointLight.position.set(2, 3, 4);
-scene.add(ambientLight, pointLight);
+const pointLightHelper = new three.PointLightHelper(pointLight);
+scene.add(ambientLight, pointLight, pointLightHelper);
 
 const pointLightTweaks = gui.addFolder("Point Light");
 pointLightTweaks.add(pointLight, "intensity", 0, 200, 5);
