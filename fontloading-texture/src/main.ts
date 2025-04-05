@@ -44,7 +44,9 @@ const material = new three.MeshMatcapMaterial({
   matcap: textureMaps[1],
 });
 renderRandomizedGeometry({
-  amount: 1000,
+  // doing brute force neightbor check in the util
+  // gets slow for a lot of geometries ( makes sense )
+  amount: 200,
   geometry: torusGeometry,
   material,
   scene,
@@ -69,6 +71,7 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
   });
   textGeometry.center();
 
+  // Todo remove orbitcontrols and use gsap and / or js mouse events for camera move
   scene.add(new three.Mesh(textGeometry, material));
   gsap.to(camera.position, {
     z: 4,
