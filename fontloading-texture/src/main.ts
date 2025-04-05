@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { renderRandomizedGeometry } from "./utils";
+import { gsap } from "gsap";
 
 /**
  * Globals
@@ -15,6 +16,15 @@ const canvasSize = {
 const scene = new three.Scene();
 const axesHelper = new three.AxesHelper(5);
 scene.add(axesHelper);
+
+/**
+ * Camera
+ */
+const camera = new three.PerspectiveCamera(
+  75,
+  canvasSize.width / canvasSize.height
+);
+camera.position.set(0, 0, 25);
 
 /**
  * Textures
@@ -60,16 +70,11 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
   textGeometry.center();
 
   scene.add(new three.Mesh(textGeometry, material));
+  gsap.to(camera.position, {
+    z: 4,
+    duration: 2,
+  });
 });
-
-/**
- * Camera
- */
-const camera = new three.PerspectiveCamera(
-  75,
-  canvasSize.width / canvasSize.height
-);
-camera.position.set(0, 0, 5);
 
 /**
  * Renderer
