@@ -6,7 +6,12 @@ type Position = {
   position: three.Vector3;
   // scale: number;
 };
-const positions: Position[] = [];
+const positions: Position[] = [
+  // don't cover the starting textgeometry
+  {
+    position: new three.Vector3(0, 0, 0),
+  },
+];
 
 // Brute force check if each new geomtry is hitting a close neightbor
 // gets slow though

@@ -31,17 +31,23 @@ camera.position.set(0, 0, 25);
  */
 
 const textureLoader = new three.TextureLoader();
-const textureMaps = {
-  1: textureLoader.load("/matcaps/1.png"),
-};
-textureMaps[1].colorSpace = three.SRGBColorSpace;
+const textureMaps = [
+  textureLoader.load("/matcaps/2.png"),
+  textureLoader.load("/matcaps/4.png"),
+  textureLoader.load("/matcaps/5.png"),
+  textureLoader.load("/matcaps/6.png"),
+  textureLoader.load("/matcaps/8.png"),
+];
+textureMaps.forEach((texture) => {
+  texture.colorSpace = three.SRGBColorSpace;
+});
 
 /**
  * Geometries
  */
 const torusGeometry = new three.TorusGeometry();
 const material = new three.MeshMatcapMaterial({
-  matcap: textureMaps[1],
+  matcap: textureMaps[Math.floor(Math.random() * textureMaps.length)],
 });
 renderRandomizedGeometry({
   // doing brute force neightbor check in the util
@@ -96,3 +102,16 @@ controls.enableDamping = true;
   controls.update();
   requestAnimationFrame(animate);
 })();
+
+/**
+ * Event Listener
+ */
+window.addEventListener("resize", () => {
+  const { innerWidth, innerHeight } = window;
+
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+});
