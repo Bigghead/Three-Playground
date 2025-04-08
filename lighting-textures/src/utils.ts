@@ -1,34 +1,46 @@
-import * as three from 'three'
-import GUI from 'lil-gui'
+import * as three from "three";
+import GUI from "lil-gui";
 
-const gui = new GUI()
+const gui = new GUI();
 
-const geometry = new three.SphereGeometry()
+const geometry = new three.SphereGeometry();
 const material = new three.MeshPhysicalMaterial({
   sheen: 1,
   metalness: 0.7,
-  roughness: 0.5
-})
+  roughness: 0.5,
+});
 
-export const createSphere = (texture: three.Texture, position: [number, number, number], name: string, normalMap?: three.Texture) => {
+export const createSphere = (
+  texture: three.Texture,
+  position: [number, number, number],
+  name: string,
+  normalMap?: three.Texture,
+  metalMap?: three.Texture
+) => {
   // have to clone the same material instance to reuse
   const sphere = new three.Mesh(geometry, material.clone());
   sphere.material.map = texture;
   sphere.position.set(...position);
   if (normalMap) {
-    sphere.material.normalMap = normalMap
+    sphere.material.normalMap = normalMap;
+  }
+  if (metalMap) {
+    sphere.material.metalnessMap = metalMap;
   }
 
   // GUI Tweaks
   const folder = gui.addFolder(name);
-  (['x', 'y', 'z'] as const).forEach(axis =>
-    folder.add(sphere.position, axis, -20, 20, 0.5),
+  (["x", "y", "z"] as const).forEach(
+    (axis) => folder.add(sphere.position, axis, -20, 20, 0.5),
     folder.close()
   );
 
   return sphere;
 };
 
-export const rotateGeometry = (geometry: three.Mesh, rotation: [number, number, number]) => {
-  geometry.rotation.set(...rotation)
-}
+export const rotateGeometry = (
+  geometry: three.Mesh,
+  rotation: [number, number, number]
+) => {
+  geometry.rotation.set(...rotation);
+};
