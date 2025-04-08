@@ -24,7 +24,7 @@ const camera = new three.PerspectiveCamera(
   75,
   canvasSize.width / canvasSize.height
 );
-camera.position.set(0, 0, 25);
+camera.position.set(-25, 4, -25);
 
 /**
  * Textures
@@ -49,14 +49,14 @@ const torusGeometry = new three.TorusGeometry();
 const material = new three.MeshMatcapMaterial({
   matcap: textureMaps[Math.floor(Math.random() * textureMaps.length)],
 });
-renderRandomizedGeometry({
+const geometryGroup = renderRandomizedGeometry({
   // doing brute force neightbor check in the util
   // gets slow for a lot of geometries ( makes sense )
   amount: 200,
   geometry: torusGeometry,
   material,
-  scene,
 });
+scene.add(geometryGroup);
 
 /**
  * Font
@@ -78,11 +78,30 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
   textGeometry.center();
 
   // Todo remove orbitcontrols and use gsap and / or js mouse events for camera move
-  scene.add(new three.Mesh(textGeometry, material));
+  const textMesh = new three.Mesh(textGeometry, material);
+  scene.add(textMesh);
+
   gsap.to(camera.position, {
+    x: 0,
+    y: 0,
     z: 4,
     duration: 2,
   });
+  // gsap.to(camera.position, {
+  //   x: 0.5,
+  //   // y: 0.5,
+  //   duration: 5,
+  // });
+  // tl.to(textMesh.rotation, {
+  //   x: -0.5,
+  //   y: -0.5,
+  //   duration: 5,
+  // });
+  // gsap.to(textMesh.position, {
+  //   x: 2,
+  //   duration: 4,
+  //   ease: "power2.out",
+  // });
 });
 
 /**
@@ -97,7 +116,11 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 
+const clock = new three.Clock();
+
 (function animate() {
+  const elapsedTime = clock.getElapsedTime();
+  // console.log(elapsedTime);
   renderer.render(scene, camera);
   controls.update();
   requestAnimationFrame(animate);

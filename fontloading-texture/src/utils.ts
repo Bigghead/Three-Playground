@@ -29,13 +29,12 @@ export function renderRandomizedGeometry({
   amount,
   geometry,
   material,
-  scene,
 }: {
   amount: number;
   geometry: three.BufferGeometry;
   material: three.Material;
-  scene: three.Scene;
-}) {
+}): three.Group {
+  const geometryGroup = new three.Group();
   for (let i = 0; i <= amount; i++) {
     let position;
     // const randomScale = Math.floor(Math.random() * 2);
@@ -56,7 +55,7 @@ export function renderRandomizedGeometry({
     // mesh.scale.set(randomScale, randomScale, randomScale);
     positions.push({ position });
 
-    scene.add(mesh);
+    geometryGroup.add(mesh);
   }
-  console.log(positions.length);
+  return geometryGroup;
 }
