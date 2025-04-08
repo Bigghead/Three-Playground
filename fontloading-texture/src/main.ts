@@ -81,27 +81,24 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
   const textMesh = new three.Mesh(textGeometry, material);
   scene.add(textMesh);
 
+  // todo - maybe use gsap timeline. Does the same things, for chaining animations
   gsap.to(camera.position, {
     x: 0,
     y: 0,
     z: 4,
     duration: 2,
+    onComplete: () => {
+      gsap.to(camera.position, {
+        duration: 5,
+        y: 0.8,
+        yoyo: true,
+        repeat: -1,
+        ease: "power1.inOut",
+      });
+    },
   });
-  // gsap.to(camera.position, {
-  //   x: 0.5,
-  //   // y: 0.5,
-  //   duration: 5,
-  // });
-  // tl.to(textMesh.rotation, {
-  //   x: -0.5,
-  //   y: -0.5,
-  //   duration: 5,
-  // });
-  // gsap.to(textMesh.position, {
-  //   x: 2,
-  //   duration: 4,
-  //   ease: "power2.out",
-  // });
+
+  camera.lookAt(textMesh.position);
 });
 
 /**
@@ -121,6 +118,9 @@ const clock = new three.Clock();
 (function animate() {
   const elapsedTime = clock.getElapsedTime();
   // console.log(elapsedTime);
+
+  geometryGroup.rotation.y = elapsedTime * 0.02;
+  geometryGroup.rotation.z = elapsedTime * 0.02;
   renderer.render(scene, camera);
   controls.update();
   requestAnimationFrame(animate);
