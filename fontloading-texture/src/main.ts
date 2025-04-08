@@ -7,6 +7,14 @@ import { gsap } from "gsap";
 /**
  * Globals
  */
+const introTexts = [
+  "Get in here!",
+  "Hello, awesome!",
+  "Ready to roll?",
+  "Let’s make magic!",
+  "Ready, set, go!",
+  "Step into cool.",
+];
 const canvas = document.querySelector(".webgl") as HTMLCanvasElement;
 const canvasSize = {
   width: window.innerWidth,
@@ -66,7 +74,7 @@ const fontLoader = new FontLoader();
 fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
   console.log(font);
   const textGeometry = new TextGeometry(
-    "If you're reading this, you're beautiful!",
+    introTexts[Math.floor(Math.random() * introTexts.length)],
     {
       font,
       size: 1,
