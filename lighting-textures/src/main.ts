@@ -26,7 +26,7 @@ gui.close();
  * Camera
  */
 const camera = new three.PerspectiveCamera(75, sizes.width / sizes.height);
-camera.position.set(3, -0.5, 5.5);
+camera.position.set(-4, -0.5, 3.5);
 scene.add(camera);
 
 /**
@@ -39,13 +39,13 @@ controls.enableDamping = true;
  * Lighting
  */
 const ambientLight = new three.AmbientLight();
-const pointLight = new three.PointLight(0xffa500, 80);
+const pointLight = new three.PointLight(0xffa500, 200);
 pointLight.position.set(2, 3, 4);
 const pointLightHelper = new three.PointLightHelper(pointLight);
 scene.add(ambientLight, pointLight, pointLightHelper);
 
 const pointLightTweaks = gui.addFolder("Point Light");
-pointLightTweaks.add(pointLight, "intensity", 0, 200, 5);
+pointLightTweaks.add(pointLight, "intensity", 100, 500, 10);
 pointLightTweaks.add(pointLight.position, "x", -20, 20, 0.5);
 pointLightTweaks.add(pointLight.position, "y", -20, 20, 0.5);
 pointLightTweaks.add(pointLight.position, "z", -20, 20, 0.5);
@@ -55,16 +55,16 @@ pointLightTweaks.add(pointLight.position, "z", -20, 20, 0.5);
  */
 const textureLoader = new three.TextureLoader();
 const textureMap = {
-  door: textureLoader.load("/textures/color.jpg"),
   metal_sheet: textureLoader.load("/textures/metal_sheet.jpg"),
   blue_metal: textureLoader.load("/textures/blue_metal.jpg"),
   coast_land: textureLoader.load("/textures/coast_land.jpg"),
   rock_wall: textureLoader.load("/textures/rock_wall.jpg"),
   blue_metal_normal: textureLoader.load("/textures/blue_plate_normal.png"),
   coast_land_normal: textureLoader.load("/textures/coast_land_normal.png"),
-  mud_normal: textureLoader.load("/textures/mud_cracked.png"),
+  mud_normal: textureLoader.load("/textures/mud_cracked-min.png"),
+  rusty_normal: textureLoader.load("/textures/rusty_metal_normal.png"),
+  rusty_metal: textureLoader.load("/textures/rusty_metal_metal.png"),
 };
-textureMap.door.colorSpace = three.SRGBColorSpace;
 textureMap.metal_sheet.colorSpace = three.SRGBColorSpace;
 // textureMap.metal_sheet.magFilter = three.NearestFilter;
 // textureMap.metal_sheet.minFilter = three.LinearMipMapLinearFilter;
@@ -76,32 +76,28 @@ textureMap.rock_wall.colorSpace = three.SRGBColorSpace;
  * Objects
  */
 
-// Todo:
-// Create a glowing sun / object that will wrap around the pointlight
-// But we need to learn Bloom / Shading
-// For later
-
-const blueMetalSphere = createSphere(
-  textureMap.blue_metal,
-  [-2, 1.5, -1],
-  "Blue Metal Sphere",
-  textureMap.blue_metal_normal
-);
-const rockSphere = createSphere(
-  textureMap.rock_wall,
-  [-2, -1.5, -1],
-  "Rock Sphere",
-  textureMap.blue_metal_normal
-);
 const redSphere = createSphere(
   textureMap.metal_sheet,
-  [2, 1.5, 1],
+  [-2, 1.5, 0],
   "Red Sphere",
   textureMap.mud_normal
 );
+const rockSphere = createSphere(
+  textureMap.rock_wall,
+  [2, -1.5, 0],
+  "Rock Sphere",
+  textureMap.mud_normal
+);
+const blueMetalSphere = createSphere(
+  textureMap.blue_metal,
+  [2, 1.5, 0],
+  "Blue Metal Sphere",
+  textureMap.rusty_normal,
+  textureMap.rusty_metal
+);
 const coastSphere = createSphere(
   textureMap.coast_land,
-  [2, -1.5, 2],
+  [-2, -1.5, 0],
   "Coast Land Sphere",
   textureMap.coast_land_normal
 );
@@ -163,7 +159,7 @@ const clock = new three.Clock();
   pointLight.position.set(
     Math.sin(elapsedTime) * 8,
     Math.cos(elapsedTime) * 8,
-    0
+    Math.sin(elapsedTime) * 8
   );
 
   renderer.render(scene, camera);
