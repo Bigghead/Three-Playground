@@ -2,6 +2,7 @@ import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Timer } from "three/addons/misc/Timer.js";
 import GUI from "lil-gui";
+import { createBushes, createGraves } from "./utils";
 
 /**
  * Base
@@ -103,21 +104,12 @@ floor.receiveShadow = true;
 scene.add(house, floor);
 
 // Bushes
-const bushGeometry = new three.SphereGeometry(1, 16);
-const bushMaterial = new three.MeshStandardMaterial();
-
-const bushes: three.Mesh[] = [
-  { scale: 0.5, position: [0.8, 0.2, 2.2] },
-  { scale: 0.25, position: [1.4, 0.1, 2.1] },
-  { scale: 0.4, position: [-0.8, 0.1, 2.2] },
-  { scale: 0.15, position: [-1, 0.05, 2.6] },
-].map(({ scale, position }) => {
-  const bush = new three.Mesh(bushGeometry, bushMaterial);
-  bush.scale.set(scale, scale, scale);
-  bush.position.set(...position);
-  return bush;
-});
+const bushes = createBushes();
 scene.add(...bushes);
+
+// Graves
+const graves = createGraves(30);
+scene.add(graves);
 
 /**
  * Lights
