@@ -18,14 +18,22 @@ scene.add(new three.AxesHelper(5));
 
 // Textures
 const textureLoader = new three.TextureLoader();
-const textureMaps = {
-  floor: textureLoader.load("/floor/alpha.jpg"),
-  coast_land: textureLoader.load("/floor/coast_land.jpg"),
-  coast_land_normal: textureLoader.load("/floor/coast_land_normal.png"),
-  mud_cracked_normal: textureLoader.load("/floor/mud_cracked-min.png"),
-};
-textureMaps.coast_land.colorSpace = three.SRGBColorSpace;
 
+const floorTexture = textureLoader.load("/floor/alpha.jpg");
+const coast_land = textureLoader.load("/floor/coast_land.jpg");
+const coast_land_normal = textureLoader.load("/floor/coast_land_normal.png");
+const mud_cracked_normal = textureLoader.load("/floor/mud_cracked-min.png");
+const doorTexture = textureLoader.load("/door/color.jpg");
+const doorNormal = textureLoader.load("/door/normal.jpg");
+const doorAO = textureLoader.load("/door/ambientOcclusion.jpg");
+
+const wallTexture = textureLoader.load("/textures/mixed_brick_wall.jpg");
+const wallNormal = textureLoader.load("/textures/mixed_brick_wall_normal.png");
+const wallAO = textureLoader.load("/textures/mixed_brick_wall_ao.png");
+const roofTexture = textureLoader.load("/textures/herringbone_pavement.png");
+coast_land.colorSpace = three.SRGBColorSpace;
+doorTexture.colorSpace = three.SRGBColorSpace;
+wallTexture.colorSpace = three.SRGBColorSpace;
 /**
  * House
  */
@@ -36,19 +44,45 @@ textureMaps.coast_land.colorSpace = three.SRGBColorSpace;
 // );
 
 const house = new three.Group();
-const houseMaterial = new three.MeshStandardMaterial();
+const houseMaterial = new three.MeshStandardMaterial({
+  side: three.DoubleSide,
+});
 
-const walls = new three.Mesh(new three.BoxGeometry(4, 2.5, 4), houseMaterial);
+const walls = new three.Mesh(
+  new three.BoxGeometry(4, 2.5, 4),
+  new three.MeshStandardMaterial({
+    map: wallTexture,
+    normalMap: wallNormal,
+    aoMap: wallAO,
+  })
+);
 // centered at x-axis, move the y up by half the height of the geometry
 walls.position.y = 2.5 / 2;
 
-const roof = new three.Mesh(new three.ConeGeometry(3.5, 1.5, 4), houseMaterial);
+const roof = new three.Mesh(
+  new three.ConeGeometry(3.5, 1.5, 4),
+  new three.MeshStandardMaterial({
+    map: roofTexture,
+  })
+);
 // half of height of walls + walls position y ( walls height ) offset + height of roof
 // 2.5 + 2 + 2.5
 roof.position.y = (2.5 + 2.5 + 1.5) / 2;
 roof.rotation.y = Math.PI / 4;
 
-house.add(walls, roof);
+const door = new three.Mesh(
+  new three.PlaneGeometry(1.5, 2),
+  new three.MeshStandardMaterial({
+    color: "red",
+    side: three.DoubleSide,
+    map: doorTexture,
+    normalMap: doorNormal,
+    aoMap: doorAO,
+  })
+);
+// door.rotation.y = Math.PI;
+door.position.set(0.01, 2.5 / 2 + 0.01, 4 / 2 + 0.01);
+house.add(walls, roof, door);
 
 // const floorGeometry = new three.PlaneGeometry(50, 50);
 // floorGeometry.rotateX(-Math.PI / 2);
@@ -57,9 +91,9 @@ const floor = new three.Mesh(
   new three.MeshStandardMaterial({
     color: "white",
     side: three.DoubleSide,
-    alphaMap: textureMaps.floor,
-    map: textureMaps.coast_land,
-    normalMap: textureMaps.mud_cracked_normal,
+    alphaMap: floorTexture,
+    map: coast_land,
+    normalMap: coast_land_normal,
     alphaTest: 0.5,
   })
 );
@@ -78,11 +112,11 @@ scene.add(ambientLight);
 
 // Directional light
 const directionalLight = new three.DirectionalLight("#ffffff", 3);
-directionalLight.position.set(3, 2, -8);
+directionalLight.position.set(4, 5, -8);
 const directionalLightHelper = new three.DirectionalLightHelper(
   directionalLight
 );
-scene.add(directionalLight, directionalLightHelper);
+scene.add(directionalLight);
 
 /**
  * Sizes
