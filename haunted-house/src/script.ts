@@ -81,7 +81,7 @@ const door = new three.Mesh(
   })
 );
 // door.rotation.y = Math.PI;
-door.position.set(0.01, 2.5 / 2 + 0.01, 4 / 2 + 0.01);
+door.position.set(0.01, 1 + 0.01, 4 / 2 + 0.01);
 house.add(walls, roof, door);
 
 // const floorGeometry = new three.PlaneGeometry(50, 50);
@@ -90,7 +90,6 @@ const floor = new three.Mesh(
   new three.PlaneGeometry(50, 50),
   new three.MeshStandardMaterial({
     color: "white",
-    side: three.DoubleSide,
     alphaMap: floorTexture,
     map: coast_land,
     normalMap: coast_land_normal,
@@ -102,6 +101,23 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 
 scene.add(house, floor);
+
+// Bushes
+const bushGeometry = new three.SphereGeometry(1, 16);
+const bushMaterial = new three.MeshStandardMaterial();
+
+const bushes: three.Mesh[] = [
+  { scale: 0.5, position: [0.8, 0.2, 2.2] },
+  { scale: 0.25, position: [1.4, 0.1, 2.1] },
+  { scale: 0.4, position: [-0.8, 0.1, 2.2] },
+  { scale: 0.15, position: [-1, 0.05, 2.6] },
+].map(({ scale, position }) => {
+  const bush = new three.Mesh(bushGeometry, bushMaterial);
+  bush.scale.set(scale, scale, scale);
+  bush.position.set(...position);
+  return bush;
+});
+scene.add(...bushes);
 
 /**
  * Lights
