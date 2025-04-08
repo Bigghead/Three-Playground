@@ -1,5 +1,4 @@
 import * as three from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { renderRandomizedGeometry } from "./utils";
@@ -14,11 +13,7 @@ const canvasSize = {
   height: window.innerHeight,
 };
 
-const targetCameraPosition = new three.Vector3();
-
 const scene = new three.Scene();
-const axesHelper = new three.AxesHelper(5);
-scene.add(axesHelper);
 
 /**
  * Camera
