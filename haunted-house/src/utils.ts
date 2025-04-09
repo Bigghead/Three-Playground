@@ -18,8 +18,10 @@ export function createBushes(): three.Mesh[] {
   return bushes;
 }
 
-const getRandom = (min: number, max: number): number =>
-  min + Math.random() * max;
+const getRandom = (min: number, max: number): number => {
+  const randomInt = Math.random() * (max - min);
+  return Math.random() < 0.5 ? -randomInt : randomInt;
+};
 
 export function createGraves(
   graveAmount: number
@@ -30,6 +32,8 @@ export function createGraves(
 
   for (let i = 0; i <= graveAmount; i++) {
     const graveMesh = new three.Mesh(graveGeo, graveMaterial);
+    // This kinda works but needs collision detection for the house / bushes
+    // graveMesh.position.set(getRandom(4, 15), 0.4, getRandom(4, 15));
 
     // get random angle in a circle ( our circle floor )
     const randomAngle = Math.random() * Math.PI * 2;
@@ -38,14 +42,15 @@ export function createGraves(
     // but since y axis is static ( has a floor ), then use x / z
     // Doing this gives a perfect circle, but we need randomly placed
     // graves around a circle
-    // const x = Math.sin(randomAngle);
-    // const z = Math.cos(randomAngle);
 
     // 4 ( walls width ) - radius outside the house so it won't collide
     const randomRadius = 4 + Math.random() * 10;
     const x = Math.sin(randomAngle) * randomRadius;
     const z = Math.cos(randomAngle) * randomRadius;
-    graveMesh.position.set(x, 0.8 / 2, z);
+    graveMesh.position.set(x, (Math.random() * 1) / 2, z);
+
+    graveMesh.rotation.x = Math.random() - 0.5;
+    graveMesh.rotation.z = Math.random() - 0.5;
 
     // graveMesh.position.set(getRandom(4, 4), 0.8 / 2, getRandom(4, 4));
     graveGroup.add(graveMesh);

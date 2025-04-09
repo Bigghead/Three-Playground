@@ -23,6 +23,9 @@ const textureLoader = new three.TextureLoader();
 const floorTexture = textureLoader.load("/floor/alpha.jpg");
 const coast_land = textureLoader.load("/floor/coast_land.jpg");
 const coast_land_normal = textureLoader.load("/floor/coast_land_normal.png");
+const forrestFloor = textureLoader.load("/floor/forest_leaves_diffuse.jpg");
+
+const floorDisplacement = textureLoader.load("/floor/forest_leaves_disp.jpg");
 const mud_cracked_normal = textureLoader.load("/floor/mud_cracked-min.png");
 const doorTexture = textureLoader.load("/door/color.jpg");
 const doorNormal = textureLoader.load("/door/normal.jpg");
@@ -32,6 +35,12 @@ const wallTexture = textureLoader.load("/textures/mixed_brick_wall.jpg");
 const wallNormal = textureLoader.load("/textures/mixed_brick_wall_normal.png");
 const wallAO = textureLoader.load("/textures/mixed_brick_wall_ao.png");
 const roofTexture = textureLoader.load("/textures/herringbone_pavement.png");
+
+// const bush
+coast_land.repeat.set(8, 8);
+coast_land.wrapS = three.RepeatWrapping;
+coast_land.wrapT = three.RepeatWrapping;
+
 coast_land.colorSpace = three.SRGBColorSpace;
 doorTexture.colorSpace = three.SRGBColorSpace;
 wallTexture.colorSpace = three.SRGBColorSpace;
@@ -88,15 +97,29 @@ house.add(walls, roof, door);
 // const floorGeometry = new three.PlaneGeometry(50, 50);
 // floorGeometry.rotateX(-Math.PI / 2);
 const floor = new three.Mesh(
-  new three.PlaneGeometry(50, 50),
+  // add more faces on the plane / floor to see displacement
+  new three.PlaneGeometry(50, 50, 100, 100),
   new three.MeshStandardMaterial({
+    // wireframe: true,
     color: "white",
-    alphaMap: floorTexture,
     map: coast_land,
     normalMap: coast_land_normal,
-    alphaTest: 0.5,
+    alphaMap: floorTexture,
+    transparent: true,
+
+    // if using displacement, need scale / bias to offset the higher vertices on x axis
+    displacementMap: floorDisplacement,
+    displacementScale: 0.3,
+    displacementBias: -0.125,
   })
 );
+gui
+  .add(floor.material, "displacementScale", 0, 1, 0.001)
+  .name("Floor Display Scale");
+gui
+  .add(floor.material, "displacementBias", -1, 1, 0.001)
+  .name("Floor Display Bias");
+
 // floor.position.set(0, -1, 0);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
@@ -158,9 +181,9 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.x = 4;
+camera.position.x = 8;
 camera.position.y = 2;
-camera.position.z = 5;
+camera.position.z = 10;
 scene.add(camera);
 
 // Controls
