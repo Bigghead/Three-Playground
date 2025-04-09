@@ -1,4 +1,30 @@
 import * as three from "three";
+const textureLoader = new three.TextureLoader();
+
+export function loadTexture({
+  path,
+  repeat,
+  wrap,
+  colorSpace,
+}: {
+  path: string;
+  repeat?: [number, number];
+  wrap?: boolean;
+  colorSpace?: string; // three srgbcolor
+}) {
+  const texture = textureLoader.load(path);
+  if (repeat) {
+    texture.repeat.set(...repeat);
+  }
+  if (wrap) {
+    texture.wrapS = three.RepeatWrapping;
+    texture.wrapT = three.RepeatWrapping;
+  }
+  if (colorSpace) {
+    texture.colorSpace = colorSpace;
+  }
+  return texture;
+}
 
 export function createBushes({
   map,

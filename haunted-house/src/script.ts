@@ -2,7 +2,7 @@ import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Timer } from "three/addons/misc/Timer.js";
 import GUI from "lil-gui";
-import { createBushes, createGraves } from "./utils";
+import { createBushes, createGraves, loadTexture } from "./utils";
 
 /**
  * Base
@@ -18,38 +18,62 @@ const scene = new three.Scene();
 scene.add(new three.AxesHelper(5));
 
 // Textures
-const textureLoader = new three.TextureLoader();
+const textureMap = {
+  floorTexture: loadTexture({
+    path: "/floor/alpha.jpg",
+  }),
+  coast_land: loadTexture({
+    path: "/floor/coast_land.jpg",
+    repeat: [8, 8],
+    wrap: true,
+    colorSpace: three.SRGBColorSpace,
+  }),
+  coast_land_normal: loadTexture({
+    path: "/floor/coast_land_normal.png",
+  }),
+  forrestFloor: loadTexture({
+    path: "/floor/forest_leaves_diffuse.jpg",
+  }),
+  floorDisplacement: loadTexture({
+    path: "/floor/forest_leaves_disp.jpg",
+  }),
+  mud_cracked_normal: loadTexture({
+    path: "/floor/mud_cracked-min.png",
+  }),
+  doorTexture: loadTexture({
+    path: "/door/color.jpg",
+  }),
+  doorNormal: loadTexture({
+    path: "/door/normal.jpg",
+  }),
+  doorAO: loadTexture({
+    path: "/door/ambientOcclusion.jpg",
+  }),
+  wallTexture: loadTexture({
+    path: "/textures/mixed_brick_wall.jpg",
+  }),
+  wallNormal: loadTexture({
+    path: "/textures/mixed_brick_wall_normal.png",
+  }),
+  wallARM: loadTexture({
+    path: "/textures/castle_brick_arm.png",
+  }),
+  roofTexture: loadTexture({
+    path: "/textures/herringbone_pavement.png",
+    colorSpace: three.SRGBColorSpace,
+  }),
+  bush: loadTexture({
+    path: "/bush/leaves_forest_ground_diff_1k.webp",
+    colorSpace: three.SRGBColorSpace,
+  }),
+  bushARM: loadTexture({
+    path: "/bush/leaves_forest_ground_arm_1k.webp",
+  }),
+  bushNormal: loadTexture({
+    path: "/bush/leaves_forest_ground_nor_gl_1k.webp",
+  }),
+};
 
-const floorTexture = textureLoader.load("/floor/alpha.jpg");
-const coast_land = textureLoader.load("/floor/coast_land.jpg");
-const coast_land_normal = textureLoader.load("/floor/coast_land_normal.png");
-const forrestFloor = textureLoader.load("/floor/forest_leaves_diffuse.jpg");
-
-const floorDisplacement = textureLoader.load("/floor/forest_leaves_disp.jpg");
-const mud_cracked_normal = textureLoader.load("/floor/mud_cracked-min.png");
-const doorTexture = textureLoader.load("/door/color.jpg");
-const doorNormal = textureLoader.load("/door/normal.jpg");
-const doorAO = textureLoader.load("/door/ambientOcclusion.jpg");
-
-const wallTexture = textureLoader.load("/textures/mixed_brick_wall.jpg");
-const wallNormal = textureLoader.load("/textures/mixed_brick_wall_normal.png");
-const wallARM = textureLoader.load("/textures/castle_brick_arm.png");
-const roofTexture = textureLoader.load("/textures/herringbone_pavement.png");
-
-const bush = textureLoader.load("/bush/leaves_forest_ground_diff_1k.webp");
-const bushARM = textureLoader.load("/bush/leaves_forest_ground_arm_1k.webp");
-const bushNormal = textureLoader.load(
-  "/bush/leaves_forest_ground_nor_gl_1k.webp"
-);
-
-coast_land.repeat.set(8, 8);
-coast_land.wrapS = three.RepeatWrapping;
-coast_land.wrapT = three.RepeatWrapping;
-
-coast_land.colorSpace = three.SRGBColorSpace;
-doorTexture.colorSpace = three.SRGBColorSpace;
-wallTexture.colorSpace = three.SRGBColorSpace;
-bush.colorSpace = three.SRGBColorSpace;
 /**
  * House
  */
@@ -67,10 +91,10 @@ const houseMaterial = new three.MeshStandardMaterial({
 const walls = new three.Mesh(
   new three.BoxGeometry(4, 2.5, 4),
   new three.MeshStandardMaterial({
-    map: wallTexture,
-    normalMap: wallNormal,
-    metalnessMap: wallARM,
-    roughnessMap: wallARM,
+    map: textureMap.wallTexture,
+    normalMap: textureMap.wallNormal,
+    metalnessMap: textureMap.wallARM,
+    roughnessMap: textureMap.wallARM,
   })
 );
 // centered at x-axis, move the y up by half the height of the geometry
@@ -80,7 +104,7 @@ const roof = new three.Mesh(
   new three.ConeGeometry(3.5, 1.5, 4),
   new three.MeshStandardMaterial({
     color: "brown",
-    map: roofTexture,
+    map: textureMap.roofTexture,
   })
 );
 // half of height of walls + walls position y ( walls height ) offset + height of roof
@@ -93,9 +117,9 @@ const door = new three.Mesh(
   new three.MeshStandardMaterial({
     color: "red",
     side: three.DoubleSide,
-    map: doorTexture,
-    normalMap: doorNormal,
-    aoMap: doorAO,
+    map: textureMap.doorTexture,
+    normalMap: textureMap.doorNormal,
+    aoMap: textureMap.doorAO,
   })
 );
 // door.rotation.y = Math.PI;
@@ -110,13 +134,13 @@ const floor = new three.Mesh(
   new three.MeshStandardMaterial({
     // wireframe: true,
     color: "white",
-    map: coast_land,
-    normalMap: coast_land_normal,
-    alphaMap: floorTexture,
+    map: textureMap.coast_land,
+    normalMap: textureMap.coast_land_normal,
+    alphaMap: textureMap.floorTexture,
     transparent: true,
 
     // if using displacement, need scale / bias to offset the higher vertices on x axis
-    displacementMap: floorDisplacement,
+    displacementMap: textureMap.floorDisplacement,
     displacementScale: 0.3,
     displacementBias: -0.125,
   })
@@ -136,9 +160,9 @@ scene.add(house, floor);
 
 // Bushes
 const bushes = createBushes({
-  map: bush,
-  normalMap: bushNormal,
-  armMap: bushARM,
+  map: textureMap.bush,
+  normalMap: textureMap.bushNormal,
+  armMap: textureMap.bushARM,
 });
 scene.add(...bushes);
 
