@@ -1,8 +1,26 @@
 import * as three from "three";
 
-export function createBushes(): three.Mesh[] {
+export function createBushes({
+  map,
+  normalMap,
+  armMap,
+}: {
+  map: three.Texture;
+  normalMap?: three.Texture;
+  armMap?: three.Texture;
+}): three.Mesh[] {
   const bushGeometry = new three.SphereGeometry(1, 16);
-  const bushMaterial = new three.MeshStandardMaterial();
+  const bushMaterial = new three.MeshStandardMaterial({
+    map,
+  });
+  if (normalMap) {
+    bushMaterial.normalMap = normalMap;
+  }
+  if (armMap) {
+    bushMaterial.aoMap = armMap;
+    bushMaterial.roughnessMap = armMap;
+    bushMaterial.metalnessMap = armMap;
+  }
 
   const bushes: three.Mesh[] = [
     { scale: 0.5, position: [0.8, 0.2, 2.2] },

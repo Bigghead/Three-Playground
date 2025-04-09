@@ -33,10 +33,15 @@ const doorAO = textureLoader.load("/door/ambientOcclusion.jpg");
 
 const wallTexture = textureLoader.load("/textures/mixed_brick_wall.jpg");
 const wallNormal = textureLoader.load("/textures/mixed_brick_wall_normal.png");
-const wallAO = textureLoader.load("/textures/mixed_brick_wall_ao.png");
+const wallARM = textureLoader.load("/textures/castle_brick_arm.png");
 const roofTexture = textureLoader.load("/textures/herringbone_pavement.png");
 
-// const bush
+const bush = textureLoader.load("/bush/leaves_forest_ground_diff_1k.webp");
+const bushARM = textureLoader.load("/bush/leaves_forest_ground_arm_1k.webp");
+const bushNormal = textureLoader.load(
+  "/bush/leaves_forest_ground_nor_gl_1k.webp"
+);
+
 coast_land.repeat.set(8, 8);
 coast_land.wrapS = three.RepeatWrapping;
 coast_land.wrapT = three.RepeatWrapping;
@@ -44,6 +49,7 @@ coast_land.wrapT = three.RepeatWrapping;
 coast_land.colorSpace = three.SRGBColorSpace;
 doorTexture.colorSpace = three.SRGBColorSpace;
 wallTexture.colorSpace = three.SRGBColorSpace;
+bush.colorSpace = three.SRGBColorSpace;
 /**
  * House
  */
@@ -63,7 +69,8 @@ const walls = new three.Mesh(
   new three.MeshStandardMaterial({
     map: wallTexture,
     normalMap: wallNormal,
-    aoMap: wallAO,
+    metalnessMap: wallARM,
+    roughnessMap: wallARM,
   })
 );
 // centered at x-axis, move the y up by half the height of the geometry
@@ -72,6 +79,7 @@ walls.position.y = 2.5 / 2;
 const roof = new three.Mesh(
   new three.ConeGeometry(3.5, 1.5, 4),
   new three.MeshStandardMaterial({
+    color: "brown",
     map: roofTexture,
   })
 );
@@ -127,7 +135,11 @@ floor.receiveShadow = true;
 scene.add(house, floor);
 
 // Bushes
-const bushes = createBushes();
+const bushes = createBushes({
+  map: bush,
+  normalMap: bushNormal,
+  armMap: bushARM,
+});
 scene.add(...bushes);
 
 // Graves
