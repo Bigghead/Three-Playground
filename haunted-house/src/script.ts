@@ -14,7 +14,6 @@ const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 
 // Scene
 const scene = new three.Scene();
-scene.add(new three.AxesHelper(5));
 
 // Textures
 scene.add(house, floor, ...bushes, graves);
@@ -29,7 +28,7 @@ gui
  * Lights
  */
 // Ambient light
-const ambientLight = new three.AmbientLight("#86cdff", 0.3);
+const ambientLight = new three.AmbientLight("#86cdff", 0.2);
 scene.add(ambientLight);
 
 // Directional light
@@ -92,6 +91,50 @@ const renderer = new three.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+/**
+ * Shadows
+ */
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = three.PCFSoftShadowMap;
+directionalLight.castShadow = true;
+ghost1.castShadow = true;
+ghost2.castShadow = true;
+ghost3.castShadow = true;
+
+for (const grave of graves.children) {
+  grave.castShadow = true;
+  grave.receiveShadow = true;
+}
+floor.receiveShadow = true;
+
+// Light mapping for shadow performance improvements
+
+// Vector2 defining the width and height of the shadow map.
+// Higher values give better quality shadows at the cost of computation time.
+
+const {
+  shadow: { mapSize, camera: lightCamera },
+} = directionalLight;
+mapSize.width = 256;
+mapSize.height = 256;
+Object.assign(lightCamera, {
+  top: 8,
+  right: 8,
+  bottom: -8,
+  left: -8,
+  // how far the camera shadow mapping can see
+  near: 1,
+  far: 20,
+});
+
+for (const ghost of ghosts) {
+  ghost.shadow.mapSize.width = 256;
+  ghost.shadow.mapSize.height = 256;
+  ghost.shadow.camera.far = 20;
+}
+
+console.log(house.children);
 
 /**
  * Animate

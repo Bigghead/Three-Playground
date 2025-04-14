@@ -170,9 +170,16 @@ const graves = createGraves({
 
 //ghost lights
 const ghosts = [
-  new three.PointLight("#8800ff", 6),
   new three.PointLight("#ff0088", 6),
-  new three.PointLight("#ff0000", 6),
+  new three.PointLight("#8800ff", 6),
+  new three.PointLight(new three.Color("#0080FE").convertSRGBToLinear(), 6),
 ];
+
+/**
+ * Shadows
+ */
+walls.castShadow = true;
+walls.receiveShadow = true;
+roof.castShadow = true;
 
 export { house, floor, bushes, graves, ghosts };
