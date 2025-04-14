@@ -116,9 +116,15 @@ const door = new three.Mesh(
     displacementScale: 0.1,
   })
 );
+
 // door.rotation.y = Math.PI;
 door.position.set(0.01, 1 + 0.01, 4 / 2 + 0.01);
-house.add(walls, roof, door);
+
+const doorLight = new three.PointLight("#ff7d46", 5);
+doorLight.position.set(0, 2.2, 2.5);
+// house.add(new three.PointLightHelper(doorLight));
+
+house.add(walls, roof, door, doorLight);
 
 // const floorGeometry = new three.PlaneGeometry(50, 50);
 // floorGeometry.rotateX(-Math.PI / 2);
@@ -162,4 +168,11 @@ const graves = createGraves({
   armMap: textureMap.plasterARM,
 });
 
-export { house, floor, bushes, graves };
+//ghost lights
+const ghosts = [
+  new three.PointLight("#8800ff", 6),
+  new three.PointLight("#ff0088", 6),
+  new three.PointLight("#ff0000", 6),
+];
+
+export { house, floor, bushes, graves, ghosts };
