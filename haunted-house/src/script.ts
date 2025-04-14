@@ -19,29 +19,27 @@ scene.add(new three.AxesHelper(5));
 
 // Textures
 const textureMap = {
-  floorTexture: loadTexture({
-    path: "/floor/alpha.jpg",
+  floorAlpha: loadTexture({
+    path: "floor/alpha.jpg",
   }),
-  coast_land: loadTexture({
-    path: "/floor/coast_land.jpg",
+  floor: loadTexture({
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_diff_1k.jpg",
     repeat: [8, 8],
     wrap: true,
     colorSpace: three.SRGBColorSpace,
   }),
-  coast_land_normal: loadTexture({
-    path: "/floor/coast_land_normal.png",
+  floorDisp: loadTexture({
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_disp_1k.jpg",
   }),
-  forrestFloor: loadTexture({
-    path: "/floor/forest_leaves_diffuse.jpg",
+  floorNormal: loadTexture({
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_nor_dx_1k.jpg",
   }),
-  floorDisplacement: loadTexture({
-    path: "/floor/forest_leaves_disp.jpg",
-  }),
-  mud_cracked_normal: loadTexture({
-    path: "/floor/mud_cracked-min.png",
+  floorARM: loadTexture({
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_arm_1k.jpg",
   }),
   doorTexture: loadTexture({
     path: "/door/color.jpg",
+    colorSpace: three.SRGBColorSpace,
   }),
   doorNormal: loadTexture({
     path: "/door/normal.jpg",
@@ -72,6 +70,16 @@ const textureMap = {
   bushNormal: loadTexture({
     path: "/bush/leaves_forest_ground_nor_gl_1k.webp",
   }),
+  plaster: loadTexture({
+    path: "/grave/plastered_stone_wall_diff_1k.webp",
+    colorSpace: three.SRGBColorSpace,
+  }),
+  plasterNormal: loadTexture({
+    path: "/grave/plastered_stone_wall_nor_gl_1k.webp",
+  }),
+  plasterARM: loadTexture({
+    path: "/grave/plastered_stone_wall_arm_1k.webp",
+  }),
 };
 
 /**
@@ -84,13 +92,11 @@ const textureMap = {
 // );
 
 const house = new three.Group();
-const houseMaterial = new three.MeshStandardMaterial({
-  side: three.DoubleSide,
-});
 
 const walls = new three.Mesh(
   new three.BoxGeometry(4, 2.5, 4),
   new three.MeshStandardMaterial({
+    color: "#C4A484",
     map: textureMap.wallTexture,
     normalMap: textureMap.wallNormal,
     metalnessMap: textureMap.wallARM,
@@ -115,7 +121,7 @@ roof.rotation.y = Math.PI / 4;
 const door = new three.Mesh(
   new three.PlaneGeometry(1.5, 2),
   new three.MeshStandardMaterial({
-    color: "red",
+    // color: "red",
     side: three.DoubleSide,
     map: textureMap.doorTexture,
     normalMap: textureMap.doorNormal,
@@ -133,16 +139,19 @@ const floor = new three.Mesh(
   new three.PlaneGeometry(50, 50, 100, 100),
   new three.MeshStandardMaterial({
     // wireframe: true,
-    color: "white",
-    map: textureMap.coast_land,
-    normalMap: textureMap.coast_land_normal,
-    alphaMap: textureMap.floorTexture,
+    color: "#C4A484",
+    map: textureMap.floor,
+    normalMap: textureMap.floorNormal,
+    alphaMap: textureMap.floorAlpha,
     transparent: true,
 
     // if using displacement, need scale / bias to offset the higher vertices on x axis
-    displacementMap: textureMap.floorDisplacement,
+    displacementMap: textureMap.floorDisp,
     displacementScale: 0.3,
     displacementBias: -0.125,
+    aoMap: textureMap.floorARM,
+    metalnessMap: textureMap.floorARM,
+    roughnessMap: textureMap.floorARM,
   })
 );
 gui
@@ -167,7 +176,12 @@ const bushes = createBushes({
 scene.add(...bushes);
 
 // Graves
-const graves = createGraves(30);
+const graves = createGraves({
+  amount: 30,
+  alpha: textureMap.plaster,
+  normalMap: textureMap.plasterNormal,
+  armMap: textureMap.plasterARM,
+});
 scene.add(graves);
 
 /**

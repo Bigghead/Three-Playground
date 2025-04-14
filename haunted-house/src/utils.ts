@@ -38,6 +38,7 @@ export function createBushes({
   const bushGeometry = new three.SphereGeometry(1, 16);
   const bushMaterial = new three.MeshStandardMaterial({
     map,
+    color: "#ccffcc",
   });
   if (normalMap) {
     bushMaterial.normalMap = normalMap;
@@ -47,6 +48,7 @@ export function createBushes({
     bushMaterial.roughnessMap = armMap;
     bushMaterial.metalnessMap = armMap;
   }
+  console.log(bushMaterial);
 
   const bushes: three.Mesh[] = [
     { scale: 0.5, position: [0.8, 0.2, 2.2] },
@@ -67,14 +69,28 @@ const getRandom = (min: number, max: number): number => {
   return Math.random() < 0.5 ? -randomInt : randomInt;
 };
 
-export function createGraves(
-  graveAmount: number
-): three.Group<three.Object3DEventMap> {
+export function createGraves({
+  amount,
+  alpha,
+  normalMap,
+  armMap,
+}: {
+  amount: number;
+  alpha: three.Texture;
+  normalMap: three.Texture;
+  armMap: three.Texture;
+}): three.Group<three.Object3DEventMap> {
   const graveGroup = new three.Group();
   const graveGeo = new three.BoxGeometry(0.6, 0.8, 0.2);
-  const graveMaterial = new three.MeshStandardMaterial();
+  const graveMaterial = new three.MeshStandardMaterial({
+    map: alpha,
+    normalMap,
+    aoMap: armMap,
+    roughnessMap: armMap,
+    metalnessMap: armMap,
+  });
 
-  for (let i = 0; i <= graveAmount; i++) {
+  for (let i = 0; i <= amount; i++) {
     const graveMesh = new three.Mesh(graveGeo, graveMaterial);
     // This kinda works but needs collision detection for the house / bushes
     // graveMesh.position.set(getRandom(4, 15), 0.4, getRandom(4, 15));
