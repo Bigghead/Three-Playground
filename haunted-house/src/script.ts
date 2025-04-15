@@ -1,6 +1,7 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Timer } from "three/addons/misc/Timer.js";
+import { Sky } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
 import { house, floor, bushes, graves, ghosts } from "./textures";
 /**
@@ -32,7 +33,7 @@ const ambientLight = new three.AmbientLight("#86cdff", 0.2);
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new three.DirectionalLight("#86cdff", 1.5);
+const directionalLight = new three.DirectionalLight("#86cdff", 2);
 directionalLight.position.set(4, 5, -8);
 const directionalLightHelper = new three.DirectionalLightHelper(
   directionalLight
@@ -135,6 +136,33 @@ for (const ghost of ghosts) {
 }
 
 console.log(house.children);
+
+/**
+ * Sky
+ */
+// Example code from threejs demo:
+// https://github.com/mrdoob/three.js/blob/master/examples/webgl_shaders_sky.html
+const sky = new Sky();
+const {
+  material: { uniforms },
+} = sky;
+uniforms["turbidity"].value = 10;
+uniforms["rayleigh"].value = 3;
+uniforms["mieCoefficient"].value = 0.005;
+uniforms["mieDirectionalG"].value = 0.7;
+uniforms["sunPosition"].value.set(-0.2, -0.038, -1.2);
+
+// the sky is a box
+sky.scale.set(100, 100, 100);
+scene.add(sky);
+gui.add(uniforms.turbidity, "value", -20, 40, 5).name("Sky Turbidity");
+const skyPosition = gui.addFolder(" Sky Position");
+skyPosition.add(uniforms.sunPosition.value, "x", -2, 5, 0.1);
+skyPosition.add(uniforms.sunPosition.value, "y", -2, 5, 0.01);
+skyPosition.add(uniforms.sunPosition.value, "z", -5, 5, 0.1);
+
+// fog is easier
+scene.fog = new three.Fog("#02343f", 1, 20);
 
 /**
  * Animate
