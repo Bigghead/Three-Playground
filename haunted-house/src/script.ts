@@ -76,8 +76,8 @@ const camera = new three.PerspectiveCamera(
   100
 );
 camera.position.x = 8;
-camera.position.y = 2;
-camera.position.z = 10;
+camera.position.y = 3.5;
+camera.position.z = 8.5;
 scene.add(camera);
 
 // Controls
@@ -150,7 +150,7 @@ uniforms["turbidity"].value = 10;
 uniforms["rayleigh"].value = 3;
 uniforms["mieCoefficient"].value = 0.005;
 uniforms["mieDirectionalG"].value = 0.7;
-uniforms["sunPosition"].value.set(-0.2, -0.038, -1.2);
+uniforms["sunPosition"].value.set(-0.5, -0.038, -1.2);
 
 // the sky is a box
 sky.scale.set(100, 100, 100);
@@ -162,7 +162,7 @@ skyPosition.add(uniforms.sunPosition.value, "y", -2, 5, 0.01);
 skyPosition.add(uniforms.sunPosition.value, "z", -5, 5, 0.1);
 
 // fog is easier
-scene.fog = new three.Fog("#02343f", 1, 20);
+scene.fog = new three.Fog("#02343f", 2, 20);
 
 /**
  * Animate

@@ -6,44 +6,44 @@ const textureMap = {
     path: "floor/alpha.jpg",
   }),
   floor: loadTexture({
-    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_diff_1k.jpg",
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_diff_1k.webp",
     repeat: [8, 8],
     wrap: true,
     colorSpace: three.SRGBColorSpace,
   }),
   floorDisp: loadTexture({
-    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_disp_1k.jpg",
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_disp_1k.webp",
   }),
   floorNormal: loadTexture({
-    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_nor_dx_1k.jpg",
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_nor_dx_1k.webp",
   }),
   floorARM: loadTexture({
-    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_arm_1k.jpg",
+    path: "floor/brown_mud_leaves_01_1k/brown_mud_leaves_01_arm_1k.webp",
   }),
   doorTexture: loadTexture({
-    path: "/door/color.jpg",
+    path: "/door/color.webp",
     colorSpace: three.SRGBColorSpace,
   }),
   doorNormal: loadTexture({
-    path: "/door/normal.jpg",
+    path: "/door/normal.webp",
   }),
   doorAO: loadTexture({
-    path: "/door/ambientOcclusion.jpg",
+    path: "/door/ambientOcclusion.webp",
   }),
   doorHeight: loadTexture({
-    path: "/door/height.jpg",
+    path: "/door/height.webp",
   }),
   wallTexture: loadTexture({
-    path: "/textures/mixed_brick_wall.jpg",
+    path: "/textures/mixed_brick_wall.webp",
   }),
   wallNormal: loadTexture({
-    path: "/textures/mixed_brick_wall_normal.png",
+    path: "/textures/mixed_brick_wall_normal.webp",
   }),
   wallARM: loadTexture({
-    path: "/textures/castle_brick_arm.png",
+    path: "/textures/castle_brick_arm.webp",
   }),
   roofTexture: loadTexture({
-    path: "/textures/herringbone_pavement.png",
+    path: "/textures/herringbone_pavement.webp",
     colorSpace: three.SRGBColorSpace,
   }),
   bush: loadTexture({
