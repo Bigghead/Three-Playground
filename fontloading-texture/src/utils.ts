@@ -1,6 +1,7 @@
 import * as three from "three";
 
-const getRandomVertex = (num: number) => (Math.random() - 0.5) * num;
+// three.MathUtils.randFloatSpread does the same thing
+// const getRandomVertex = (num: number) => (Math.random() - 0.5) * num;
 
 type Position = {
   position: three.Vector3;
@@ -44,11 +45,16 @@ export function renderRandomizedGeometry({
     // it is sloowww though
     do {
       position = new three.Vector3(
-        getRandomVertex(50),
-        getRandomVertex(50),
-        getRandomVertex(50)
+        three.MathUtils.randFloatSpread(50),
+        three.MathUtils.randFloatSpread(50),
+        three.MathUtils.randFloatSpread(50)
       );
-    } while (hasOverlapNeighbor(position));
+    } while (
+      // collides with neighbor
+      hasOverlapNeighbor(position) ||
+      // right in front of the camera
+      (position.z > 0 && Math.abs(position.x / position.z) < 0.5)
+    );
     mesh.position.copy(position);
     mesh.rotation.x = Math.PI * Math.random();
     mesh.rotation.y = Math.PI * Math.random();
@@ -58,4 +64,14 @@ export function renderRandomizedGeometry({
     geometryGroup.add(mesh);
   }
   return geometryGroup;
+}
+
+export function animateGroupChild(
+  groupMesh: three.Group,
+  animateType: "position" | "rotation" | "scale",
+  animateDelta: [number, number, number]
+): void {
+  for (const child of groupMesh.children) {
+    child[animateType].set(...animateDelta);
+  }
 }
