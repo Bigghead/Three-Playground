@@ -1,0 +1,22 @@
+{
+  "name": "haunted-house",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@monogrid/gainmap-js": "^3.1.0",
+    "@types/three": "^0.174.0",
+    "three": "^0.174.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "lil-gui": "^0.20.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.2",
+    "vite-plugin-restart": "^0.4.2"
+  }
+}
