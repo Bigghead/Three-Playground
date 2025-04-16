@@ -3,7 +3,7 @@ import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { animateGroupChild, renderRandomizedGeometry } from "./utils";
 import { gsap } from "gsap";
-import { Sky } from "three/examples/jsm/Addons.js";
+import { OrbitControls, Sky } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
 
 /**
@@ -159,8 +159,8 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
     duration: 2,
   });
 
-  gsapCamera.to(camera.position, {
-    duration: 5,
+  gsap.to(textMesh.position, {
+    duration: 8,
     y: 0.8,
     x: -0.5,
     yoyo: true,
@@ -191,17 +191,16 @@ const renderer = new three.WebGLRenderer({
 renderer.setSize(canvasSize.width, canvasSize.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-// const controls = new OrbitControls(camera, canvas);
-// controls.enableDamping = true;
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
 
 const clock = new three.Clock();
 
 (function animate() {
   const elapsedTime = clock.getElapsedTime();
-  // console.log(elapsedTime);
-
-  torusGroup.rotation.y = elapsedTime * 0.02;
-  torusGroup.rotation.z = elapsedTime * 0.02;
+  controls.update();
+  torusGroup.rotation.y = elapsedTime * 0.01;
+  torusGroup.rotation.z = elapsedTime * 0.01;
 
   animateGroupChild(sphereGroup, "rotation", [
     elapsedTime * 0.1,
@@ -209,14 +208,9 @@ const clock = new three.Clock();
     elapsedTime * 0.1,
   ]);
 
-  // camera follows mouse but broken since we're animating camera position above with gsap
-  // camera.position.x = targetCameraPosition.x * 10;
-  // camera.position.y = targetCameraPosition.y * 10;
-
   camera.lookAt(0, 0, 0);
 
   renderer.render(scene, camera);
-  // controls.update();
   requestAnimationFrame(animate);
 })();
 
@@ -232,15 +226,3 @@ window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
 });
-
-// Todo - update camera controls on mousemove
-// clashes with gsap AND orbitcontrols, no idea how to fix for now
-// const { width, height } = canvasSize;
-// window.addEventListener("mousemove", (e) => {
-//   controls.enabled = false;
-//   gsapCamera.pause();
-//   const { clientX, clientY } = e;
-
-//   targetCameraPosition.x = clientX / width - 0.5;
-//   targetCameraPosition.y = (clientY / height - 0.5) * -1;
-// });
