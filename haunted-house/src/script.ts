@@ -35,8 +35,8 @@ const directionalLightHelper = new three.DirectionalLightHelper(
 scene.add(directionalLight);
 gui.add(directionalLight, "intensity", 1, 8, 0.5).name("Light Intensity");
 
-const [ghost1, ghost2, ghost3] = ghosts;
-scene.add(ghost1, ghost2, ghost3);
+const [ghost1, ghost2, ghost3, ghost4] = ghosts;
+scene.add(ghost1, ghost2, ghost3, ghost4);
 
 /**
  * Sizes
@@ -170,26 +170,33 @@ const tick = () => {
 
   const ghostAngle = elapsedTime / 2;
   ghost1.position.set(
-    Math.sin(ghostAngle) * 4.5,
+    Math.sin(ghostAngle) * 3.5,
     Math.cos(ghostAngle * 2) / Math.cos(ghostAngle / 3), // randomized popping above y axis
     Math.cos(ghostAngle) * 4.5
   );
 
   const ghostAngle2 = elapsedTime * 0.4;
   ghost2.position.set(
-    Math.cos(ghostAngle) * 8,
+    Math.cos(ghostAngle) * 5,
     (Math.sin(ghostAngle) / Math.sin(ghostAngle * 2.77)) *
       Math.sin(ghostAngle * 4.533),
     Math.sin(ghostAngle) * 8
   );
 
   ghost3.position.set(
-    Math.sin(ghostAngle2) * 10,
+    Math.sin(ghostAngle2) * 7,
     (Math.sin(ghostAngle2) / Math.sin(ghostAngle2 * 2.77)) *
       Math.sin(ghostAngle2 * 4.533),
     Math.cos(ghostAngle2) * 10
   );
 
+  const ghostAngle3 = elapsedTime * 0.62;
+  ghost4.position.set(
+    Math.cos(ghostAngle3) * 8.5,
+    (Math.cos(ghostAngle3) / Math.sin(ghostAngle2 * 4.98)) *
+      Math.cos(ghostAngle3 * 1.6),
+    Math.sin(ghostAngle3) * 8.5
+  );
   // Update controls
   controls.update();
 

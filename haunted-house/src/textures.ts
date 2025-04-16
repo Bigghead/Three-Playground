@@ -173,6 +173,7 @@ const ghosts = [
   new three.PointLight("#ff0088", 6),
   new three.PointLight("#8800ff", 6),
   new three.PointLight(new three.Color("#0080FE").convertSRGBToLinear(), 6),
+  new three.PointLight(new three.Color("#00A86B").convertSRGBToLinear(), 6),
 ];
 
 /**
