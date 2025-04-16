@@ -18,12 +18,6 @@ const scene = new three.Scene();
 
 // Textures
 scene.add(house, floor, ...bushes, graves);
-gui
-  .add(floor.material, "displacementScale", 0, 1, 0.001)
-  .name("Floor Display Scale");
-gui
-  .add(floor.material, "displacementBias", -1, 1, 0.001)
-  .name("Floor Display Bias");
 
 /**
  * Lights
@@ -33,12 +27,13 @@ const ambientLight = new three.AmbientLight("#86cdff", 0.2);
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new three.DirectionalLight("#86cdff", 2);
+const directionalLight = new three.DirectionalLight("#86cdff", 3);
 directionalLight.position.set(4, 5, -8);
 const directionalLightHelper = new three.DirectionalLightHelper(
   directionalLight
 );
 scene.add(directionalLight);
+gui.add(directionalLight, "intensity", 1, 8, 0.5).name("Light Intensity");
 
 const [ghost1, ghost2, ghost3] = ghosts;
 scene.add(ghost1, ghost2, ghost3);
@@ -158,7 +153,6 @@ scene.add(sky);
 gui.add(uniforms.turbidity, "value", -20, 40, 5).name("Sky Turbidity");
 const skyPosition = gui.addFolder(" Sky Position");
 skyPosition.add(uniforms.sunPosition.value, "x", -2, 5, 0.1);
-skyPosition.add(uniforms.sunPosition.value, "y", -2, 5, 0.01);
 skyPosition.add(uniforms.sunPosition.value, "z", -5, 5, 0.1);
 
 // fog is easier
