@@ -22,7 +22,6 @@ function hasOverlapNeighbor(pos: three.Vector3, minDistance = 5) {
     const distance = pos.distanceTo(p.position);
     if (distance < minDistance) return true;
   }
-  console.log(pos);
   return false;
 }
 

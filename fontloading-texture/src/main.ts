@@ -3,6 +3,8 @@ import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { renderRandomizedGeometry } from "./utils";
 import { gsap } from "gsap";
+import { Sky } from "three/examples/jsm/Addons.js";
+import GUI from "lil-gui";
 
 /**
  * Globals
@@ -25,6 +27,8 @@ const canvasSize = {
 };
 
 const scene = new three.Scene();
+const gui = new GUI();
+const guiActions: { [key: string]: () => void } = {};
 
 /**
  * Camera
@@ -90,24 +94,39 @@ const gradientMaterial = new three.ShaderMaterial({
       gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
     }
   `,
-  // wireframe: true,
+  wireframe: true,
 });
 const geometryGroup = renderRandomizedGeometry({
-  amount: 200,
+  amount: 150,
   geometry: torusGeometry,
   material,
 });
 const boxGeo = renderRandomizedGeometry({
-  amount: 125,
+  amount: 100,
   geometry: new three.SphereGeometry(),
   material: gradientMaterial,
 });
 scene.add(geometryGroup, boxGeo);
+console.log(boxGeo);
+
+const sky = new Sky();
+const {
+  material: { uniforms },
+} = sky;
+uniforms["turbidity"].value = 10;
+uniforms["rayleigh"].value = 3;
+uniforms["mieCoefficient"].value = 0.005;
+uniforms["mieDirectionalG"].value = 0.7;
+uniforms["sunPosition"].value.set(-0.5, -0.038, -1.2);
+
+// the sky is a box
+sky.scale.set(100, 100, 100);
+scene.add(sky);
 
 /**
  * Font
  */
-let textMesh;
+let textMesh: three.Mesh;
 let gsapCamera: gsap.core.Timeline;
 const fontLoader = new FontLoader();
 fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
@@ -149,6 +168,19 @@ fontLoader.load("/fonts/WinkySans_Bold.json", (font) => {
     repeat: -1,
     ease: "power1.inOut",
   });
+
+  (guiActions["spin"] = () => {
+    console.log("spin");
+    gsap.to(textMesh.rotation, {
+      // tricky gsap, once the rotation fills, won't do it again if we do
+      // y: Math.Pi * 2
+      // cause it thinks there is nothing to animate after the 1st time
+      y: textMesh.rotation.y + Math.PI * 2,
+      duration: 1,
+      ease: "power1.inOut",
+    });
+  }),
+    gui.add(guiActions, "spin");
 });
 
 /**
