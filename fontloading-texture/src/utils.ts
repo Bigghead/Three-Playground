@@ -1,6 +1,7 @@
 import * as three from "three";
 
-const getRandomVertex = (num: number) => (Math.random() - 0.5) * num;
+// three.MathUtils.randFloatSpread does the same thing
+// const getRandomVertex = (num: number) => (Math.random() - 0.5) * num;
 
 type Position = {
   position: three.Vector3;
@@ -21,6 +22,7 @@ function hasOverlapNeighbor(pos: three.Vector3, minDistance = 5) {
     const distance = pos.distanceTo(p.position);
     if (distance < minDistance) return true;
   }
+  console.log(pos);
   return false;
 }
 
@@ -44,9 +46,9 @@ export function renderRandomizedGeometry({
     // it is sloowww though
     do {
       position = new three.Vector3(
-        getRandomVertex(50),
-        getRandomVertex(50),
-        getRandomVertex(50)
+        three.MathUtils.randFloatSpread(50),
+        three.MathUtils.randFloatSpread(50),
+        three.MathUtils.randFloatSpread(50)
       );
     } while (hasOverlapNeighbor(position));
     mesh.position.copy(position);

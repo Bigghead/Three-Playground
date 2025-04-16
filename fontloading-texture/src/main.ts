@@ -14,6 +14,9 @@ const introTexts = [
   "Let’s make magic!",
   "Ready, set, go!",
   "Step into cool.",
+  "Lights, camera, action!",
+  "Hey, superstar!",
+  "Jump on in!",
 ];
 const canvas = document.querySelector(".webgl") as HTMLCanvasElement;
 const canvasSize = {
@@ -56,14 +59,50 @@ const torusGeometry = new three.TorusGeometry();
 const material = new three.MeshMatcapMaterial({
   matcap: textureMaps[Math.floor(Math.random() * textureMaps.length)],
 });
+
+// taken from here:
+// https://stackoverflow.com/questions/52614371/apply-color-gradient-to-material-on-mesh-three-js
+const gradientMaterial = new three.ShaderMaterial({
+  uniforms: {
+    color1: {
+      value: new three.Color("blue"),
+    },
+    color2: {
+      value: new three.Color("red"),
+    },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 color1;
+    uniform vec3 color2;
+  
+    varying vec2 vUv;
+    
+    void main() {
+      
+      gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
+    }
+  `,
+  // wireframe: true,
+});
 const geometryGroup = renderRandomizedGeometry({
-  // doing brute force neightbor check in the util
-  // gets slow for a lot of geometries ( makes sense )
   amount: 200,
   geometry: torusGeometry,
   material,
 });
-scene.add(geometryGroup);
+const boxGeo = renderRandomizedGeometry({
+  amount: 125,
+  geometry: new three.SphereGeometry(),
+  material: gradientMaterial,
+});
+scene.add(geometryGroup, boxGeo);
 
 /**
  * Font
