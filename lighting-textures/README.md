@@ -2,6 +2,8 @@
 
 Remaking the textures demo as we learn more three.js concepts
 
+## Demo at https://amazing-maamoul-caa601.netlify.app/
+
 ---
 
 ## Features / What We've Learned
@@ -65,5 +67,3 @@ Remaking the textures demo as we learn more three.js concepts
    ```
 
 ---
-
-## Demo at https://amazing-maamoul-caa601.netlify.app/
