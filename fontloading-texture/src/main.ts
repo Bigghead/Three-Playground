@@ -1,7 +1,7 @@
 import * as three from "three";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { renderRandomizedGeometry } from "./utils";
+import { animateGroupChild, renderRandomizedGeometry } from "./utils";
 import { gsap } from "gsap";
 import { Sky } from "three/examples/jsm/Addons.js";
 import GUI from "lil-gui";
@@ -46,11 +46,11 @@ camera.lookAt(0, 0, 0);
 
 const textureLoader = new three.TextureLoader();
 const textureMaps = [
-  textureLoader.load("/matcaps/2.png"),
-  textureLoader.load("/matcaps/4.png"),
-  textureLoader.load("/matcaps/5.png"),
-  textureLoader.load("/matcaps/6.png"),
-  textureLoader.load("/matcaps/8.png"),
+  textureLoader.load("/matcaps/1.webp"),
+  textureLoader.load("/matcaps/2.webp"),
+  textureLoader.load("/matcaps/4.webp"),
+  textureLoader.load("/matcaps/5.webp"),
+  textureLoader.load("/matcaps/8.webp"),
 ];
 textureMaps.forEach((texture) => {
   texture.colorSpace = three.SRGBColorSpace;
@@ -96,18 +96,17 @@ const gradientMaterial = new three.ShaderMaterial({
   `,
   wireframe: true,
 });
-const geometryGroup = renderRandomizedGeometry({
+const torusGroup = renderRandomizedGeometry({
   amount: 150,
   geometry: torusGeometry,
   material,
 });
-const boxGeo = renderRandomizedGeometry({
+const sphereGroup = renderRandomizedGeometry({
   amount: 100,
   geometry: new three.SphereGeometry(),
   material: gradientMaterial,
 });
-scene.add(geometryGroup, boxGeo);
-console.log(boxGeo);
+scene.add(torusGroup, sphereGroup);
 
 const sky = new Sky();
 const {
@@ -201,8 +200,14 @@ const clock = new three.Clock();
   const elapsedTime = clock.getElapsedTime();
   // console.log(elapsedTime);
 
-  geometryGroup.rotation.y = elapsedTime * 0.02;
-  geometryGroup.rotation.z = elapsedTime * 0.02;
+  torusGroup.rotation.y = elapsedTime * 0.02;
+  torusGroup.rotation.z = elapsedTime * 0.02;
+
+  animateGroupChild(sphereGroup, "rotation", [
+    elapsedTime * 0.1,
+    elapsedTime * 0.1,
+    elapsedTime * 0.1,
+  ]);
 
   // camera follows mouse but broken since we're animating camera position above with gsap
   // camera.position.x = targetCameraPosition.x * 10;

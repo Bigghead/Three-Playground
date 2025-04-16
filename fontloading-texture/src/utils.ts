@@ -49,7 +49,12 @@ export function renderRandomizedGeometry({
         three.MathUtils.randFloatSpread(50),
         three.MathUtils.randFloatSpread(50)
       );
-    } while (hasOverlapNeighbor(position));
+    } while (
+      // collides with neighbor
+      hasOverlapNeighbor(position) ||
+      // right in front of the camera
+      (position.z > 0 && Math.abs(position.x / position.z) < 0.5)
+    );
     mesh.position.copy(position);
     mesh.rotation.x = Math.PI * Math.random();
     mesh.rotation.y = Math.PI * Math.random();
@@ -59,4 +64,14 @@ export function renderRandomizedGeometry({
     geometryGroup.add(mesh);
   }
   return geometryGroup;
+}
+
+export function animateGroupChild(
+  groupMesh: three.Group,
+  animateType: "position" | "rotation" | "scale",
+  animateDelta: [number, number, number]
+): void {
+  for (const child of groupMesh.children) {
+    child[animateType].set(...animateDelta);
+  }
 }
