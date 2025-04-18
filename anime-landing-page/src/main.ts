@@ -7,20 +7,32 @@ const elements = {
   ) as HTMLVideoElement,
 };
 
+const videoLength = 4;
 let currentVideo = 1;
-let nextVideoSrc = "";
 
 /**
  * Event Listeners
  */
 elements["video-preview"]?.addEventListener("click", () => {
-  startVideo();
+  startNextVideo();
 });
 
-function startVideo(): void {
-  console.log(startVideo);
+/**
+ * Loop through available video previews and use preview src to switch playing video
+ */
+function startNextVideo(): void {
+  // play video
+  const currentVideoIndex = currentVideo % videoLength;
   const video = elements["video-container"];
-  video.src = `hero-${currentVideo}.mp4`;
+  const videoPreview = elements["video-preview"];
+  video.src = `hero-${currentVideoIndex + 1}.mp4`;
   video.load();
   video.play();
+
+  // change video preview src to the next video
+  videoPreview.src = `hero-${
+    currentVideoIndex === 3 ? 1 : currentVideoIndex + 2
+  }.mp4`;
+
+  currentVideo = (currentVideoIndex % videoLength) + 1;
 }
