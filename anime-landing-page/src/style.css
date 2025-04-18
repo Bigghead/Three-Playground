@@ -15,14 +15,28 @@ body {
   position: relative;
 }
 
+/* .landing-hero .video-current video {
+  scale: 0;
+} */
+
 .landing-hero .video-preview video {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  cursor: pointer;
+  z-index: 10;
+  transition: none;
+  /* position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   background-position: center center;
   background-size: contain;
-  width: 250px;
+  width: 250px; */
   /* height: 250px; */
   border-radius: 8px;
   opacity: 0.4;
@@ -32,4 +46,18 @@ body {
 
 .landing-hero .video-preview video:hover {
   opacity: 1;
+}
+
+.landing-hero .video-preview .invisible-preview {
+  visibility: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  cursor: pointer;
+  z-index: 5;
+  transition: none;
 }
