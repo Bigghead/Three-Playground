@@ -7,3 +7,21 @@ html,
 body {
   overflow: hidden;
 }
+
+.landing-hero {
+  width: 100vw;
+  height: 100vh;
+  background-color: lightblue;
+  position: relative;
+}
+
+.landing-hero .video-preview video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-position: center center;
+  background-size: contain;
+  width: 250px;
+  height: 250px;
+}
