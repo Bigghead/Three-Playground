@@ -32,18 +32,16 @@ elements["video-preview"]?.addEventListener("click", () => {
 
 // Todo
 // - Fix mismatched videos' currenttime sync
+// - video gets zoomed in after ^ mis-sync
 // - refactor
 function startNextVideo(): void {
   hasFinishedLoadingAnimation = false;
-  const tl = gsap.timeline();
   const currentVideoIndex = currentVideo % videoLength;
-  console.log(currentVideoIndex);
   const videoSrc = `hero-${currentVideoIndex + 1}.mp4`;
   const video = elements["video-current"];
   const videoPreview = elements["video-preview"];
   const invisibleVideoPreview = elements["invisible-video-preview"];
 
-  tl.set(videoPreview, { visibility: "hidden" });
   invisibleVideoPreview.src = videoSrc;
 
   invisibleVideoPreview.load();
@@ -61,28 +59,69 @@ function startNextVideo(): void {
       duration: 1.5,
       ease: "power3.out",
       onComplete: () => {
-        video.src = videoSrc;
-        video.onloadeddata = () => {
-          video.currentTime = invisibleVideoPreview.currentTime;
-          video.play().then(() => {
-            hasFinishedLoadingAnimation = true;
-            gsap.set(invisibleVideoPreview, {
-              visibility: "hidden",
-              opacity: 1,
-              zIndex: 5,
-              width: "300px",
-              height: "200px",
-            });
-          });
-        };
+        swapVideo({
+          video,
+          videoSrc,
+          invisibleVideoPreview,
+          videoPreview,
+          currentVideoIndex,
+        });
       },
-    }).set(videoPreview, { visibility: "visible" });
+    });
   });
+}
 
-  // change video preview src to the next video
-  videoPreview.src = `hero-${
-    currentVideoIndex === 3 ? 1 : currentVideoIndex + 2
-  }.mp4`;
+function swapVideo({
+  video,
+  videoSrc,
+  invisibleVideoPreview,
+  videoPreview,
+  currentVideoIndex,
+}: {
+  video: HTMLVideoElement;
+  videoSrc: string;
+  invisibleVideoPreview: HTMLVideoElement;
+  videoPreview: HTMLVideoElement;
+  currentVideoIndex: number;
+}): void {
+  video.src = videoSrc;
+  video.onloadeddata = async () => {
+    video.currentTime = invisibleVideoPreview.currentTime;
 
+    try {
+      await video.play();
+      hasFinishedLoadingAnimation = true;
+
+      gsap.set(invisibleVideoPreview, {
+        visibility: "hidden",
+        opacity: 1,
+        zIndex: 5,
+        width: "300px",
+        height: "200px",
+        onComplete: () =>
+          updatePreviewVideo({
+            videoPreviewEl: videoPreview,
+            videoSrc: `hero-${
+              currentVideoIndex === 3 ? 1 : currentVideoIndex + 2
+            }.mp4`,
+            currentVideoIndex,
+          }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+}
+
+function updatePreviewVideo({
+  videoPreviewEl,
+  videoSrc,
+  currentVideoIndex,
+}: {
+  videoSrc: string;
+  videoPreviewEl: HTMLVideoElement;
+  currentVideoIndex: number;
+}): void {
+  videoPreviewEl.src = videoSrc;
   currentVideo = (currentVideoIndex % videoLength) + 1;
 }

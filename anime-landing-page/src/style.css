@@ -26,22 +26,18 @@ body {
   cursor: pointer;
   z-index: 10;
   transition: none;
-  /* position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background-position: center center;
-  background-size: contain;
-  width: 250px; */
-  /* height: 250px; */
   border-radius: 8px;
   opacity: 0.4;
-  transition: opacity 0.5s ease-in;
+  transition: all 1s ease-in;
   cursor: pointer;
 }
 
 .landing-hero .video-preview video:hover {
   opacity: 1;
+  width: 350px;
+  height: 250px;
+  /* scale: 1.5; */
+  /* object-fit: fill; */
 }
 
 .landing-hero .video-preview .invisible-preview {
