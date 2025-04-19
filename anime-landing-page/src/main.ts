@@ -14,6 +14,8 @@ const elements = {
 
 const videoLength = 4;
 let currentVideo = 1;
+
+// cant click while gsap is doing its thing
 let hasFinishedLoadingAnimation = true;
 
 /**
@@ -27,20 +29,29 @@ elements["video-preview"]?.addEventListener("click", () => {
 /**
  * Loop through available video previews and use preview src to switch playing video
  */
+
+// Todo
+// - Fix mismatched videos' currenttime sync
+// - refactor
 function startNextVideo(): void {
   hasFinishedLoadingAnimation = false;
-  // play video
+  const tl = gsap.timeline();
   const currentVideoIndex = currentVideo % videoLength;
+  console.log(currentVideoIndex);
+  const videoSrc = `hero-${currentVideoIndex + 1}.mp4`;
   const video = elements["video-current"];
   const videoPreview = elements["video-preview"];
   const invisibleVideoPreview = elements["invisible-video-preview"];
-  // video.src = `hero-${currentVideoIndex + 1}.mp4`;
-  // video.load();
-  // video.play();
-  invisibleVideoPreview.src = `hero-${currentVideoIndex + 1}.mp4`;
+
+  tl.set(videoPreview, { visibility: "hidden" });
+  invisibleVideoPreview.src = videoSrc;
+
   invisibleVideoPreview.load();
+
   invisibleVideoPreview.play().then(() => {
     const tl = gsap.timeline();
+
+    // need this set asap since the aniamtion duration takes 1.5s and will show the overlaid preview in the back
     tl.to(invisibleVideoPreview, {
       visibility: "visible",
       opacity: 1,
@@ -50,16 +61,22 @@ function startNextVideo(): void {
       duration: 1.5,
       ease: "power3.out",
       onComplete: () => {
-        hasFinishedLoadingAnimation = true;
+        video.src = videoSrc;
+        video.onloadeddata = () => {
+          video.currentTime = invisibleVideoPreview.currentTime;
+          video.play().then(() => {
+            hasFinishedLoadingAnimation = true;
+            gsap.set(invisibleVideoPreview, {
+              visibility: "hidden",
+              opacity: 1,
+              zIndex: 5,
+              width: "300px",
+              height: "200px",
+            });
+          });
+        };
       },
-    });
-    tl.set(invisibleVideoPreview, {
-      visibility: "hidden",
-      opacity: 1,
-      zIndex: 5,
-      width: "300px",
-      height: "200px",
-    });
+    }).set(videoPreview, { visibility: "visible" });
   });
 
   // change video preview src to the next video

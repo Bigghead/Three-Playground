@@ -15,10 +15,6 @@ body {
   position: relative;
 }
 
-/* .landing-hero .video-current video {
-  scale: 0;
-} */
-
 .landing-hero .video-preview video {
   position: absolute;
   top: 50%;
