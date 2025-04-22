@@ -47,13 +47,23 @@
   transition: none;
 }
 
-.hero-text-special {
+.hero-text__special {
   position: absolute;
   right: 5rem;
   bottom: 5rem;
   z-index: 30;
 }
-.hero-text-special h2 {
-  font-size: 5rem;
+.hero-text__static {
+  position: absolute;
+  left: 5rem;
+  top: 5rem;
+  z-index: 30;
+}
+.hero-text__static h1 {
+  font-size: 8rem;
+  color: #ffffff;
+}
+.hero-text__special h2 {
+  font-size: 6.5rem;
   color: #ffffff;
 }
