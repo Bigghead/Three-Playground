@@ -14,8 +14,16 @@ const elements = {
 
 const tl = gsap.timeline();
 const videoLength = 4;
+const videoPreview = elements["video-preview"];
+
 let currentVideo = 1;
 let hasPlayedOnce = false;
+let hasPreviewShowing = false;
+
+// this is new, gsap has an animation loop you can track and kill process of
+let expandTween: gsap.core.Tween | null = null;
+let shrinkTween: gsap.core.Tween | null = null;
+let shrinkTimer: gsap.core.Tween | null = null;
 
 // cant click while gsap is doing its thing
 let hasFinishedLoadingAnimation = true;
@@ -31,6 +39,80 @@ elements["video-preview"]?.addEventListener("click", () => {
   if (!hasFinishedLoadingAnimation) return;
   startNextVideo();
 });
+
+document.addEventListener("mousemove", () => {
+  // on mousemove, kill every animation process of the expanding preview
+  if (expandTween) {
+    expandTween.kill();
+    expandTween = null;
+  }
+  if (shrinkTimer) {
+    shrinkTimer.kill();
+    shrinkTimer = null;
+  }
+  if (shrinkTween) {
+    shrinkTween.kill();
+    shrinkTween = null;
+  }
+
+  if (!hasPreviewShowing) {
+    expandPreview();
+  } else {
+    restartShrinkTimer();
+  }
+});
+
+function expandPreview() {
+  expandTween = gsap.to(videoPreview, {
+    duration: 0.5,
+    width: "300px",
+    height: "200px",
+    opacity: 1,
+    // zIndex: 10,
+    onComplete: () => {
+      hasPreviewShowing = true;
+      startShrinkTimer();
+    },
+  });
+}
+
+/**
+ * Starts a delayed timer that will trigger the preview video to shrink after 3 seconds.
+ * If called again without clearing, multiple shrink timers could stack.
+ */
+function startShrinkTimer() {
+  shrinkTimer = gsap.delayedCall(5, () => {
+    shrinkPreview();
+  });
+}
+
+/**
+ * Restarts the shrink timer by killing the existing one (if any) and starting a new 3-second delay.
+ * Prevents multiple timers from overlapping.
+ */
+function restartShrinkTimer() {
+  if (shrinkTimer) {
+    shrinkTimer.kill();
+  }
+  startShrinkTimer();
+}
+
+/**
+ * Animates the preview video element to shrink to 0 size and fade out.
+ * Once the animation completes, updates the preview visibility state.
+ */
+function shrinkPreview() {
+  shrinkTween = gsap.to(videoPreview, {
+    duration: 0.5,
+    width: "0px",
+    height: "0px",
+    opacity: 0,
+    onComplete: () => {
+      hasPreviewShowing = false;
+      shrinkTween = null;
+    },
+  });
+}
 
 /**
  * Starts the transition to the next video.
@@ -100,6 +182,10 @@ function startNextVideo(): void {
         hasPlayedOnce = true;
       },
     });
+    // tl.to(videoPreview, {
+    //   duration: 0.5,
+    //   opacity: 0.4,
+    // });
   });
 }
 
