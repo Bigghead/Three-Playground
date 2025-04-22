@@ -10,12 +10,17 @@ const elements = {
   "video-preview": document.querySelector(
     ".video-preview-container video.video-preview"
   ) as HTMLVideoElement,
+  "hero-text-special": document.querySelector(
+    ".hero-text-special"
+  ) as HTMLDivElement,
 };
 
 const tl = gsap.timeline();
 const videoLength = 4;
 let currentVideo = 1;
 let hasPlayedOnce = false;
+
+const heroText = elements["hero-text-special"];
 
 // cant click while gsap is doing its thing
 let hasFinishedLoadingAnimation = true;
@@ -44,7 +49,7 @@ elements["video-preview"]?.addEventListener("click", () => {
  */
 
 // Todo
-// - refactor
+// - refactor ( getting kinda big in animations )
 function startNextVideo(): void {
   hasFinishedLoadingAnimation = false;
   const currentVideoIndex = currentVideo % videoLength;
@@ -98,6 +103,43 @@ function startNextVideo(): void {
       onComplete: () => {
         hasFinishedLoadingAnimation = true;
         hasPlayedOnce = true;
+      },
+    });
+
+    gsap.set(heroText, {
+      x: 0,
+      y: 0,
+      scale: 1,
+      opacity: 1,
+      scaleX: 1,
+      transformOrigin: "center center",
+    });
+    gsap.to(heroText, {
+      duration: 1,
+      opacity: 0,
+      x: 100,
+      y: 100,
+      scale: 0.5,
+      ease: "power2.out",
+      onComplete: () => {
+        // After flying out, reset position for left-to-right entry
+        gsap.set(heroText, {
+          x: -50,
+          y: 0,
+          scale: 1,
+          scaleX: 0,
+          opacity: 0,
+          transformOrigin: "left center",
+        });
+
+        // Animate left-to-right reveal
+        gsap.to(heroText, {
+          duration: 1.2,
+          opacity: 1,
+          x: 0,
+          scaleX: 1,
+          ease: "power2.out",
+        });
       },
     });
   });
