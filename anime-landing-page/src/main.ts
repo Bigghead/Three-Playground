@@ -10,11 +10,9 @@ const elements = {
   "video-preview": document.querySelector(
     ".video-preview-container video.video-preview"
   ) as HTMLVideoElement,
-  "invisible-video-preview": document.querySelector(
-    ".video-preview-container video.invisible-preview"
-  ) as HTMLVideoElement,
 };
 
+const tl = gsap.timeline();
 const videoLength = 4;
 let currentVideo = 1;
 let hasPlayedOnce = false;
@@ -25,6 +23,10 @@ let hasFinishedLoadingAnimation = true;
 /**
  * Event Listeners
  */
+elements["video-current"].addEventListener("canplaythrough", (e) => {
+  const video = e.currentTarget as HTMLVideoElement;
+  video.play();
+});
 elements["video-preview"]?.addEventListener("click", () => {
   if (!hasFinishedLoadingAnimation) return;
   startNextVideo();
@@ -49,6 +51,8 @@ function startNextVideo(): void {
   const videoSrc = `hero-${currentVideoIndex + 1}.mp4`;
   const video = elements["video-current"];
   const videoPreview = elements["video-preview"];
+
+  // Need this one to be queried everytime since we're dynamically re-creating a new one later
   const invisibleVideoPreview = document.querySelector(
     ".video-preview-container video.invisible-preview:last-child"
   ) as HTMLVideoElement;
@@ -61,8 +65,6 @@ function startNextVideo(): void {
   invisibleVideoPreview.load();
 
   invisibleVideoPreview.play().then(() => {
-    const tl = gsap.timeline();
-
     // need this set asap since the aniamtion duration takes 1.5s and will show the overlaid preview in the back
     tl.to(invisibleVideoPreview, {
       visibility: "visible",
@@ -70,7 +72,7 @@ function startNextVideo(): void {
       zIndex: 20,
       width: window.innerWidth,
       height: window.innerHeight,
-      duration: 1.5,
+      duration: 1,
       ease: "power3.out",
       onComplete: () => {
         // we start off the page load with a full screen autoplay video
@@ -88,14 +90,14 @@ function startNextVideo(): void {
           }.mp4`,
           currentVideoIndex,
         });
-        gsap.to(invisibleVideoPreview, {
-          duration: 0.5,
-          zIndex: 8,
-          onComplete: () => {
-            hasFinishedLoadingAnimation = true;
-            hasPlayedOnce = true;
-          },
-        });
+      },
+    });
+    tl.to(invisibleVideoPreview, {
+      duration: 0.5,
+      zIndex: 8,
+      onComplete: () => {
+        hasFinishedLoadingAnimation = true;
+        hasPlayedOnce = true;
       },
     });
   });
@@ -145,6 +147,7 @@ function createInvisiblePreview(videoSrc: string): void {
   newVideoPreview.autoplay = true;
   newVideoPreview.loop = true;
   newVideoPreview.muted = true;
+  newVideoPreview.preload = "auto";
   newVideoPreview.className = "invisible-preview";
   newVideoPreview.addEventListener("click", () => startNextVideo);
 

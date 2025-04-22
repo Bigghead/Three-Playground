@@ -13,11 +13,18 @@
       <div class="video-container">
         <!-- fake 1st load video -->
         <div class="video-current">
-          <video src="hero-1.mp4" autoplay loop muted></video>
+          <video src="hero-1.mp4" autoplay loop muted preload="auto"></video>
         </div>
         <div class="video-preview-container">
           <video src="hero-2.mp4" class="video-preview"></video>
-          <video src="" autoplay loop muted class="invisible-preview"></video>
+          <video
+            src=""
+            autoplay
+            loop
+            muted
+            preload="auto"
+            class="invisible-preview"
+          ></video>
         </div>
       </div>
     </main>

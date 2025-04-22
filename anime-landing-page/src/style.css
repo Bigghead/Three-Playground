@@ -33,7 +33,7 @@ body {
   transition: none;
   border-radius: 8px;
   opacity: 0.4;
-  transition: all 1s ease-in;
+  transition: all 0.5s ease-in;
   cursor: pointer;
 }
 
@@ -41,8 +41,6 @@ body {
   opacity: 1;
   width: 350px;
   height: 250px;
-  /* scale: 1.5; */
-  /* object-fit: fill; */
 }
 
 .landing-hero .video-preview-container .invisible-preview {
