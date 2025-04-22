@@ -15,7 +15,12 @@ body {
   position: relative;
 }
 
-.landing-hero .video-preview video {
+.landing-hero .video-preview-container .video-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.landing-hero .video-preview-container .video-preview {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -32,7 +37,7 @@ body {
   cursor: pointer;
 }
 
-.landing-hero .video-preview video:hover {
+.landing-hero .video-preview:hover {
   opacity: 1;
   width: 350px;
   height: 250px;
@@ -40,7 +45,7 @@ body {
   /* object-fit: fill; */
 }
 
-.landing-hero .video-preview .invisible-preview {
+.landing-hero .video-preview-container .invisible-preview {
   visibility: hidden;
   position: absolute;
   top: 50%;
