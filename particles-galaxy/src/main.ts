@@ -1,30 +1,89 @@
-import * as three from "three";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import GUI from "lil-gui";
 
-(function init() {
-  // create a scene, that will hold all our elements such as objects, cameras and lights.
-  const scene = new three.Scene();
-  // create a camera, which defines where we're looking at
-  const camera = new three.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    100
-  );
-  // tell the camera where to look
-  camera.position.set(0, 0, 10);
-  // create a render and set the size
-  const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-  };
-  const renderer = new three.WebGLRenderer();
+/**
+ * Base
+ */
+// Debug
+const gui = new GUI();
+
+// Canvas
+const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
+
+// Scene
+const scene = new THREE.Scene();
+
+/**
+ * Test cube
+ */
+const cube: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial> =
+  new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial());
+scene.add(cube);
+
+/**
+ * Sizes
+ */
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
+window.addEventListener("resize", () => {
+  // Update sizes
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+
+  // Update camera
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+
+  // Update renderer
   renderer.setSize(sizes.width, sizes.height);
-  // add the output of the render function to the HTML
-  document.body.appendChild(renderer.domElement);
-  // function for re-rendering/animating the scene
-  function tick() {
-    requestAnimationFrame(tick);
-    renderer.render(scene, camera);
-  }
-  tick();
-})();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+/**
+ * Camera
+ */
+const camera = new THREE.PerspectiveCamera(
+  75,
+  sizes.width / sizes.height,
+  0.1,
+  100
+);
+camera.position.set(3, 3, 3);
+scene.add(camera);
+
+// Controls
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+  canvas: canvas,
+});
+renderer.setSize(sizes.width, sizes.height);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+/**
+ * Animate
+ */
+const clock = new THREE.Clock();
+
+const tick = (): void => {
+  const elapsedTime = clock.getElapsedTime();
+
+  // Update controls
+  controls.update();
+
+  // Render
+  renderer.render(scene, camera);
+
+  // Call tick again on the next frame
+  window.requestAnimationFrame(tick);
+};
+
+tick();
