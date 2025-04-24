@@ -7,8 +7,9 @@ import GUI from "lil-gui";
  */
 // Debug
 const gui = new GUI();
-const guiObj: Record<string, unknown> = {
+const guiObj: Record<string, any> = {
   count: 1000,
+  size: 0.02,
 };
 
 // Canvas
@@ -35,10 +36,23 @@ scene.add(cube);
 /**
  * Particles
  */
-const generateRandomParticles = (count: number): three.Points => {
-  const geometry = new three.BufferGeometry();
-  const material = new three.PointsMaterial({
-    size: 0.1,
+
+// Need to keep a reference to check if these are empty before calling lil-gui re-render
+// Otherwise lil-gui will create new particles inside the onFinishChange
+let particleGeometry: three.BufferGeometry | null = null;
+let particleMaterial: three.Material | null = null;
+let particleMesh: three.Points | null = null;
+
+const generateRandomParticles = (): void => {
+  // remove all previously generated particles if exists
+  if (particleMesh !== null) {
+    particleGeometry?.dispose();
+    particleMaterial?.dispose();
+    scene.remove(particleMesh);
+  }
+  particleGeometry = new three.BufferGeometry();
+  particleMaterial = new three.PointsMaterial({
+    size: guiObj.size,
     alphaMap: textureMap.star,
     color: "#ff88cc",
     transparent: true,
@@ -48,20 +62,27 @@ const generateRandomParticles = (count: number): three.Points => {
   });
   const vertices = [];
   const axisRange = 50;
-  for (let i = 0; i < count * 3; i++) {
+  for (let i = 0; i < guiObj.count * 3; i++) {
     vertices[i] = three.MathUtils.randFloatSpread(axisRange);
   }
 
   // copy vertex array into float32array that threejs will accept
   const typedVertices = new Float32Array(vertices);
-  geometry.setAttribute(
+  particleGeometry.setAttribute(
     "position",
     new three.BufferAttribute(typedVertices, 3)
   );
-
-  return new three.Points(geometry, material);
+  particleMesh = new three.Points(particleGeometry, particleMaterial);
+  scene.add(particleMesh);
 };
-scene.add(generateRandomParticles(500));
+generateRandomParticles();
+
+gui
+  .add(guiObj, "count", 100, 100000, 100)
+  .onFinishChange(generateRandomParticles);
+gui
+  .add(guiObj, "size", 0.001, 0.2, 0.001)
+  .onFinishChange(generateRandomParticles);
 
 /**
  * Sizes
