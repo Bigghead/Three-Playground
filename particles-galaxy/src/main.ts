@@ -10,6 +10,9 @@ const gui = new GUI();
 const guiObj: Record<string, any> = {
   count: 1000,
   size: 0.02,
+  radius: 5,
+  branches: 3,
+  spin: 1,
 };
 
 // Canvas
@@ -50,9 +53,12 @@ const generateRandomParticles = (): void => {
     particleMaterial?.dispose();
     scene.remove(particleMesh);
   }
+
+  const { count, size, radius, branches, spin } = guiObj;
+
   particleGeometry = new three.BufferGeometry();
   particleMaterial = new three.PointsMaterial({
-    size: guiObj.size,
+    size,
     alphaMap: textureMap.star,
     color: "#ff88cc",
     transparent: true,
@@ -62,8 +68,21 @@ const generateRandomParticles = (): void => {
   });
   const vertices = [];
   const axisRange = 50;
-  for (let i = 0; i < guiObj.count * 3; i++) {
-    vertices[i] = three.MathUtils.randFloatSpread(axisRange);
+
+  for (let i = 0; i < count; i++) {
+    const branchRadius = Math.random() * radius;
+
+    // branchAngle gives an angle that corresponds to a position in a circle for each branch
+    // this is also how each branch are split equally inside the circle
+    const branchAngle = ((i % branches) / branches) * Math.PI * 2;
+    const spinAngle = branchRadius * spin;
+
+    // x axis
+    vertices[i * 3] = Math.cos(branchAngle + spinAngle) * branchRadius;
+    // y axis
+    vertices[i * 3 + 1] = 0;
+    // z axis
+    vertices[i * 3 + 2] = Math.sin(branchAngle + spinAngle) * branchRadius;
   }
 
   // copy vertex array into float32array that threejs will accept
@@ -83,6 +102,10 @@ gui
 gui
   .add(guiObj, "size", 0.001, 0.2, 0.001)
   .onFinishChange(generateRandomParticles);
+gui
+  .add(guiObj, "radius", 0.02, 20, 0.02)
+  .onFinishChange(generateRandomParticles);
+gui.add(guiObj, "branches", 1, 15, 1).onFinishChange(generateRandomParticles);
 
 /**
  * Sizes
