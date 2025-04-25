@@ -8,15 +8,15 @@ import GUI from "lil-gui";
 // Debug
 const gui = new GUI();
 const guiObj: Record<string, any> = {
-  count: 10000, // how many particles
+  count: 50000, // how many particles
   size: 0.02, // how big are each
   radius: 8, // how long are the branches
   branches: 3, // bruh
-  spin: 0.18, // how bent are the branches
-  axisRange: 1, // how close to the y axis center line are the particles positioned
-  randomnessPower: 3, // ^ kinda related but how random particles are placed from center line
+  spin: 2, // how bent are the branches
+  axisRange: 0.5, // how close to the y axis center line are the particles positioned
+  randomnessPower: 5, // ^ kinda related but how random particles are placed from center line
   centerColor: "#ff88cc",
-  outsideColor: "#88ffb3",
+  branchEndColor: "#88ffb3",
 };
 
 // Canvas
@@ -68,13 +68,16 @@ const generateRandomParticles = (): void => {
     axisRange,
     randomnessPower: randomness,
     centerColor,
+    branchEndColor,
   } = guiObj;
 
   particleGeometry = new three.BufferGeometry();
   particleMaterial = new three.PointsMaterial({
     size,
     alphaMap: textureMap.star,
-    color: centerColor,
+
+    // small ( maybe kinda big ) gotcha, can't set global color if using vertexColors
+    // color: centerColor,
     transparent: true,
     alphaTest: 0.001,
     depthWrite: false,
@@ -88,6 +91,10 @@ const generateRandomParticles = (): void => {
     Math.pow(Math.random(), randomness) *
     (Math.random() < 0.5 ? 1 : -1) *
     axisRange;
+
+  // We're gonna "mix" 2 colors using lerp https://threejs.org/docs/#api/en/math/Color.lerp
+  const insideColor = new three.Color(centerColor);
+  const outsideColor = new three.Color(branchEndColor);
 
   for (let i = 0; i < count; i++) {
     const branchRadius = Math.random() * radius;
@@ -111,9 +118,15 @@ const generateRandomParticles = (): void => {
     vertices[i * 3 + 2] =
       Math.sin(branchAngle + spinAngle) * branchRadius + randomZ;
 
-    vertexColors[i * 3] = Math.random();
-    vertexColors[i * 3 + 1] = Math.random();
-    vertexColors[i * 3 + 2] = Math.random();
+    // goes from one color, takes an argument of another color and a number from 0 - 1, where 0 is original color and 1 is the 2nd color
+    // 0.5 is a perfect mix of both colors
+    const mixedColors = insideColor
+      .clone()
+      .lerp(outsideColor, branchAngle / radius);
+
+    vertexColors[i * 3] = mixedColors.r;
+    vertexColors[i * 3 + 1] = mixedColors.g;
+    vertexColors[i * 3 + 2] = mixedColors.b;
   }
 
   // copy vertex array into float32array that threejs will accept
@@ -127,7 +140,6 @@ const generateRandomParticles = (): void => {
     new three.BufferAttribute(new Float32Array(vertexColors), 3)
   );
   particleMesh = new three.Points(particleGeometry, particleMaterial);
-  console.log(particleMesh.position);
 
   scene.add(particleMesh);
 };
@@ -151,6 +163,7 @@ gui
   .add(guiObj, "randomnessPower", 1, 10, 0.001)
   .onFinishChange(generateRandomParticles);
 gui.addColor(guiObj, "centerColor").onFinishChange(generateRandomParticles);
+gui.addColor(guiObj, "branchEndColor").onFinishChange(generateRandomParticles);
 
 /**
  * Sizes
