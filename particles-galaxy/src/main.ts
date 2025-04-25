@@ -6,7 +6,7 @@ import GUI from "lil-gui";
  * Base
  */
 // Debug
-const gui = new GUI();
+const gui = new GUI({ width: 300 });
 const guiObj: Record<string, any> = {
   count: 50000, // how many particles
   size: 0.02, // how big are each
@@ -15,8 +15,8 @@ const guiObj: Record<string, any> = {
   spin: 2, // how bent are the branches
   axisRange: 0.5, // how close to the y axis center line are the particles positioned
   randomnessPower: 5, // ^ kinda related but how random particles are placed from center line
-  centerColor: "#ff88cc",
-  branchEndColor: "#88ffb3",
+  centerColor: "#ff3c30",
+  branchEndColor: "#68c3d9",
 };
 
 // Canvas
@@ -54,7 +54,7 @@ const generateParticles = (options: {
   randomnessPower?: number;
   centerColor?: string;
   branchEndColor?: string;
-}): void => {
+}): three.Points => {
   // remove all previously generated particles if exists
   if (particleMesh !== null) {
     particleGeometry?.dispose();
@@ -99,6 +99,7 @@ const generateParticles = (options: {
       centerColor,
       branchEndColor,
     } = options;
+    console.log(centerColor, branchEndColor);
     // We're gonna "mix" 2 colors using lerp https://threejs.org/docs/#api/en/math/Color.lerp
     const insideColor = new three.Color(centerColor);
     const outsideColor = new three.Color(branchEndColor);
@@ -159,34 +160,74 @@ const generateParticles = (options: {
     );
   }
   particleMesh = new three.Points(particleGeometry, particleMaterial);
-  scene.add(new three.Points(particleGeometry, particleMaterial));
+  return particleMesh;
 };
 
-generateParticles({
-  type: "random",
-  count: guiObj.count,
-  size: guiObj.size,
-  ...guiObj,
-});
-
-const generateGalaxy = (): void => {
-  generateParticles({
+const generateGalaxy = (): three.Points => {
+  return generateParticles({
     type: "galaxy",
     count: guiObj.count,
     size: guiObj.size,
     ...guiObj,
   });
 };
-generateGalaxy();
+const stars = generateParticles({
+  type: "random",
+  count: guiObj.count,
+  size: guiObj.size,
+  ...guiObj,
+});
+const galaxy = generateGalaxy();
 
-gui.add(guiObj, "count", 100, 100000, 100).onFinishChange(generateGalaxy);
-gui.add(guiObj, "size", 0.001, 0.2, 0.001).onFinishChange(generateGalaxy);
-gui.add(guiObj, "radius", 0.02, 20, 0.02).onFinishChange(generateGalaxy);
-gui.add(guiObj, "branches", 1, 15, 1).onFinishChange(generateGalaxy);
-gui.add(guiObj, "axisRange", 0, 2, 0.001).onFinishChange(generateGalaxy);
-gui.add(guiObj, "randomnessPower", 1, 10, 0.001).onFinishChange(generateGalaxy);
-gui.addColor(guiObj, "centerColor").onFinishChange(generateGalaxy);
-gui.addColor(guiObj, "branchEndColor").onFinishChange(generateGalaxy);
+const galaxy2 = generateParticles({
+  type: "galaxy",
+  count: 20000,
+  size: guiObj.size,
+  ...guiObj,
+  centerColor: "#ff88cc",
+  branchEndColor: "#88ffb3",
+  radius: 10,
+});
+galaxy2.position.set(-50, -15, -25);
+
+scene.add(stars, galaxy, galaxy2);
+
+const guiUpdateFinishChange = (): void => {
+  scene.add(generateGalaxy());
+};
+
+gui
+  .add(guiObj, "count", 100, 100000, 100)
+  .name("Particle Count")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .add(guiObj, "size", 0.001, 0.2, 0.001)
+  .name("Galaxy Size")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .add(guiObj, "radius", 0.02, 20, 0.02)
+  .name("Galaxy Radius")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .add(guiObj, "branches", 1, 15, 1)
+  .name("Galaxy Radius")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .add(guiObj, "axisRange", 0, 2, 0.001)
+  .name("Axis Range")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .add(guiObj, "randomnessPower", 1, 10, 0.001)
+  .name("Galaxy Star Randomness")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .addColor(guiObj, "centerColor")
+  .name("Center Color")
+  .onFinishChange(guiUpdateFinishChange);
+gui
+  .addColor(guiObj, "branchEndColor")
+  .name("Branch End Color")
+  .onFinishChange(guiUpdateFinishChange);
 
 /**
  * Sizes
@@ -219,7 +260,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 7, 12);
+camera.position.set(3, 4, 5);
 scene.add(camera);
 
 // Controls
@@ -242,6 +283,11 @@ const clock = new three.Clock();
 
 const tick = (): void => {
   const elapsedTime = clock.getElapsedTime();
+
+  // Spinny bois
+  galaxy.rotation.y = elapsedTime * 0.008;
+  stars.rotation.y = elapsedTime * 0.005;
+  stars.rotation.x = elapsedTime * 0.005;
 
   // Update controls
   controls.update();
