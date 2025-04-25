@@ -34,14 +34,6 @@ const textureMap = {
 };
 
 /**
- * Test cube
- */
-const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
-  new three.Mesh(new three.BoxGeometry(1, 1, 1), new three.MeshBasicMaterial());
-// scene.add(cube);
-// scene.add(new three.AxesHelper(5));
-
-/**
  * Particles
  */
 
@@ -51,36 +43,18 @@ let particleGeometry: three.BufferGeometry | null = null;
 let particleMaterial: three.Material | null = null;
 let particleMesh: three.Points | null = null;
 
-const generateRandomParticles = (): void => {
-  const { count, size } = guiObj;
-  particleGeometry = new three.BufferGeometry();
-  particleMaterial = new three.PointsMaterial({
-    size,
-    alphaMap: textureMap.star,
-    color: "#ffffff",
-    transparent: true,
-    alphaTest: 0.001,
-    depthWrite: false,
-  });
-
-  const vertices: number[] = [];
-
-  for (let i = 0; i <= count; i++) {
-    const x = three.MathUtils.randFloatSpread(500);
-    const y = three.MathUtils.randFloatSpread(500);
-    const z = three.MathUtils.randFloatSpread(500);
-
-    vertices.push(x, y, z);
-  }
-  particleGeometry.setAttribute(
-    "position",
-    new three.Float32BufferAttribute(vertices, 3)
-  );
-  scene.add(new three.Points(particleGeometry, particleMaterial));
-};
-generateRandomParticles();
-
-const generateGalaxy = (): void => {
+const generateParticles = (options: {
+  type: "random" | "galaxy"; // Allows to choose between random or galaxy
+  count: number;
+  size: number;
+  radius?: number;
+  branches?: number;
+  spin?: number;
+  axisRange?: number;
+  randomnessPower?: number;
+  centerColor?: string;
+  branchEndColor?: string;
+}): void => {
   // remove all previously generated particles if exists
   if (particleMesh !== null) {
     particleGeometry?.dispose();
@@ -88,89 +62,120 @@ const generateGalaxy = (): void => {
     scene.remove(particleMesh);
   }
 
-  const {
-    count,
-    size,
-    radius,
-    branches,
-    spin,
-    axisRange,
-    randomnessPower: randomness,
-    centerColor,
-    branchEndColor,
-  } = guiObj;
-
+  const { type, count, size } = options;
   particleGeometry = new three.BufferGeometry();
   particleMaterial = new three.PointsMaterial({
     size,
     alphaMap: textureMap.star,
 
-    // small ( maybe kinda big ) gotcha, can't set global color if using vertexColors
+    // small ( maybe kinda big ) gotcha, can't set global color if using vertexColors for galaxy
     // color: centerColor,
     transparent: true,
     alphaTest: 0.001,
     depthWrite: false,
-    blending: three.AdditiveBlending, // particles that overlap get brighter in colors. Cool but performance hit
-    vertexColors: true,
+    vertexColors: options.type === "galaxy",
   });
+
   const vertices: number[] = [];
   const vertexColors: number[] = [];
 
-  const randomOffset = (): number =>
-    Math.pow(Math.random(), randomness) *
-    (Math.random() < 0.5 ? 1 : -1) *
-    axisRange;
+  if (type === "random") {
+    for (let i = 0; i <= count; i++) {
+      const x = three.MathUtils.randFloatSpread(500);
+      const y = three.MathUtils.randFloatSpread(500);
+      const z = three.MathUtils.randFloatSpread(500);
 
-  // We're gonna "mix" 2 colors using lerp https://threejs.org/docs/#api/en/math/Color.lerp
-  const insideColor = new three.Color(centerColor);
-  const outsideColor = new three.Color(branchEndColor);
-
-  for (let i = 0; i < count; i++) {
-    const branchRadius = Math.random() * radius;
-
-    // branchAngle gives an angle that corresponds to a position in a circle for each branch
-    // this is also how each branch are split equally inside the circle
-    const branchAngle = ((i % branches) / branches) * Math.PI * 2;
-    const spinAngle = branchRadius * spin;
-
-    // how far away from the axis we plot the vertex on
-    const randomX = randomOffset();
-    const randomY = randomOffset();
-    const randomZ = randomOffset();
-
-    // x axis
-    vertices[i * 3] =
-      Math.cos(branchAngle + spinAngle) * branchRadius + randomX;
-    // y axis
-    vertices[i * 3 + 1] = randomY;
-    // z axis
-    vertices[i * 3 + 2] =
-      Math.sin(branchAngle + spinAngle) * branchRadius + randomZ;
-
-    // goes from one color, takes an argument of another color and a number from 0 - 1, where 0 is original color and 1 is the 2nd color
-    // 0.5 is a perfect mix of both colors
-    const mixedColors = insideColor
-      .clone()
-      .lerp(outsideColor, branchAngle / radius);
-
-    vertexColors[i * 3] = mixedColors.r;
-    vertexColors[i * 3 + 1] = mixedColors.g;
-    vertexColors[i * 3 + 2] = mixedColors.b;
+      vertices.push(x, y, z);
+    }
   }
 
-  // copy vertex array into float32array that threejs will accept
-  const typedVertices = new Float32Array(vertices);
+  if (type === "galaxy") {
+    const {
+      radius,
+      branches,
+      spin,
+      axisRange,
+      randomnessPower: randomness,
+      centerColor,
+      branchEndColor,
+    } = options;
+    // We're gonna "mix" 2 colors using lerp https://threejs.org/docs/#api/en/math/Color.lerp
+    const insideColor = new three.Color(centerColor);
+    const outsideColor = new three.Color(branchEndColor);
+
+    const randomOffset = (): number =>
+      Math.pow(Math.random(), randomness ?? 1) *
+      (Math.random() < 0.5 ? 1 : -1) *
+      (axisRange ?? 100);
+
+    for (let i = 0; i < count; i++) {
+      const branchRadius = Math.random() * radius!;
+
+      // branchAngle gives an angle that corresponds to a position in a circle for each branch
+      // this is also how each branch are split equally inside the circle
+      const branchAngle = ((i % branches!) / branches!) * Math.PI * 2;
+      const spinAngle = branchRadius * spin!;
+
+      // how far away from the axis we plot the vertex on
+      const randomX = randomOffset();
+      const randomY = randomOffset();
+      const randomZ = randomOffset();
+
+      // x axis
+      vertices[i * 3] =
+        Math.cos(branchAngle + spinAngle) * branchRadius + randomX;
+      // y axis
+      vertices[i * 3 + 1] = randomY;
+      // z axis
+      vertices[i * 3 + 2] =
+        Math.sin(branchAngle + spinAngle) * branchRadius + randomZ;
+
+      // goes from one color, takes an argument of another color and a number from 0 - 1, where 0 is original color and 1 is the 2nd color
+      // 0.5 is a perfect mix of both colors
+      const mixedColors = insideColor
+        .clone()
+        .lerp(outsideColor, branchRadius / radius!);
+
+      vertexColors[i * 3] = mixedColors.r;
+      vertexColors[i * 3 + 1] = mixedColors.g;
+      vertexColors[i * 3 + 2] = mixedColors.b;
+    }
+  }
   particleGeometry.setAttribute(
     "position",
-    new three.BufferAttribute(typedVertices, 3)
+    new three.Float32BufferAttribute(vertices, 3)
   );
-  particleGeometry.setAttribute(
-    "color",
-    new three.BufferAttribute(new Float32Array(vertexColors), 3)
-  );
-  particleMesh = new three.Points(particleGeometry, particleMaterial);
 
-  scene.add(particleMesh);
+  if (type === "random") {
+    // typescript fix, the material doesnt have direct color poperty
+    (particleMaterial as three.PointsMaterial).color.set("#ffffff");
+  }
+
+  if (type === "galaxy") {
+    particleMaterial.blending = three.AdditiveBlending; // particles that overlap get brighter in colors. Cool but performance hit
+    particleGeometry.setAttribute(
+      "color",
+      new three.BufferAttribute(new Float32Array(vertexColors), 3)
+    );
+  }
+  particleMesh = new three.Points(particleGeometry, particleMaterial);
+  scene.add(new three.Points(particleGeometry, particleMaterial));
+};
+
+generateParticles({
+  type: "random",
+  count: guiObj.count,
+  size: guiObj.size,
+  ...guiObj,
+});
+
+const generateGalaxy = (): void => {
+  generateParticles({
+    type: "galaxy",
+    count: guiObj.count,
+    size: guiObj.size,
+    ...guiObj,
+  });
 };
 generateGalaxy();
 
@@ -214,7 +219,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 5, 8);
+camera.position.set(3, 7, 12);
 scene.add(camera);
 
 // Controls
