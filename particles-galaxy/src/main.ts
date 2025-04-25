@@ -8,13 +8,15 @@ import GUI from "lil-gui";
 // Debug
 const gui = new GUI();
 const guiObj: Record<string, any> = {
-  count: 10000,
-  size: 0.02,
-  radius: 5,
-  branches: 3,
-  spin: 0.25,
-  axisRange: 1,
-  randomnessPower: 2,
+  count: 10000, // how many particles
+  size: 0.02, // how big are each
+  radius: 8, // how long are the branches
+  branches: 3, // bruh
+  spin: 0.18, // how bent are the branches
+  axisRange: 1, // how close to the y axis center line are the particles positioned
+  randomnessPower: 3, // ^ kinda related but how random particles are placed from center line
+  centerColor: "#ff88cc",
+  outsideColor: "#88ffb3",
 };
 
 // Canvas
@@ -36,8 +38,8 @@ const textureMap = {
  */
 const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
   new three.Mesh(new three.BoxGeometry(1, 1, 1), new three.MeshBasicMaterial());
-scene.add(cube);
-scene.add(new three.AxesHelper(5));
+// scene.add(cube);
+// scene.add(new three.AxesHelper(5));
 
 /**
  * Particles
@@ -65,19 +67,23 @@ const generateRandomParticles = (): void => {
     spin,
     axisRange,
     randomnessPower: randomness,
+    centerColor,
   } = guiObj;
 
   particleGeometry = new three.BufferGeometry();
   particleMaterial = new three.PointsMaterial({
     size,
     alphaMap: textureMap.star,
-    color: "#ff88cc",
+    color: centerColor,
     transparent: true,
     alphaTest: 0.001,
     depthWrite: false,
-    // vertexColors: true,
+    blending: three.AdditiveBlending, // particles that overlap get brighter in colors. Cool but performance hit
+    vertexColors: true,
   });
-  const vertices = [];
+  const vertices: number[] = [];
+  const vertexColors: number[] = [];
+
   const randomOffset = (): number =>
     Math.pow(Math.random(), randomness) *
     (Math.random() < 0.5 ? 1 : -1) *
@@ -104,6 +110,10 @@ const generateRandomParticles = (): void => {
     // z axis
     vertices[i * 3 + 2] =
       Math.sin(branchAngle + spinAngle) * branchRadius + randomZ;
+
+    vertexColors[i * 3] = Math.random();
+    vertexColors[i * 3 + 1] = Math.random();
+    vertexColors[i * 3 + 2] = Math.random();
   }
 
   // copy vertex array into float32array that threejs will accept
@@ -111,6 +121,10 @@ const generateRandomParticles = (): void => {
   particleGeometry.setAttribute(
     "position",
     new three.BufferAttribute(typedVertices, 3)
+  );
+  particleGeometry.setAttribute(
+    "color",
+    new three.BufferAttribute(new Float32Array(vertexColors), 3)
   );
   particleMesh = new three.Points(particleGeometry, particleMaterial);
   console.log(particleMesh.position);
@@ -136,6 +150,7 @@ gui
 gui
   .add(guiObj, "randomnessPower", 1, 10, 0.001)
   .onFinishChange(generateRandomParticles);
+gui.addColor(guiObj, "centerColor").onFinishChange(generateRandomParticles);
 
 /**
  * Sizes
