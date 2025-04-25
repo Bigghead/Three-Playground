@@ -52,6 +52,35 @@ let particleMaterial: three.Material | null = null;
 let particleMesh: three.Points | null = null;
 
 const generateRandomParticles = (): void => {
+  const { count, size } = guiObj;
+  particleGeometry = new three.BufferGeometry();
+  particleMaterial = new three.PointsMaterial({
+    size,
+    alphaMap: textureMap.star,
+    color: "#ffffff",
+    transparent: true,
+    alphaTest: 0.001,
+    depthWrite: false,
+  });
+
+  const vertices: number[] = [];
+
+  for (let i = 0; i <= count; i++) {
+    const x = three.MathUtils.randFloatSpread(500);
+    const y = three.MathUtils.randFloatSpread(500);
+    const z = three.MathUtils.randFloatSpread(500);
+
+    vertices.push(x, y, z);
+  }
+  particleGeometry.setAttribute(
+    "position",
+    new three.Float32BufferAttribute(vertices, 3)
+  );
+  scene.add(new three.Points(particleGeometry, particleMaterial));
+};
+generateRandomParticles();
+
+const generateGalaxy = (): void => {
   // remove all previously generated particles if exists
   if (particleMesh !== null) {
     particleGeometry?.dispose();
@@ -143,27 +172,16 @@ const generateRandomParticles = (): void => {
 
   scene.add(particleMesh);
 };
-generateRandomParticles();
+generateGalaxy();
 
-gui
-  .add(guiObj, "count", 100, 100000, 100)
-  .onFinishChange(generateRandomParticles);
-gui
-  .add(guiObj, "size", 0.001, 0.2, 0.001)
-  .onFinishChange(generateRandomParticles);
-gui
-  .add(guiObj, "radius", 0.02, 20, 0.02)
-  .onFinishChange(generateRandomParticles);
-gui.add(guiObj, "branches", 1, 15, 1).onFinishChange(generateRandomParticles);
-gui.add(guiObj, "spin", -5, 5, 0.001).onFinishChange(generateRandomParticles);
-gui
-  .add(guiObj, "axisRange", 0, 2, 0.001)
-  .onFinishChange(generateRandomParticles);
-gui
-  .add(guiObj, "randomnessPower", 1, 10, 0.001)
-  .onFinishChange(generateRandomParticles);
-gui.addColor(guiObj, "centerColor").onFinishChange(generateRandomParticles);
-gui.addColor(guiObj, "branchEndColor").onFinishChange(generateRandomParticles);
+gui.add(guiObj, "count", 100, 100000, 100).onFinishChange(generateGalaxy);
+gui.add(guiObj, "size", 0.001, 0.2, 0.001).onFinishChange(generateGalaxy);
+gui.add(guiObj, "radius", 0.02, 20, 0.02).onFinishChange(generateGalaxy);
+gui.add(guiObj, "branches", 1, 15, 1).onFinishChange(generateGalaxy);
+gui.add(guiObj, "axisRange", 0, 2, 0.001).onFinishChange(generateGalaxy);
+gui.add(guiObj, "randomnessPower", 1, 10, 0.001).onFinishChange(generateGalaxy);
+gui.addColor(guiObj, "centerColor").onFinishChange(generateGalaxy);
+gui.addColor(guiObj, "branchEndColor").onFinishChange(generateGalaxy);
 
 /**
  * Sizes
