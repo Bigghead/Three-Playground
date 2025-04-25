@@ -8,11 +8,13 @@ import GUI from "lil-gui";
 // Debug
 const gui = new GUI();
 const guiObj: Record<string, any> = {
-  count: 1000,
+  count: 10000,
   size: 0.02,
   radius: 5,
   branches: 3,
-  spin: 1,
+  spin: 0.25,
+  axisRange: 1,
+  randomnessPower: 2,
 };
 
 // Canvas
@@ -35,6 +37,7 @@ const textureMap = {
 const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
   new three.Mesh(new three.BoxGeometry(1, 1, 1), new three.MeshBasicMaterial());
 scene.add(cube);
+scene.add(new three.AxesHelper(5));
 
 /**
  * Particles
@@ -54,7 +57,15 @@ const generateRandomParticles = (): void => {
     scene.remove(particleMesh);
   }
 
-  const { count, size, radius, branches, spin } = guiObj;
+  const {
+    count,
+    size,
+    radius,
+    branches,
+    spin,
+    axisRange,
+    randomnessPower: randomness,
+  } = guiObj;
 
   particleGeometry = new three.BufferGeometry();
   particleMaterial = new three.PointsMaterial({
@@ -67,7 +78,10 @@ const generateRandomParticles = (): void => {
     // vertexColors: true,
   });
   const vertices = [];
-  const axisRange = 50;
+  const randomOffset = (): number =>
+    Math.pow(Math.random(), randomness) *
+    (Math.random() < 0.5 ? 1 : -1) *
+    axisRange;
 
   for (let i = 0; i < count; i++) {
     const branchRadius = Math.random() * radius;
@@ -77,12 +91,19 @@ const generateRandomParticles = (): void => {
     const branchAngle = ((i % branches) / branches) * Math.PI * 2;
     const spinAngle = branchRadius * spin;
 
+    // how far away from the axis we plot the vertex on
+    const randomX = randomOffset();
+    const randomY = randomOffset();
+    const randomZ = randomOffset();
+
     // x axis
-    vertices[i * 3] = Math.cos(branchAngle + spinAngle) * branchRadius;
+    vertices[i * 3] =
+      Math.cos(branchAngle + spinAngle) * branchRadius + randomX;
     // y axis
-    vertices[i * 3 + 1] = 0;
+    vertices[i * 3 + 1] = randomY;
     // z axis
-    vertices[i * 3 + 2] = Math.sin(branchAngle + spinAngle) * branchRadius;
+    vertices[i * 3 + 2] =
+      Math.sin(branchAngle + spinAngle) * branchRadius + randomZ;
   }
 
   // copy vertex array into float32array that threejs will accept
@@ -92,6 +113,8 @@ const generateRandomParticles = (): void => {
     new three.BufferAttribute(typedVertices, 3)
   );
   particleMesh = new three.Points(particleGeometry, particleMaterial);
+  console.log(particleMesh.position);
+
   scene.add(particleMesh);
 };
 generateRandomParticles();
@@ -106,6 +129,13 @@ gui
   .add(guiObj, "radius", 0.02, 20, 0.02)
   .onFinishChange(generateRandomParticles);
 gui.add(guiObj, "branches", 1, 15, 1).onFinishChange(generateRandomParticles);
+gui.add(guiObj, "spin", -5, 5, 0.001).onFinishChange(generateRandomParticles);
+gui
+  .add(guiObj, "axisRange", 0, 2, 0.001)
+  .onFinishChange(generateRandomParticles);
+gui
+  .add(guiObj, "randomnessPower", 1, 10, 0.001)
+  .onFinishChange(generateRandomParticles);
 
 /**
  * Sizes
@@ -138,7 +168,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 3, 3);
+camera.position.set(3, 5, 8);
 scene.add(camera);
 
 // Controls
