@@ -39,12 +39,29 @@ const textureMap = {
 
 // Need to keep a reference to check if these are empty before calling lil-gui re-render
 // Otherwise lil-gui will create new particles inside the onFinishChange
-let particleGeometry: three.BufferGeometry | null = null;
-let particleMaterial: three.Material | null = null;
-let particleMesh: three.Points | null = null;
+type ParticleMesh = {
+  particleGeometry: three.BufferGeometry;
+  particleMaterial: three.Material;
+  mesh: three.Points;
+};
+let particleMeshes: Record<string, ParticleMesh> = {};
 
+const GALAXY_MAIN = "galaxy-main";
+const GALAXY = "galaxy";
+const RANDOM_PARTICLES = "random-particles";
+
+/**
+ * Generates a new particle system (random particles or galaxy) and optionally replaces the main galaxy.
+ *
+ * This function creates and returns a `THREE.Points` mesh based on the provided options.
+ * If the type is `"galaxy-main"`, it disposes of and removes any previously created galaxy with that ID.
+ * The returned mesh includes vertex positions and, for galaxies, per-vertex colors to create gradient effects.
+ *
+ * @param {Object} options - GuiObject params
+ */
+// Todo - Refactor, cause oh boi
 const generateParticles = (options: {
-  type: "random" | "galaxy"; // Allows to choose between random or galaxy
+  type: typeof GALAXY_MAIN | typeof GALAXY | typeof RANDOM_PARTICLES; // Allows to choose between random or galaxy
   count: number;
   size: number;
   radius?: number;
@@ -55,16 +72,20 @@ const generateParticles = (options: {
   centerColor?: string;
   branchEndColor?: string;
 }): three.Points => {
+  const { type, count, size } = options;
   // remove all previously generated particles if exists
-  if (particleMesh !== null) {
+  if (type === GALAXY_MAIN && particleMeshes["galaxy-main"]) {
+    const { particleGeometry, particleMaterial, mesh } =
+      particleMeshes["galaxy-main"];
     particleGeometry?.dispose();
     particleMaterial?.dispose();
-    scene.remove(particleMesh);
+    scene.remove(mesh);
+    delete particleMeshes[GALAXY_MAIN];
   }
 
-  const { type, count, size } = options;
-  particleGeometry = new three.BufferGeometry();
-  particleMaterial = new three.PointsMaterial({
+  const isGalaxy = type === GALAXY || type === GALAXY_MAIN;
+  const particleGeometry = new three.BufferGeometry();
+  const particleMaterial = new three.PointsMaterial({
     size,
     alphaMap: textureMap.star,
 
@@ -73,13 +94,13 @@ const generateParticles = (options: {
     transparent: true,
     alphaTest: 0.001,
     depthWrite: false,
-    vertexColors: options.type === "galaxy",
+    vertexColors: isGalaxy,
   });
 
   const vertices: number[] = [];
   const vertexColors: number[] = [];
 
-  if (type === "random") {
+  if (!isGalaxy) {
     for (let i = 0; i <= count; i++) {
       const x = three.MathUtils.randFloatSpread(500);
       const y = three.MathUtils.randFloatSpread(500);
@@ -89,7 +110,7 @@ const generateParticles = (options: {
     }
   }
 
-  if (type === "galaxy") {
+  if (isGalaxy) {
     const {
       radius,
       branches,
@@ -99,7 +120,7 @@ const generateParticles = (options: {
       centerColor,
       branchEndColor,
     } = options;
-    console.log(centerColor, branchEndColor);
+
     // We're gonna "mix" 2 colors using lerp https://threejs.org/docs/#api/en/math/Color.lerp
     const insideColor = new three.Color(centerColor);
     const outsideColor = new three.Color(branchEndColor);
@@ -147,48 +168,57 @@ const generateParticles = (options: {
     new three.Float32BufferAttribute(vertices, 3)
   );
 
-  if (type === "random") {
+  if (!isGalaxy) {
     // typescript fix, the material doesnt have direct color poperty
     (particleMaterial as three.PointsMaterial).color.set("#ffffff");
   }
 
-  if (type === "galaxy") {
+  if (isGalaxy) {
     particleMaterial.blending = three.AdditiveBlending; // particles that overlap get brighter in colors. Cool but performance hit
     particleGeometry.setAttribute(
       "color",
       new three.BufferAttribute(new Float32Array(vertexColors), 3)
     );
   }
-  particleMesh = new three.Points(particleGeometry, particleMaterial);
+  const particleMesh = new three.Points(particleGeometry, particleMaterial);
+
+  if (type === GALAXY_MAIN) {
+    particleMeshes["galaxy-main"] = {
+      particleGeometry: particleGeometry,
+      particleMaterial: particleMaterial,
+      mesh: particleMesh,
+    };
+  }
+
   return particleMesh;
 };
 
 const generateGalaxy = (): three.Points => {
   return generateParticles({
-    type: "galaxy",
+    type: GALAXY_MAIN,
     count: guiObj.count,
     size: guiObj.size,
     ...guiObj,
   });
 };
 const stars = generateParticles({
-  type: "random",
+  ...guiObj,
+  type: RANDOM_PARTICLES,
   count: guiObj.count,
   size: guiObj.size,
-  ...guiObj,
 });
 const galaxy = generateGalaxy();
 
 const galaxy2 = generateParticles({
-  type: "galaxy",
-  count: 20000,
-  size: guiObj.size,
   ...guiObj,
+  type: GALAXY,
+  count: 10000,
+  size: guiObj.size,
   centerColor: "#ff88cc",
   branchEndColor: "#88ffb3",
   radius: 10,
 });
-galaxy2.position.set(-50, -15, -25);
+galaxy2.position.set(-75, -15, -30);
 
 scene.add(stars, galaxy, galaxy2);
 
@@ -260,7 +290,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 4, 5);
+camera.position.set(3, 2.5, 5);
 scene.add(camera);
 
 // Controls
