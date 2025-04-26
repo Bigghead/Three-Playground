@@ -1,20 +1,20 @@
 import * as three from "three";
+import gsap from "gsap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import GUI from "lil-gui";
+import { GUIOptions, renderGuiChangeOptions } from "./utils";
 
 /**
  * Base
  */
-// Debug
-const gui = new GUI({ width: 300 });
-const guiObj: Record<string, any> = {
+
+const guiObj: GUIOptions = {
   count: 50000, // how many particles
   size: 0.02, // how big are each
   radius: 8, // how long are the branches
   branches: 3, // bruh
   spin: 2, // how bent are the branches
   axisRange: 0.5, // how close to the y axis center line are the particles positioned
-  randomnessPower: 5, // ^ kinda related but how random particles are placed from center line
+  randomnessPower: 7, // ^ kinda related but how random particles are placed from center line
   centerColor: "#ff3c30",
   branchEndColor: "#68c3d9",
 };
@@ -73,15 +73,8 @@ const generateParticles = (options: {
   branchEndColor?: string;
 }): three.Points => {
   const { type, count, size } = options;
-  // remove all previously generated particles if exists
-  if (type === GALAXY_MAIN && particleMeshes["galaxy-main"]) {
-    const { particleGeometry, particleMaterial, mesh } =
-      particleMeshes["galaxy-main"];
-    particleGeometry?.dispose();
-    particleMaterial?.dispose();
-    scene.remove(mesh);
-    delete particleMeshes[GALAXY_MAIN];
-  }
+
+  removeMainGalaxy(type);
 
   const isGalaxy = type === GALAXY || type === GALAXY_MAIN;
   const particleGeometry = new three.BufferGeometry();
@@ -193,12 +186,24 @@ const generateParticles = (options: {
   return particleMesh;
 };
 
+const removeMainGalaxy = (particleMeshType: string): void => {
+  // remove all previously generated particles if exists
+  if (particleMeshType === GALAXY_MAIN && particleMeshes["galaxy-main"]) {
+    const { particleGeometry, particleMaterial, mesh } =
+      particleMeshes["galaxy-main"];
+    particleGeometry?.dispose();
+    particleMaterial?.dispose();
+    scene.remove(mesh);
+    delete particleMeshes[GALAXY_MAIN];
+  }
+};
+
 const generateGalaxy = (): three.Points => {
   return generateParticles({
     type: GALAXY_MAIN,
+    ...guiObj,
     count: guiObj.count,
     size: guiObj.size,
-    ...guiObj,
   });
 };
 const stars = generateParticles({
@@ -214,50 +219,29 @@ const galaxy2 = generateParticles({
   type: GALAXY,
   count: 10000,
   size: guiObj.size,
-  centerColor: "#ff88cc",
-  branchEndColor: "#88ffb3",
+  centerColor: "#ee8917", //"#ff88cc",
+  branchEndColor: "#337540", //"#88ffb3",
   radius: 10,
 });
 galaxy2.position.set(-75, -15, -30);
 
-scene.add(stars, galaxy, galaxy2);
+const galaxy3 = generateParticles({
+  ...guiObj,
+  type: GALAXY,
+  count: 5000,
+  size: 0.05,
+  centerColor: "#532dbe",
+  branchEndColor: "#e0841a",
+  radius: 10,
+});
+galaxy3.position.set(5, 10, -50);
+
+scene.add(stars, galaxy, galaxy2, galaxy3);
 
 const guiUpdateFinishChange = (): void => {
   scene.add(generateGalaxy());
 };
-
-gui
-  .add(guiObj, "count", 100, 100000, 100)
-  .name("Particle Count")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .add(guiObj, "size", 0.001, 0.2, 0.001)
-  .name("Galaxy Size")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .add(guiObj, "radius", 0.02, 20, 0.02)
-  .name("Galaxy Radius")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .add(guiObj, "branches", 1, 15, 1)
-  .name("Galaxy Radius")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .add(guiObj, "axisRange", 0, 2, 0.001)
-  .name("Axis Range")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .add(guiObj, "randomnessPower", 1, 10, 0.001)
-  .name("Galaxy Star Randomness")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .addColor(guiObj, "centerColor")
-  .name("Center Color")
-  .onFinishChange(guiUpdateFinishChange);
-gui
-  .addColor(guiObj, "branchEndColor")
-  .name("Branch End Color")
-  .onFinishChange(guiUpdateFinishChange);
+renderGuiChangeOptions(guiObj, guiUpdateFinishChange);
 
 /**
  * Sizes
@@ -290,7 +274,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 2.5, 5);
+camera.position.set(3, 2.5, 50);
 scene.add(camera);
 
 // Controls
@@ -307,7 +291,17 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 /**
- * Animate
+ * Gsap Animate ( Once )
+ */
+window.addEventListener("scroll", () => console.log("scroll"));
+
+gsap.to(camera.position, {
+  duration: 3.5,
+  z: 5,
+});
+
+/**
+ * Three Animate ( Every Frame )
  */
 const clock = new three.Clock();
 
