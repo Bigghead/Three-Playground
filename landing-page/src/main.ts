@@ -1,6 +1,13 @@
 import { gsap } from "gsap";
+import ScrollTrigger from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const elements = {
+  "landing-hero": document.querySelector(".landing-hero") as HTMLDivElement,
+  "video-container": document.querySelector(
+    ".video-container"
+  ) as HTMLDivElement,
   "video-preview-container": document.querySelector(
     ".video-preview-container"
   ) as HTMLDivElement,
@@ -10,9 +17,9 @@ const elements = {
   "video-preview": document.querySelector(
     ".video-preview-container video.video-preview"
   ) as HTMLVideoElement,
-  "hero-text-special": document.querySelector(
+  "hero-text-special": document.querySelectorAll(
     ".hero-text__special h2"
-  ) as HTMLHeadingElement,
+  ) as NodeListOf<HTMLHeadingElement>,
 };
 
 const heroTextContents = ["Gaming", "Identity", "Reality", "Immersion"];
@@ -226,7 +233,9 @@ function animateHeroText(currentVideoIndex: number): void {
         opacity: 0,
         transformOrigin: "left center",
         onComplete: () => {
-          heroText.textContent = heroTextContents[currentVideoIndex];
+          heroText.forEach((text) => {
+            text.textContent = heroTextContents[currentVideoIndex];
+          });
         },
       });
 
@@ -241,3 +250,22 @@ function animateHeroText(currentVideoIndex: number): void {
     },
   });
 }
+
+(function animateHeroPath() {
+  gsap.set(elements["video-container"], {
+    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+    borderRadius: "0% 0% 0% 0%",
+  });
+
+  gsap.to(elements["video-container"], {
+    clipPath: "polygon(14% 0, 72% 0, 88% 90%, 0 95%)",
+    borderRadius: "0% 0% 40% 10%",
+    ease: "power1.inOut",
+    scrollTrigger: {
+      trigger: elements["video-container"],
+      start: "center center",
+      end: "bottom center",
+      scrub: true,
+    },
+  });
+})();
