@@ -74,8 +74,8 @@ elements["video-preview"]?.addEventListener("click", () => {
 function startNextVideo(): void {
   hasFinishedLoadingAnimation = false;
   const currentVideoIndex = currentVideo % videoLength;
-  const videoSrc = `hero-${currentVideoIndex + 1}.mp4`;
-  const nextVideoSrc = `hero-${
+  const videoSrc = `videos/hero/hero-${currentVideoIndex + 1}.mp4`;
+  const nextVideoSrc = `videos/hero/hero-${
     currentVideoIndex === 3 ? 1 : currentVideoIndex + 2
   }.mp4`;
   const video = elements["video-current"];
@@ -296,7 +296,7 @@ gsap.to(spans, {
     trigger: elements["intro-text-heading"],
     start: "top center",
     end: "bottom center",
-    scrub: 0.5,
+    scrub: 5,
     markers: true,
   },
 });
@@ -307,7 +307,7 @@ gsap.set(elements["intro-text-paragraph"], {
   scale: 0.3,
   opacity: 0.2,
   scaleX: 1,
-  transformOrigin: "center center",
+  transformOrigin: "left bottom",
 });
 
 gsap.to(elements["intro-text-paragraph"], {
@@ -321,7 +321,7 @@ gsap.to(elements["intro-text-paragraph"], {
     trigger: elements["landing-about-scroll-trigger"],
     start: "top center",
     end: "bottom bottom",
-    scrub: 0.5,
+    scrub: 5,
   },
 });
 gsap.to(elements["landing-about-image"], {
@@ -332,8 +332,8 @@ gsap.to(elements["landing-about-image"], {
   scrollTrigger: {
     trigger: elements["landing-about-image"],
     start: "top top",
-    end: "+=800 center",
-    scrub: 0.5,
+    end: "+=800 center bottom",
+    scrub: 1,
     pin: "body",
     // markers: true,
     // anticipatePin: 1,
