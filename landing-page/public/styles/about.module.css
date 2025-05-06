@@ -2,3 +2,44 @@
   width: 100vw;
   height: 100vh;
 }
+
+.landing-about {
+  padding: 10rem 0;
+}
+
+.landing-about .intro-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.landing-about .intro-text h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.landing-about .intro-text h2 span {
+  visibility: hidden;
+}
+.landing-about .intro-text p {
+  font-size: 6rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.landing-about .intro-image {
+  height: 100vh;
+  width: 100vw;
+  border-radius: 0% 0% 40% 10%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.landing-about img {
+  height: 450px;
+  width: 300px;
+  clip-path: polygon(25% 0%, 73% 15%, 85% 89%, 23% 65%);
+  object-fit: cover;
+  /* clip-path: polygon(45% 45%, 55% 45%, 55% 55%, 45% 55%); */
+  transition: clip-path 0.3s ease;
+}

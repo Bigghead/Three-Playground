@@ -20,6 +20,18 @@ const elements = {
   "hero-text-special": document.querySelectorAll(
     ".hero-text__special h2"
   ) as NodeListOf<HTMLHeadingElement>,
+  "landing-about-scroll-trigger": document.querySelector(
+    ".landing-about-scroll-trigger"
+  ) as HTMLDivElement,
+  "intro-text-heading": document.querySelector(
+    ".intro-text h2"
+  ) as HTMLHeadingElement,
+  "intro-text-paragraph": document.querySelector(
+    ".intro-text p"
+  ) as HTMLDivElement,
+  "landing-about-image": document.querySelector(
+    ".landing-about .intro-image img"
+  ) as HTMLImageElement,
 };
 
 const heroTextContents = ["Gaming", "Identity", "Reality", "Immersion"];
@@ -258,7 +270,7 @@ function animateHeroText(currentVideoIndex: number): void {
   });
 
   gsap.to(elements["video-container"], {
-    clipPath: "polygon(14% 0, 72% 0, 88% 90%, 0 95%)",
+    clipPath: "polygon(9% 6%, 74% 9%, 81% 79%, 0 100%)",
     borderRadius: "0% 0% 40% 10%",
     ease: "power1.inOut",
     scrollTrigger: {
@@ -269,3 +281,61 @@ function animateHeroText(currentVideoIndex: number): void {
     },
   });
 })();
+
+for (const char of "Welcome") {
+  const charSpan = document.createElement("span");
+  charSpan.textContent = char;
+  elements["intro-text-heading"].appendChild(charSpan);
+}
+const spans = elements["intro-text-heading"].querySelectorAll(":scope > span");
+
+gsap.to(spans, {
+  autoAlpha: 1,
+  stagger: 0.1,
+  scrollTrigger: {
+    trigger: elements["intro-text-heading"],
+    start: "top center",
+    end: "bottom center",
+    scrub: 0.5,
+    markers: true,
+  },
+});
+
+gsap.set(elements["intro-text-paragraph"], {
+  x: -600,
+  y: 300,
+  scale: 0.3,
+  opacity: 0.2,
+  scaleX: 1,
+  transformOrigin: "center center",
+});
+
+gsap.to(elements["intro-text-paragraph"], {
+  duration: 1.5,
+  opacity: 1,
+  x: 0,
+  y: 0,
+  scale: 1,
+  ease: "power2.out",
+  scrollTrigger: {
+    trigger: elements["landing-about-scroll-trigger"],
+    start: "top center",
+    end: "bottom bottom",
+    scrub: 0.5,
+  },
+});
+gsap.to(elements["landing-about-image"], {
+  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+  width: "100vw",
+  height: "100vh",
+  ease: "power1.inOut",
+  scrollTrigger: {
+    trigger: elements["landing-about-image"],
+    start: "top top",
+    end: "+=800 center",
+    scrub: 0.5,
+    pin: "body",
+    // markers: true,
+    // anticipatePin: 1,
+  },
+});
