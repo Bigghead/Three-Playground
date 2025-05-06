@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anime Landing</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    <main>
+      <section class="landing-hero">
+        <div class="hero-text__special">
+          <h2 class="clipped">Gaming</h2>
+        </div>
+        <div class="video-container">
+          <div class="hero-text__static">
+            <h1>Redefine</h1>
+          </div>
+          <div class="">
+            <!-- fake 1st load video -->
+            <div class="video-current">
+              <video
+                src="hero-1.mp4"
+                autoplay
+                loop
+                muted
+                preload="auto"
+              ></video>
+            </div>
+            <div class="video-preview-container">
+              <video src="hero-2.mp4" class="video-preview"></video>
+              <video
+                src=""
+                autoplay
+                loop
+                muted
+                preload="auto"
+                class="invisible-preview"
+              ></video>
+            </div>
+          </div>
+          <div class="hero-text__special">
+            <h2 class="original">Gaming</h2>
+          </div>
+        </div>
+      </section>
+      <section class="landing-about">
+        <div class="landing-about-scroll-trigger"></div>
+
+        <div class="intro-text">
+          <h2></h2>
+          <p>Discover the world's largest shared adventure</p>
+        </div>
+        <div class="landing-about-scroll-trigger"></div>
+
+        <div class="intro-image">
+          <img src="/image/about.webp" alt="" />
+        </div>
+      </section>
+      <section
+        class="portfolio"
+        style="height: 100vh; width: 100vw; background-color: #000000"
+      ></section>
+    </main>
+  </body>
+</html>
