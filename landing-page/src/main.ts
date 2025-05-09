@@ -297,7 +297,6 @@ gsap.to(spans, {
     start: "top center",
     end: "bottom center",
     scrub: 5,
-    markers: true,
   },
 });
 
@@ -324,18 +323,24 @@ gsap.to(elements["intro-text-paragraph"], {
     scrub: 5,
   },
 });
+
+/**
+ * Todo - Fix clippath / border radius clashing
+ */
 gsap.to(elements["landing-about-image"], {
   clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
   width: "100vw",
   height: "100vh",
+  // scale: 1.1,
   ease: "power1.inOut",
   scrollTrigger: {
     trigger: elements["landing-about-image"],
     start: "top top",
     end: "+=800 center bottom",
     scrub: 1,
-    pin: "body",
-    // markers: true,
-    // anticipatePin: 1,
+    pin: elements["landing-about-image"].parentElement,
+    pinSpacing: true,
+    markers: true,
+    anticipatePin: 1,
   },
 });

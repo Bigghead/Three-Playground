@@ -45,6 +45,10 @@
 }
 
 .landing-about .about-secondary-content {
-  margin: 10rem 2rem 1rem 2rem;
+  padding-top: 5rem;
+  background-color: #000;
+}
+.landing-about .about-secondary-content .content__text {
+  margin: 0 2rem 1rem 2rem;
   color: #fff;
 }
