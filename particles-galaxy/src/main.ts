@@ -176,7 +176,7 @@ const generateParticles = (options: {
   const particleMesh = new three.Points(particleGeometry, particleMaterial);
 
   if (type === GALAXY_MAIN) {
-    particleMeshes["galaxy-main"] = {
+    particleMeshes[GALAXY_MAIN] = {
       particleGeometry: particleGeometry,
       particleMaterial: particleMaterial,
       mesh: particleMesh,
@@ -188,9 +188,9 @@ const generateParticles = (options: {
 
 const removeMainGalaxy = (particleMeshType: string): void => {
   // remove all previously generated particles if exists
-  if (particleMeshType === GALAXY_MAIN && particleMeshes["galaxy-main"]) {
+  if (particleMeshType === GALAXY_MAIN && particleMeshes[GALAXY_MAIN]) {
     const { particleGeometry, particleMaterial, mesh } =
-      particleMeshes["galaxy-main"];
+      particleMeshes[GALAXY_MAIN];
     particleGeometry?.dispose();
     particleMaterial?.dispose();
     scene.remove(mesh);
@@ -309,7 +309,8 @@ const tick = (): void => {
   const elapsedTime = clock.getElapsedTime();
 
   // Spinny bois
-  galaxy.rotation.y = elapsedTime * 0.008;
+
+  particleMeshes[GALAXY_MAIN].mesh.rotation.y = elapsedTime * 0.008;
   stars.rotation.y = elapsedTime * 0.005;
   stars.rotation.x = elapsedTime * 0.005;
 
