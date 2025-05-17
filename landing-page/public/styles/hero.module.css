@@ -1,0 +1,81 @@
+.landing-hero {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+}
+
+.landing-hero .video-preview-container .video-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.landing-hero .video-preview-container .video-preview {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  cursor: pointer;
+  z-index: 10;
+  transition: none;
+  border-radius: 8px;
+  opacity: 0.4;
+  transition: all 0.5s ease-in;
+  cursor: pointer;
+}
+
+.landing-hero .video-preview:hover {
+  opacity: 1;
+  width: 350px;
+  height: 250px;
+}
+
+.landing-hero .video-preview-container .invisible-preview {
+  visibility: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 200px;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  cursor: pointer;
+  z-index: 5;
+  transition: none;
+}
+
+.hero-text__static {
+  position: absolute;
+  left: 5rem;
+  top: 5rem;
+  z-index: 30;
+}
+.hero-text__static h1 {
+  font-size: 8rem;
+  color: #ffffff;
+}
+.hero-text__special {
+  font-size: 6.5rem;
+}
+.hero-text__special h2 {
+  position: absolute;
+  right: 5rem;
+  bottom: 5rem;
+  /* z-index: 30; */
+}
+.hero-text__special h2.original {
+  color: #ffffff;
+  z-index: 30;
+}
+.hero-text__special h2.clipped {
+  color: #000000;
+}
