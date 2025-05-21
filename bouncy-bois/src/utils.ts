@@ -22,5 +22,11 @@ export const createGeometry = (
 
   const mesh = new three.Mesh(body, basicMaterial);
   mesh.position.set(...position);
+
+  const randomScale = Math.random() + 0.2;
+  mesh.scale.set(randomScale, randomScale, randomScale);
+
+  mesh.castShadow = true;
+
   return mesh;
 };
