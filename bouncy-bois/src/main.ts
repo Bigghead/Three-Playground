@@ -1,8 +1,9 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import { createGeometry } from "./utils";
+import { createGeometry, world } from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
+await RAPIER.init();
 
 console.log(RAPIER);
 
@@ -45,9 +46,13 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-const cube = createGeometry("box", [0, 1.5, 0]);
-const cone = createGeometry("cone", [-2, 1, -2]);
-const sphere = createGeometry("sphere", [2, 1, 0]);
+const { mesh: cube } = createGeometry("box", [0, 2, 0]);
+const { mesh: cone } = createGeometry("cone", [-2, 1, -2]);
+const {
+  mesh: sphere,
+  rapierBody,
+  rapierCollider,
+} = createGeometry("sphere", [2, 10, 0]);
 
 const floorGeometry = new three.PlaneGeometry(15, 15);
 const floorMaterial = new three.MeshStandardMaterial({
@@ -68,16 +73,12 @@ scene.add(cube, cone, sphere, floor);
 /**
  * Rapier Physics
  */
-await RAPIER.init();
-const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
-const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-  sphere.position.x,
-  sphere.position.y,
-  sphere.position.z
-);
-const rigidBody = world.createRigidBody(rigidBodyDesc);
-const colliderDesc = RAPIER.ColliderDesc.ball(1.0);
-world.createCollider(colliderDesc, rigidBody);
+
+const rapierFloor = RAPIER.RigidBodyDesc.fixed().setTranslation(0, 0, 0);
+const rapierFloorBody = world.createRigidBody(rapierFloor);
+const floorColliderDesc = RAPIER.ColliderDesc.cuboid(50, 0.001, 50); // very wide, very thin
+world.createCollider(floorColliderDesc, rapierFloorBody);
+
 /**
  * Sizes
  */
@@ -141,8 +142,8 @@ const tick = (): void => {
   controls.update();
 
   world.step();
-  sphere.position.copy(rigidBody.translation());
-  sphere.quaternion.copy(rigidBody.rotation());
+  sphere.position.copy(rapierBody.translation());
+  sphere.quaternion.copy(rapierBody.rotation());
   // Render
   renderer.render(scene, camera);
 
