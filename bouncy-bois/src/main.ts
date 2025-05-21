@@ -1,6 +1,7 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
+import { createGeometry } from "./utils";
 
 /**
  * Base
@@ -23,9 +24,10 @@ const textureMap = {};
 
  * Test cube
  */
-const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
-  new three.Mesh(new three.BoxGeometry(1, 1, 1), new three.MeshBasicMaterial());
-scene.add(cube);
+const cube = createGeometry("box", [0, 0, 0]);
+const cone = createGeometry("cone", [-2, 2, -2]);
+const sphere = createGeometry("sphere", [2, 2, 0]);
+scene.add(cube, cone, sphere);
 
 /**
  * Sizes
