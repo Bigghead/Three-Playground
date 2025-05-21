@@ -62,8 +62,22 @@ const floorMaterial = new three.MeshStandardMaterial({
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
+console.log(sphere.position);
 scene.add(cube, cone, sphere, floor);
 
+/**
+ * Rapier Physics
+ */
+await RAPIER.init();
+const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
+const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
+  sphere.position.x,
+  sphere.position.y,
+  sphere.position.z
+);
+const rigidBody = world.createRigidBody(rigidBodyDesc);
+const colliderDesc = RAPIER.ColliderDesc.ball(1.0);
+world.createCollider(colliderDesc, rigidBody);
 /**
  * Sizes
  */
@@ -126,6 +140,9 @@ const tick = (): void => {
   // Update controls
   controls.update();
 
+  world.step();
+  sphere.position.copy(rigidBody.translation());
+  sphere.quaternion.copy(rigidBody.rotation());
   // Render
   renderer.render(scene, camera);
 
