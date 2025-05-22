@@ -28,7 +28,7 @@ const getRandomNumber = (min: number, max: number): number => {
 export const buildRandomVertexPosition = (): [number, number, number] => {
   return [
     getRandomNumber(-7, 7),
-    getRandomNumber(2, 10),
+    getRandomNumber(7, 15),
     getRandomNumber(-7, 7),
   ];
 };
@@ -62,11 +62,9 @@ export const createGeometry = (
 
   mesh.castShadow = true;
 
-  const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
-    mesh.position.x,
-    mesh.position.y,
-    mesh.position.z
-  );
+  const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+    .setCanSleep(true)
+    .setTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
   const rapierBody = world.createRigidBody(rigidBodyDesc);
   let rapierCollider: RAPIER.ColliderDesc;
 

@@ -41,7 +41,7 @@ scene.add(directionalLight);
  * Meshes
  */
 const worldObjects = [
-  createGeometry("box", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
   createGeometry("sphere", buildRandomVertexPosition()),
   // createGeometry("cone", [-2, 1, -2]),
 ];
@@ -73,10 +73,10 @@ generateObjects();
 const rapierFloor = RAPIER.RigidBodyDesc.fixed().setTranslation(0, 0, 0);
 const rapierFloorBody = world.createRigidBody(rapierFloor);
 const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
-  50,
+  7.5,
   0.001,
-  50
-).setRestitution(0.5); // very wide, very thin
+  7.5
+).setRestitution(0.5);
 world.createCollider(floorColliderDesc, rapierFloorBody);
 
 /**
@@ -84,10 +84,9 @@ world.createCollider(floorColliderDesc, rapierFloorBody);
  */
 const guiObj = {
   createObject: () => {
-    const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    worldObjects.push(
-      createGeometry(geometryType, buildRandomVertexPosition())
-    );
+    // just do all spheres for now
+    // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
+    worldObjects.push(createGeometry("sphere", buildRandomVertexPosition()));
     generateObjects();
   },
 };
@@ -125,7 +124,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(3, 3, 3);
+camera.position.set(10, 7, 18);
 scene.add(camera);
 
 // Controls
@@ -166,7 +165,20 @@ const tick = (): void => {
     // +/- 2000 in x/y/z axis
     mesh.position.copy(rapierBody.translation());
     mesh.quaternion.copy(rapierBody.rotation());
+
+    // get rid of object if it's below floor ( assuming cause it fell off the sides )
+    if (mesh.position.y <= -20) {
+      // scene.remove(mesh);
+      // world.removeRigidBody(rapierBody);
+    }
   });
+
+  // rapierFloorBody.setRotation(
+  //   new RAPIER.Quaternion(0, 0, Math.PI / 4, 0),
+  //   true
+  // );
+  // floor.rotation.z += (Math.PI / 8) * 0.01;
+  // floor.position.copy(rapierFloorBody.translation());
   // Render
   renderer.render(scene, camera);
 
