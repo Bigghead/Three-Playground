@@ -1,7 +1,7 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import { createGeometry, world } from "./utils";
+import { buildRandomVertexPosition, createGeometry, world } from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
@@ -47,9 +47,9 @@ scene.add(directionalLight);
  * Meshes
  */
 const worldObjects = [
-  createGeometry("box", [0, 2, 0]),
+  createGeometry("box", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
   // createGeometry("cone", [-2, 1, -2]),
-  createGeometry("sphere", [2, 10, 0]),
 ];
 
 const floorGeometry = new three.PlaneGeometry(15, 15);
@@ -65,10 +65,12 @@ const floorMaterial = new three.MeshStandardMaterial({
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
-scene.add(floor);
+scene.add(floor, new three.AxesHelper(10));
 
-console.log(worldObjects);
-worldObjects.forEach(({ mesh }) => scene.add(mesh));
+const generateObjects = (): void => {
+  worldObjects.forEach(({ mesh }) => scene.add(mesh));
+};
+generateObjects();
 
 /**
  * Rapier Physics
@@ -76,8 +78,27 @@ worldObjects.forEach(({ mesh }) => scene.add(mesh));
 
 const rapierFloor = RAPIER.RigidBodyDesc.fixed().setTranslation(0, 0, 0);
 const rapierFloorBody = world.createRigidBody(rapierFloor);
-const floorColliderDesc = RAPIER.ColliderDesc.cuboid(50, 0.001, 50); // very wide, very thin
+const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
+  50,
+  0.001,
+  50
+).setRestitution(0.5); // very wide, very thin
 world.createCollider(floorColliderDesc, rapierFloorBody);
+
+/**
+ * GUI Functions
+ */
+const guiObj = {
+  createObject: () => {
+    const geometryType = Math.random() < 0.5 ? "box" : "sphere";
+    worldObjects.push(
+      createGeometry(geometryType, buildRandomVertexPosition())
+    );
+    generateObjects();
+  },
+};
+
+gui.add(guiObj, "createObject").name("Create Object");
 
 /**
  * Sizes

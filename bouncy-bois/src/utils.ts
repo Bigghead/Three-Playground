@@ -5,6 +5,17 @@ await RAPIER.init();
 type randomGeometry = "sphere" | "cone" | "box";
 const basicMaterial = new three.MeshBasicMaterial();
 
+const getRandomNumber = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+export const buildRandomVertexPosition = (): [number, number, number] => {
+  return [
+    getRandomNumber(-7, 7),
+    getRandomNumber(2, 10),
+    getRandomNumber(-7, 7),
+  ];
+};
+
 export const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
 export const createGeometry = (
@@ -82,7 +93,7 @@ export const createGeometry = (
     default:
       throw new Error(`Unsupported geometry: ${geometry}`);
   }
-
+  rapierCollider.restitution = 0.5;
   world.createCollider(rapierCollider, rapierBody);
   return { mesh, rapierBody, rapierCollider };
 };
