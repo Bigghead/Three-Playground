@@ -46,13 +46,11 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-const { mesh: cube } = createGeometry("box", [0, 2, 0]);
-const { mesh: cone } = createGeometry("cone", [-2, 1, -2]);
-const {
-  mesh: sphere,
-  rapierBody,
-  rapierCollider,
-} = createGeometry("sphere", [2, 10, 0]);
+const worldObjects = [
+  createGeometry("box", [0, 2, 0]),
+  // createGeometry("cone", [-2, 1, -2]),
+  createGeometry("sphere", [2, 10, 0]),
+];
 
 const floorGeometry = new three.PlaneGeometry(15, 15);
 const floorMaterial = new three.MeshStandardMaterial({
@@ -67,8 +65,10 @@ const floorMaterial = new three.MeshStandardMaterial({
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
-console.log(sphere.position);
-scene.add(cube, cone, sphere, floor);
+scene.add(floor);
+
+console.log(worldObjects);
+worldObjects.forEach(({ mesh }) => scene.add(mesh));
 
 /**
  * Rapier Physics
@@ -142,8 +142,16 @@ const tick = (): void => {
   controls.update();
 
   world.step();
-  sphere.position.copy(rapierBody.translation());
-  sphere.quaternion.copy(rapierBody.rotation());
+  worldObjects.forEach(({ mesh, rapierBody }) => {
+    /**
+     * Todo, fix cone
+     */
+    // for cone shape, the translation would give the threejs mesh
+    // Craaaaaaaaaaazy wild variations on the position axis
+    // +/- 2000 in x/y/z axis
+    mesh.position.copy(rapierBody.translation());
+    mesh.quaternion.copy(rapierBody.rotation());
+  });
   // Render
   renderer.render(scene, camera);
 

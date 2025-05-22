@@ -15,17 +15,14 @@ export const createGeometry = (
   rapierBody: RAPIER.RigidBody;
   rapierCollider: RAPIER.ColliderDesc;
 } => {
-  let body: three.BufferGeometry;
+  let body: three.BufferGeometry = new three.SphereGeometry(1);
 
   switch (geometry) {
-    case "sphere":
-      body = new three.SphereGeometry(1);
-      break;
-    case "cone":
-      body = new three.ConeGeometry(1);
-      break;
     case "box":
       body = new three.BoxGeometry(1);
+    // case "cone":
+    //   body = new three.ConeGeometry(1);
+    //   break;
   }
 
   const mesh = new three.Mesh(body, basicMaterial);
@@ -52,7 +49,7 @@ export const createGeometry = (
       break;
 
     case "box":
-      const halfExtent = 1 * randomScale;
+      const halfExtent = (1 * randomScale) / 2;
       rapierCollider = RAPIER.ColliderDesc.cuboid(
         halfExtent,
         halfExtent,
