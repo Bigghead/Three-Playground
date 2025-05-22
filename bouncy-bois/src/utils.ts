@@ -2,8 +2,25 @@ import * as three from "three";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
+/**
+ * Textures
+ */
+const textureLoader = new three.TextureLoader();
+const textureMap = [
+  textureLoader.load("/matcaps/1.webp"),
+  textureLoader.load("/matcaps/2.webp"),
+  textureLoader.load("/matcaps/3.webp"),
+  textureLoader.load("/matcaps/4.webp"),
+  textureLoader.load("/matcaps/5.webp"),
+  textureLoader.load("/matcaps/6.webp"),
+  textureLoader.load("/matcaps/7.webp"),
+  textureLoader.load("/matcaps/8.webp"),
+];
+
 type randomGeometry = "sphere" | "cone" | "box";
-const basicMaterial = new three.MeshBasicMaterial();
+const basicMaterial = new three.MeshMatcapMaterial({
+  matcap: textureMap[0],
+});
 
 const getRandomNumber = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -35,13 +52,12 @@ export const createGeometry = (
     //   body = new three.ConeGeometry(1);
     //   break;
   }
-
-  const mesh = new three.Mesh(body, basicMaterial);
+  const material = basicMaterial.clone();
+  material.matcap = textureMap[getRandomNumber(1, textureMap.length)];
+  const mesh = new three.Mesh(body, material);
   mesh.position.set(...position);
 
   const randomScale = Math.random() + 0.2;
-  console.log(randomScale);
-  console.log(1 * randomScale);
   mesh.scale.set(randomScale, randomScale, randomScale);
 
   mesh.castShadow = true;

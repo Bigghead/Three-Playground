@@ -20,12 +20,6 @@ const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 const scene = new three.Scene();
 
 /**
- * Textures
- */
-const textureLoader = new three.TextureLoader();
-const textureMap = {};
-
-/**
  * Light
  */
 
