@@ -5,8 +5,6 @@ import { buildRandomVertexPosition, createGeometry, world } from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
-console.log(RAPIER);
-
 /**
  * Base
  */
@@ -46,7 +44,7 @@ const worldObjects = [
   // createGeometry("cone", [-2, 1, -2]),
 ];
 
-const floorGeometry = new three.PlaneGeometry(15, 15);
+const floorGeometry = new three.BoxGeometry(15, 0.01, 15);
 const floorMaterial = new three.MeshStandardMaterial({
   color: "#777777",
   metalness: 0.3,
@@ -70,7 +68,8 @@ generateObjects();
  * Rapier Physics
  */
 
-const rapierFloor = RAPIER.RigidBodyDesc.fixed().setTranslation(0, 0, 0);
+const rapierFloor =
+  RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
 const rapierFloorBody = world.createRigidBody(rapierFloor);
 const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
   7.5,
@@ -83,15 +82,30 @@ world.createCollider(floorColliderDesc, rapierFloorBody);
  * GUI Functions
  */
 const guiObj = {
+  floorRotationX: 0,
   createObject: () => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
     worldObjects.push(createGeometry("sphere", buildRandomVertexPosition()));
     generateObjects();
   },
+
+  tipFloor: () => {
+    guiObj.floorRotationX += Math.PI / 2;
+
+    const quat = new RAPIER.Quaternion(
+      Math.sin(guiObj.floorRotationX / 2),
+      0,
+      0,
+      Math.cos(guiObj.floorRotationX / 2)
+    );
+
+    rapierFloorBody.setRotation(quat, true);
+  },
 };
 
 gui.add(guiObj, "createObject").name("Create Object");
+gui.add(guiObj, "tipFloor").name("Tip Floor");
 
 /**
  * Sizes
@@ -156,7 +170,7 @@ const tick = (): void => {
   controls.update();
 
   world.step();
-  worldObjects.forEach(({ mesh, rapierBody }) => {
+  worldObjects.forEach(({ mesh, rapierBody }, index) => {
     /**
      * Todo, fix cone
      */
@@ -168,8 +182,9 @@ const tick = (): void => {
 
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
     if (mesh.position.y <= -20) {
-      // scene.remove(mesh);
-      // world.removeRigidBody(rapierBody);
+      scene.remove(mesh);
+      world.removeRigidBody(rapierBody);
+      worldObjects.splice(index, 1);
     }
   });
 
@@ -178,7 +193,9 @@ const tick = (): void => {
   //   true
   // );
   // floor.rotation.z += (Math.PI / 8) * 0.01;
-  // floor.position.copy(rapierFloorBody.translation());
+  floor.position.copy(rapierFloorBody.translation());
+  const rQuat = rapierFloorBody.rotation();
+  floor.quaternion.set(rQuat.x, rQuat.y, rQuat.z, rQuat.w);
   // Render
   renderer.render(scene, camera);
 
