@@ -2,6 +2,7 @@ import * as three from "three";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
+export const floorWidth = 10;
 /**
  * Textures
  */
@@ -27,9 +28,9 @@ const getRandomNumber = (min: number, max: number): number => {
 };
 export const buildRandomVertexPosition = (): [number, number, number] => {
   return [
-    getRandomNumber(-7, 7),
-    getRandomNumber(7, 15),
-    getRandomNumber(-7, 7),
+    getRandomNumber(-floorWidth, floorWidth),
+    getRandomNumber(10, 15),
+    getRandomNumber(-floorWidth, floorWidth),
   ];
 };
 

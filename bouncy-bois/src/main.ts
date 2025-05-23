@@ -1,7 +1,12 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import { buildRandomVertexPosition, createGeometry, world } from "./utils";
+import {
+  buildRandomVertexPosition,
+  createGeometry,
+  floorWidth,
+  world,
+} from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
@@ -48,7 +53,11 @@ const worldObjects = [
   // createGeometry("cone", [-2, 1, -2]),
 ];
 
-const floorGeometry = new three.BoxGeometry(15, 0.01, 15);
+const floorGeometry = new three.BoxGeometry(
+  floorWidth * 2,
+  0.01,
+  floorWidth * 2
+);
 const floorMaterial = new three.MeshStandardMaterial({
   color: "#777777",
   metalness: 0.3,
@@ -61,7 +70,7 @@ const floorMaterial = new three.MeshStandardMaterial({
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
-scene.add(floor, new three.AxesHelper(10));
+scene.add(floor);
 
 const generateObjects = (): void => {
   worldObjects.forEach(({ mesh }) => scene.add(mesh));
@@ -76,9 +85,9 @@ const rapierFloor =
   RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
 const rapierFloorBody = world.createRigidBody(rapierFloor);
 const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
-  7.5,
+  floorWidth,
   0.001,
-  7.5
+  floorWidth
 ).setRestitution(0.5);
 world.createCollider(floorColliderDesc, rapierFloorBody);
 
@@ -89,6 +98,7 @@ const guiObj = {
   floorRotationX: 0,
   isFloorAnimating: false,
   endFloorRotationAngle: 0.25, // stops at 25 degrees
+  rainingInterval: null as number | null, // setInterval returns a number type
   createObject: () => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
@@ -108,11 +118,30 @@ const guiObj = {
     // needs that last 1 in the w param for some reason, but it works
     rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
   },
+
+  makeItRain: () => {
+    guiObj.rainingInterval = setInterval(() => {
+      const sphere = createGeometry("sphere", buildRandomVertexPosition());
+      worldObjects.push(sphere);
+      scene.add(sphere.mesh);
+    }, 50);
+  },
+
+  clearRain: () => {
+    // typescript, bruhh...
+    // it's screaming for type mismatch before this line check if null
+    if (guiObj.rainingInterval != null) {
+      clearInterval(guiObj.rainingInterval);
+      guiObj.rainingInterval = null;
+    }
+  },
 };
 
 gui.add(guiObj, "createObject").name("Create Object");
 gui.add(guiObj, "tipFloor").name("Tip Floor");
 gui.add(guiObj, "resetFloor").name("Reset Floor");
+gui.add(guiObj, "makeItRain").name("Make It Rain!");
+gui.add(guiObj, "clearRain").name("Stop Rain!");
 
 /**
  * Sizes
@@ -145,7 +174,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(10, 7, 18);
+camera.position.set(0, 7, 18);
 scene.add(camera);
 
 // Controls
