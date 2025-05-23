@@ -41,6 +41,10 @@ scene.add(directionalLight);
 const worldObjects = [
   createGeometry("sphere", buildRandomVertexPosition()),
   createGeometry("sphere", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
+  createGeometry("sphere", buildRandomVertexPosition()),
   // createGeometry("cone", [-2, 1, -2]),
 ];
 
@@ -83,6 +87,8 @@ world.createCollider(floorColliderDesc, rapierFloorBody);
  */
 const guiObj = {
   floorRotationX: 0,
+  isFloorAnimating: false,
+  endFloorRotationAngle: 0.25, // stops at 25 degrees
   createObject: () => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
@@ -91,21 +97,22 @@ const guiObj = {
   },
 
   tipFloor: () => {
-    guiObj.floorRotationX += Math.PI / 2;
+    guiObj.isFloorAnimating = true;
+  },
 
-    const quat = new RAPIER.Quaternion(
-      Math.sin(guiObj.floorRotationX / 2),
-      0,
-      0,
-      Math.cos(guiObj.floorRotationX / 2)
-    );
+  resetFloor: () => {
+    guiObj.isFloorAnimating = false;
+    guiObj.floorRotationX = 0;
 
-    rapierFloorBody.setRotation(quat, true);
+    // trippy rapier rotation, setting all 0s doesnt put it back to 0
+    // needs that last 1 in the w param for some reason, but it works
+    rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
   },
 };
 
 gui.add(guiObj, "createObject").name("Create Object");
 gui.add(guiObj, "tipFloor").name("Tip Floor");
+gui.add(guiObj, "resetFloor").name("Reset Floor");
 
 /**
  * Sizes
@@ -162,9 +169,12 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
  * Animate
  */
 const clock = new three.Clock();
+let deltaTime = 0;
 
 const tick = (): void => {
   const elapsedTime = clock.getElapsedTime();
+  const timeDelta = elapsedTime - deltaTime;
+  deltaTime = elapsedTime;
 
   // Update controls
   controls.update();
@@ -188,14 +198,23 @@ const tick = (): void => {
     }
   });
 
-  // rapierFloorBody.setRotation(
-  //   new RAPIER.Quaternion(0, 0, Math.PI / 4, 0),
-  //   true
-  // );
-  // floor.rotation.z += (Math.PI / 8) * 0.01;
+  if (guiObj.isFloorAnimating) {
+    if (guiObj.floorRotationX <= guiObj.endFloorRotationAngle) {
+      guiObj.floorRotationX += timeDelta * 0.1;
+      const quat = new RAPIER.Quaternion(
+        0,
+        0,
+        Math.sin(guiObj.floorRotationX),
+        Math.cos(guiObj.floorRotationX)
+      );
+
+      rapierFloorBody.setRotation(quat, true);
+    }
+  }
   floor.position.copy(rapierFloorBody.translation());
   const rQuat = rapierFloorBody.rotation();
   floor.quaternion.set(rQuat.x, rQuat.y, rQuat.z, rQuat.w);
+
   // Render
   renderer.render(scene, camera);
 
