@@ -98,6 +98,8 @@ const guiObj = {
   floorRotationX: 0,
   isFloorAnimating: false,
   endFloorRotationAngle: 0.25, // stops at 25 degrees
+  isRaining: false,
+  rainSpeedTimer: 50,
   rainingInterval: null as number | null, // setInterval returns a number type
   createObject: () => {
     // just do all spheres for now
@@ -120,20 +122,31 @@ const guiObj = {
   },
 
   makeItRain: () => {
-    guiObj.rainingInterval = setInterval(() => {
-      const sphere = createGeometry("sphere", buildRandomVertexPosition());
-      worldObjects.push(sphere);
-      scene.add(sphere.mesh);
-    }, 50);
+    if (!guiObj.isRaining) {
+      guiObj.isRaining = true;
+      guiObj.rainingInterval = setInterval(() => {
+        const sphere = createGeometry("sphere", buildRandomVertexPosition());
+        worldObjects.push(sphere);
+        scene.add(sphere.mesh);
+      }, guiObj.rainSpeedTimer);
+    }
   },
 
   clearRain: () => {
     // typescript, bruhh...
     // it's screaming for type mismatch before this line check if null
     if (guiObj.rainingInterval != null) {
+      guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
       guiObj.rainingInterval = null;
     }
+  },
+
+  changeRainSpeed: (speed: number) => {
+    if (!guiObj.isRaining) return;
+    guiObj.rainSpeedTimer = speed;
+    guiObj.clearRain();
+    guiObj.makeItRain();
   },
 };
 
@@ -141,6 +154,16 @@ gui.add(guiObj, "createObject").name("Create Object");
 gui.add(guiObj, "tipFloor").name("Tip Floor");
 gui.add(guiObj, "resetFloor").name("Reset Floor");
 gui.add(guiObj, "makeItRain").name("Make It Rain!");
+
+// we're going to use this to check performance later
+// like defaulting to 1 to make that CPU work
+gui
+  .add(guiObj, "rainSpeedTimer")
+  .name("Rain Speed!")
+  .onFinishChange((speed: number) => {
+    guiObj.changeRainSpeed(speed);
+  });
+
 gui.add(guiObj, "clearRain").name("Stop Rain!");
 
 /**
