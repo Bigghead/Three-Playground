@@ -1,5 +1,6 @@
 @import url("../public/styles/hero.module.css");
 @import url("../public/styles/about.module.css");
+@import url("../public/styles/portfolio.module.css");
 
 * {
   margin: 0;
@@ -8,5 +9,5 @@
 
 html,
 body {
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
 }

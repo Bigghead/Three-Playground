@@ -74,8 +74,8 @@ elements["video-preview"]?.addEventListener("click", () => {
 function startNextVideo(): void {
   hasFinishedLoadingAnimation = false;
   const currentVideoIndex = currentVideo % videoLength;
-  const videoSrc = `hero-${currentVideoIndex + 1}.mp4`;
-  const nextVideoSrc = `hero-${
+  const videoSrc = `videos/hero/hero-${currentVideoIndex + 1}.mp4`;
+  const nextVideoSrc = `videos/hero/hero-${
     currentVideoIndex === 3 ? 1 : currentVideoIndex + 2
   }.mp4`;
   const video = elements["video-current"];
@@ -296,8 +296,7 @@ gsap.to(spans, {
     trigger: elements["intro-text-heading"],
     start: "top center",
     end: "bottom center",
-    scrub: 0.5,
-    markers: true,
+    scrub: 5,
   },
 });
 
@@ -307,7 +306,7 @@ gsap.set(elements["intro-text-paragraph"], {
   scale: 0.3,
   opacity: 0.2,
   scaleX: 1,
-  transformOrigin: "center center",
+  transformOrigin: "left bottom",
 });
 
 gsap.to(elements["intro-text-paragraph"], {
@@ -321,21 +320,27 @@ gsap.to(elements["intro-text-paragraph"], {
     trigger: elements["landing-about-scroll-trigger"],
     start: "top center",
     end: "bottom bottom",
-    scrub: 0.5,
+    scrub: 5,
   },
 });
+
+/**
+ * Todo - Fix clippath / border radius clashing
+ */
 gsap.to(elements["landing-about-image"], {
   clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
   width: "100vw",
   height: "100vh",
+  // scale: 1.1,
   ease: "power1.inOut",
   scrollTrigger: {
     trigger: elements["landing-about-image"],
     start: "top top",
-    end: "+=800 center",
-    scrub: 0.5,
-    pin: "body",
-    // markers: true,
-    // anticipatePin: 1,
+    end: "+=800 center bottom",
+    scrub: 1,
+    pin: elements["landing-about-image"].parentElement,
+    pinSpacing: true,
+    markers: true,
+    anticipatePin: 1,
   },
 });
