@@ -43,15 +43,9 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-const worldObjects = [
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  // createGeometry("cone", [-2, 1, -2]),
-];
+const worldObjects = Array.from({ length: 20 }).map(() =>
+  createGeometry("sphere", buildRandomVertexPosition())
+);
 
 const floorGeometry = new three.BoxGeometry(
   floorWidth * 2,
@@ -197,7 +191,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(0, 7, 18);
+camera.position.set(0, 7, 20);
 scene.add(camera);
 
 // Controls

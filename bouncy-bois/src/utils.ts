@@ -2,21 +2,14 @@ import * as three from "three";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
 
-export const floorWidth = 10;
+export const floorWidth = 12;
 /**
  * Textures
  */
 const textureLoader = new three.TextureLoader();
-const textureMap = [
-  textureLoader.load("/matcaps/1.webp"),
-  textureLoader.load("/matcaps/2.webp"),
-  textureLoader.load("/matcaps/3.webp"),
-  textureLoader.load("/matcaps/4.webp"),
-  textureLoader.load("/matcaps/5.webp"),
-  textureLoader.load("/matcaps/6.webp"),
-  textureLoader.load("/matcaps/7.webp"),
-  textureLoader.load("/matcaps/8.webp"),
-];
+const textureMap = Array.from({ length: 14 }).map((_, index) =>
+  textureLoader.load(`/matcaps/${index + 1}.webp`)
+);
 
 type randomGeometry = "sphere" | "cone" | "box";
 const basicMaterial = new three.MeshMatcapMaterial({
@@ -29,7 +22,7 @@ const getRandomNumber = (min: number, max: number): number => {
 export const buildRandomVertexPosition = (): [number, number, number] => {
   return [
     getRandomNumber(-floorWidth, floorWidth),
-    getRandomNumber(10, 15),
+    getRandomNumber(12, 20),
     getRandomNumber(-floorWidth, floorWidth),
   ];
 };
