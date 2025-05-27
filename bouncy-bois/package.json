@@ -9,13 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/node": "^22.15.21",
     "@types/three": "^0.176.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-restart": "^0.4.2"
   },
   "dependencies": {
+    "@dimforge/rapier3d": "^0.17.0",
     "lil-gui": "^0.20.0",
     "three": "^0.176.0"
   }
