@@ -43,15 +43,9 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-const worldObjects = [
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  createGeometry("sphere", buildRandomVertexPosition()),
-  // createGeometry("cone", [-2, 1, -2]),
-];
+const worldObjects = Array.from({ length: 20 }).map(() =>
+  createGeometry("sphere", buildRandomVertexPosition())
+);
 
 const floorGeometry = new three.BoxGeometry(
   floorWidth * 2,
@@ -99,7 +93,7 @@ const guiObj = {
   isFloorAnimating: false,
   endFloorRotationAngle: 0.25, // stops at 25 degrees
   isRaining: false,
-  rainSpeedTimer: 50,
+  rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
   createObject: () => {
     // just do all spheres for now
@@ -125,7 +119,10 @@ const guiObj = {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
       guiObj.rainingInterval = setInterval(() => {
-        const sphere = createGeometry("sphere", buildRandomVertexPosition());
+        const sphere = createGeometry(
+          Math.random() < 0.5 ? "box" : "sphere",
+          buildRandomVertexPosition()
+        );
         worldObjects.push(sphere);
         scene.add(sphere.mesh);
       }, guiObj.rainSpeedTimer);
@@ -150,7 +147,7 @@ const guiObj = {
   },
 };
 
-gui.add(guiObj, "createObject").name("Create Object");
+gui.add(guiObj, "createObject").name("Add Ball");
 gui.add(guiObj, "tipFloor").name("Tip Floor");
 gui.add(guiObj, "resetFloor").name("Reset Floor");
 gui.add(guiObj, "makeItRain").name("Make It Rain!");
@@ -158,7 +155,7 @@ gui.add(guiObj, "makeItRain").name("Make It Rain!");
 // we're going to use this to check performance later
 // like defaulting to 1 to make that CPU work
 gui
-  .add(guiObj, "rainSpeedTimer")
+  .add(guiObj, "rainSpeedTimer", 5, 200, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
     guiObj.changeRainSpeed(speed);
@@ -197,7 +194,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(0, 7, 18);
+camera.position.set(0, 7, 25);
 scene.add(camera);
 
 // Controls
