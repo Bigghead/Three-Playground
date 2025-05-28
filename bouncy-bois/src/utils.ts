@@ -3,6 +3,7 @@ export const floorWidth = 12;
 export type randomGeometry = "sphere" | "cone" | "box";
 
 export type ObjectBody = {
+  id: string;
   geometry: randomGeometry;
   position: [number, number, number];
   randomScale: number;

@@ -28,13 +28,15 @@ postMessage({
 });
 
 type RapierBody = {
+  id: string;
   rapierBody: RAPIER.RigidBody;
   rapierCollider: RAPIER.ColliderDesc;
 };
 
-let rapierBodies: RapierBody[] = [];
+let rapierBodies: Map<string, RapierBody> = new Map();
 
 const createRapierBody = (
+  id: string,
   geometry: randomGeometry,
   position: [number, number, number],
   randomScale: number
@@ -60,6 +62,7 @@ const createRapierBody = (
   rapierCollider.restitution = 0.5;
   world.createCollider(rapierCollider, rapierBody);
   return {
+    id,
     rapierBody,
     rapierCollider,
   };
@@ -70,25 +73,27 @@ self.onmessage = ({ data: { type, payload } }) => {
   if (type === "Add Objects") {
     const { data } = payload;
     console.log(data);
-    rapierBodies = data.map(
-      ({ geometry, position, randomScale }: ObjectBody) => {
-        return createRapierBody(geometry, position, randomScale);
-      }
-    );
-    console.log(rapierBodies);
+    data.forEach(({ id, geometry, position, randomScale }: ObjectBody) => {
+      rapierBodies.set(
+        id,
+        createRapierBody(id, geometry, position, randomScale)
+      );
+    });
   }
 
   if (type === "World Step") {
     if (!world) return;
+
     const { isFloorAnimating, floorRotationX, endFloorRotationAngle } = payload;
     world.step();
     postMessage({
       type: "Update Meshes",
       payload: {
-        data: rapierBodies.map((body) => {
+        data: Array.from(rapierBodies.values()).map((body) => {
           const translation = body.rapierBody.translation();
           const rotation = body.rapierBody.rotation();
           return {
+            id: body.id,
             position: { x: translation.x, y: translation.y, z: translation.z },
             rotation: {
               x: rotation.x,

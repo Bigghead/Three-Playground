@@ -52,7 +52,6 @@ type WorldObjects = ObjectBody & {
   mesh: three.Mesh;
 };
 let worldObjects: Map<string, WorldObjects> = new Map();
-let rapierFloor: RAPIER.RigidBody;
 
 worker.onmessage = ({ data: { type, payload } }) => {
   console.log(type);
@@ -62,27 +61,27 @@ worker.onmessage = ({ data: { type, payload } }) => {
       worldObjects.set(threeMesh.id, threeMesh);
       scene.add(threeMesh.mesh);
     });
-    console.log("here");
 
     worker.postMessage({
       type: "Add Objects",
       payload: {
-        data: worldObjects.map(({ geometry, position, randomScale }) => ({
-          geometry,
-          position,
-          randomScale,
-        })),
+        data: Array.from(worldObjects.values()).map(
+          ({ id, geometry, position, randomScale }) => ({
+            id,
+            geometry,
+            position,
+            randomScale,
+          })
+        ),
       },
     });
-
-    generateObjects();
   }
 
   if (type === "Update Meshes") {
     const { data } = payload;
-    data.forEach(({ position, rotation }, index: number) => {
-      worldObjects[index].mesh.position.copy(position);
-      worldObjects[index].mesh.quaternion.copy(rotation);
+    data.forEach(({ id, position, rotation }) => {
+      worldObjects.get(id)?.mesh.position.copy(position);
+      worldObjects.get(id)?.mesh.quaternion.copy(rotation);
     });
   }
 };
@@ -127,8 +126,22 @@ const guiObj = {
   createObject: () => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    worldObjects.push(createMesh("sphere"));
-    generateObjects();
+    const newMesh = createMesh("sphere");
+    worldObjects.set(newMesh.id, newMesh);
+    scene.add(newMesh.mesh);
+    worker.postMessage({
+      type: "Add Objects",
+      payload: {
+        data: [
+          {
+            id: newMesh.id,
+            geometry: newMesh.geometry,
+            position: newMesh.position,
+            randomScale: newMesh.randomScale,
+          },
+        ],
+      },
+    });
   },
 
   tipFloor: () => {
@@ -268,17 +281,16 @@ const tick = (): void => {
   // world.step();
   worldObjects.forEach(({ mesh }, index) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    if (mesh.position.y <= -20) {
-      scene.remove(mesh);
-      // worldObjects.splice(index, 1);
-
-      worker.postMessage({
-        type: "Remove Body",
-        payload: {
-          index,
-        },
-      });
-    }
+    // if (mesh.position.y <= -20) {
+    //   scene.remove(mesh);
+    //   // worldObjects.splice(index, 1);
+    //   worker.postMessage({
+    //     type: "Remove Body",
+    //     payload: {
+    //       index,
+    //     },
+    //   });
+    // }
   });
 
   // if (guiObj.isFloorAnimating) {
