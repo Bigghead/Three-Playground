@@ -123,10 +123,10 @@ const guiObj = {
   isRaining: false,
   rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
-  createObject: () => {
+  createObject: (geometry = "sphere") => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    const newMesh = createMesh("sphere");
+    const newMesh = createMesh(geometry as randomGeometry);
     worldObjects.set(newMesh.id, newMesh);
     scene.add(newMesh.mesh);
     worker.postMessage({
@@ -161,12 +161,7 @@ const guiObj = {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
       guiObj.rainingInterval = setInterval(() => {
-        const sphere = createMesh(
-          Math.random() < 0.5 ? "box" : "sphere",
-          buildRandomVertexPosition()
-        );
-        worldObjects.push(sphere);
-        scene.add(sphere.mesh);
+        guiObj.createObject(Math.random() <= 0.5 ? "sphere" : "box");
       }, guiObj.rainSpeedTimer);
     }
   },
