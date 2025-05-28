@@ -1,6 +1,11 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 
-import { floorWidth, getRandomNumber, type randomGeometry } from "./utils";
+import {
+  floorWidth,
+  getRandomNumber,
+  type ObjectBody,
+  type randomGeometry,
+} from "./utils";
 await RAPIER.init();
 
 export const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
@@ -54,4 +59,14 @@ const createRapierBody = (
     rapierBody,
     rapierCollider,
   };
+};
+
+self.onmessage = ({ data: { type, payload } }) => {
+  console.log(type, payload);
+  if (type === "Add Objects") {
+    const { data } = payload;
+    data.forEach(({ geometry, position, randomScale }: ObjectBody) => {
+      createRapierBody(geometry, position, randomScale);
+    });
+  }
 };

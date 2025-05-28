@@ -1,13 +1,19 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import { buildRandomVertexPosition, createMesh, floorWidth } from "./utils";
+import {
+  buildRandomVertexPosition,
+  floorWidth,
+  type randomGeometry,
+  type ObjectBody,
+} from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
+import { createMesh } from "./three-helper";
 await RAPIER.init();
 
-const worker = new Worker(new URL("worker.ts", import.meta.url));
-console.log(worker);
-worker.onmessage = ({ data }) => console.log(data);
+const worker = new Worker(new URL("worker.ts", import.meta.url), {
+  type: "module",
+});
 
 /**
  * Base
@@ -42,22 +48,28 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-type WorldObjects = {
+type WorldObjects = ObjectBody & {
   mesh: three.Mesh;
-  rapierBody: RAPIER.RigidBody;
-  rapierCollider: RAPIER.ColliderDesc;
 };
 let worldObjects: WorldObjects[] = [];
 let rapierFloor: RAPIER.RigidBody;
 
 worker.onmessage = ({ data: { type, payload } }) => {
-  console.log(payload);
+  console.log(type);
   if (type === "Rapier Ready") {
-    rapierFloor = payload.floor;
-    const meshes = Array.from({ length: 20 }).map(() =>
-      createMesh("sphere", buildRandomVertexPosition())
-    );
-    worker.postMessage({ type: "Create Objects" });
+    worldObjects = Array.from({ length: 20 }).map(() => createMesh("sphere"));
+    console.log("here");
+
+    worker.postMessage({
+      type: "Add Objects",
+      payload: {
+        data: worldObjects.map(({ geometry, position, randomScale }) => ({
+          geometry,
+          position,
+          randomScale,
+        })),
+      },
+    });
   }
 };
 
@@ -76,7 +88,7 @@ const floorMaterial = new three.MeshStandardMaterial({
 
 // forgot standard material needs lighting
 const floor = new three.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
+// floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
 
@@ -102,7 +114,7 @@ const guiObj = {
   createObject: () => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    worldObjects.push(createGeometry("sphere", buildRandomVertexPosition()));
+    worldObjects.push(createMesh("sphere"));
     generateObjects();
   },
 
@@ -116,14 +128,14 @@ const guiObj = {
 
     // trippy rapier rotation, setting all 0s doesnt put it back to 0
     // needs that last 1 in the w param for some reason, but it works
-    rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+    // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
   },
 
   makeItRain: () => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
       guiObj.rainingInterval = setInterval(() => {
-        const sphere = createGeometry(
+        const sphere = createMesh(
           Math.random() < 0.5 ? "box" : "sphere",
           buildRandomVertexPosition()
         );
@@ -232,41 +244,41 @@ const tick = (): void => {
   // Update controls
   controls.update();
 
-  world.step();
-  worldObjects.forEach(({ mesh, rapierBody }, index) => {
-    /**
-     * Todo, fix cone
-     */
-    // for cone shape, the translation would give the threejs mesh
-    // Craaaaaaaaaaazy wild variations on the position axis
-    // +/- 2000 in x/y/z axis
-    mesh.position.copy(rapierBody.translation());
-    mesh.quaternion.copy(rapierBody.rotation());
+  // world.step();
+  // worldObjects.forEach(({ mesh, rapierBody }, index) => {
+  //   /**
+  //    * Todo, fix cone
+  //    */
+  //   // for cone shape, the translation would give the threejs mesh
+  //   // Craaaaaaaaaaazy wild variations on the position axis
+  //   // +/- 2000 in x/y/z axis
+  //   mesh.position.copy(rapierBody.translation());
+  //   mesh.quaternion.copy(rapierBody.rotation());
 
-    // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    if (mesh.position.y <= -20) {
-      scene.remove(mesh);
-      world.removeRigidBody(rapierBody);
-      worldObjects.splice(index, 1);
-    }
-  });
+  //   // get rid of object if it's below floor ( assuming cause it fell off the sides )
+  //   if (mesh.position.y <= -20) {
+  //     scene.remove(mesh);
+  //     // world.removeRigidBody(rapierBody);
+  //     worldObjects.splice(index, 1);
+  //   }
+  // });
 
-  if (guiObj.isFloorAnimating) {
-    if (guiObj.floorRotationX <= guiObj.endFloorRotationAngle) {
-      guiObj.floorRotationX += timeDelta * 0.1;
-      const quat = new RAPIER.Quaternion(
-        0,
-        0,
-        Math.sin(guiObj.floorRotationX),
-        Math.cos(guiObj.floorRotationX)
-      );
+  // if (guiObj.isFloorAnimating) {
+  //   if (guiObj.floorRotationX <= guiObj.endFloorRotationAngle) {
+  //     guiObj.floorRotationX += timeDelta * 0.1;
+  //     const quat = new RAPIER.Quaternion(
+  //       0,
+  //       0,
+  //       Math.sin(guiObj.floorRotationX),
+  //       Math.cos(guiObj.floorRotationX)
+  //     );
 
-      rapierFloorBody.setRotation(quat, true);
-    }
-  }
-  floor.position.copy(rapierFloorBody.translation());
-  const rQuat = rapierFloorBody.rotation();
-  floor.quaternion.set(rQuat.x, rQuat.y, rQuat.z, rQuat.w);
+  //     rapierFloorBody.setRotation(quat, true);
+  //   }
+  // }
+  // floor.position.copy(rapierFloorBody.translation());
+  // const rQuat = rapierFloorBody.rotation();
+  // floor.quaternion.set(rQuat.x, rQuat.y, rQuat.z, rQuat.w);
 
   // Render
   renderer.render(scene, camera);
