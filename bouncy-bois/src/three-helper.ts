@@ -25,6 +25,7 @@ export const createMesh = (
   geometry: randomGeometry;
   position: [number, number, number];
   randomScale: number;
+  id: string;
 } => {
   let body: three.BufferGeometry = new three.SphereGeometry(1);
 
@@ -45,5 +46,11 @@ export const createMesh = (
 
   mesh.castShadow = true;
 
-  return { mesh, geometry, position, randomScale };
+  return {
+    mesh,
+    geometry,
+    position,
+    randomScale,
+    id: `mesh_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+  };
 };

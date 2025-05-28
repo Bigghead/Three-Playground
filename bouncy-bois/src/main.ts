@@ -51,13 +51,17 @@ scene.add(directionalLight);
 type WorldObjects = ObjectBody & {
   mesh: three.Mesh;
 };
-let worldObjects: WorldObjects[] = [];
+let worldObjects: Map<string, WorldObjects> = new Map();
 let rapierFloor: RAPIER.RigidBody;
 
 worker.onmessage = ({ data: { type, payload } }) => {
   console.log(type);
   if (type === "Rapier Ready") {
-    worldObjects = Array.from({ length: 20 }).map(() => createMesh("sphere"));
+    Array.from({ length: 20 }).forEach(() => {
+      const threeMesh = createMesh("sphere");
+      worldObjects.set(threeMesh.id, threeMesh);
+      scene.add(threeMesh.mesh);
+    });
     console.log("here");
 
     worker.postMessage({
@@ -102,9 +106,9 @@ const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.receiveShadow = true;
 scene.add(floor);
 
-const generateObjects = (): void => {
-  worldObjects.forEach(({ mesh }) => scene.add(mesh));
-};
+// const generateObjects = (): void => {
+//   worldObjects.forEach(({ mesh }) => scene.add(mesh));
+// };
 
 /**
  * Rapier Physics
@@ -262,23 +266,20 @@ const tick = (): void => {
     },
   });
   // world.step();
-  // worldObjects.forEach(({ mesh, rapierBody }, index) => {
-  //   /**
-  //    * Todo, fix cone
-  //    */
-  //   // for cone shape, the translation would give the threejs mesh
-  //   // Craaaaaaaaaaazy wild variations on the position axis
-  //   // +/- 2000 in x/y/z axis
-  //   mesh.position.copy(rapierBody.translation());
-  //   mesh.quaternion.copy(rapierBody.rotation());
+  worldObjects.forEach(({ mesh }, index) => {
+    // get rid of object if it's below floor ( assuming cause it fell off the sides )
+    if (mesh.position.y <= -20) {
+      scene.remove(mesh);
+      // worldObjects.splice(index, 1);
 
-  //   // get rid of object if it's below floor ( assuming cause it fell off the sides )
-  //   if (mesh.position.y <= -20) {
-  //     scene.remove(mesh);
-  //     // world.removeRigidBody(rapierBody);
-  //     worldObjects.splice(index, 1);
-  //   }
-  // });
+      worker.postMessage({
+        type: "Remove Body",
+        payload: {
+          index,
+        },
+      });
+    }
+  });
 
   // if (guiObj.isFloorAnimating) {
   //   if (guiObj.floorRotationX <= guiObj.endFloorRotationAngle) {

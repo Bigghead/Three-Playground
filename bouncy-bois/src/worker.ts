@@ -101,4 +101,9 @@ self.onmessage = ({ data: { type, payload } }) => {
       },
     });
   }
+
+  if (type === "Remove Body") {
+    world.removeRigidBody(rapierBodies[payload.index].rapierBody);
+    rapierBodies.splice(payload.index, 1);
+  }
 };
