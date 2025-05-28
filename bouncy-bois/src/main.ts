@@ -1,14 +1,13 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
-import {
-  buildRandomVertexPosition,
-  createGeometry,
-  floorWidth,
-  world,
-} from "./utils";
+import { buildRandomVertexPosition, createMesh, floorWidth } from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
 await RAPIER.init();
+
+const worker = new Worker(new URL("worker.ts", import.meta.url));
+console.log(worker);
+worker.onmessage = ({ data }) => console.log(data);
 
 /**
  * Base
@@ -43,9 +42,24 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-const worldObjects = Array.from({ length: 20 }).map(() =>
-  createGeometry("sphere", buildRandomVertexPosition())
-);
+type WorldObjects = {
+  mesh: three.Mesh;
+  rapierBody: RAPIER.RigidBody;
+  rapierCollider: RAPIER.ColliderDesc;
+};
+let worldObjects: WorldObjects[] = [];
+let rapierFloor: RAPIER.RigidBody;
+
+worker.onmessage = ({ data: { type, payload } }) => {
+  console.log(payload);
+  if (type === "Rapier Ready") {
+    rapierFloor = payload.floor;
+    const meshes = Array.from({ length: 20 }).map(() =>
+      createMesh("sphere", buildRandomVertexPosition())
+    );
+    worker.postMessage({ type: "Create Objects" });
+  }
+};
 
 const floorGeometry = new three.BoxGeometry(
   floorWidth * 2,
@@ -75,16 +89,6 @@ generateObjects();
  * Rapier Physics
  */
 
-const rapierFloor =
-  RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
-const rapierFloorBody = world.createRigidBody(rapierFloor);
-const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
-  floorWidth,
-  0.001,
-  floorWidth
-).setRestitution(0.5);
-world.createCollider(floorColliderDesc, rapierFloorBody);
-
 /**
  * GUI Functions
  */
@@ -112,7 +116,7 @@ const guiObj = {
 
     // trippy rapier rotation, setting all 0s doesnt put it back to 0
     // needs that last 1 in the w param for some reason, but it works
-    rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+    rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
   },
 
   makeItRain: () => {
