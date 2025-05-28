@@ -76,7 +76,10 @@ worker.onmessage = ({ data: { type, payload } }) => {
 
   if (type === "Update Meshes") {
     const { data } = payload;
-    console.log(data[0].position);
+    data.forEach(({ position, rotation }, index: number) => {
+      worldObjects[index].mesh.position.copy(position);
+      worldObjects[index].mesh.quaternion.copy(rotation);
+    });
   }
 };
 
