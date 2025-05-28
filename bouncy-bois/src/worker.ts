@@ -27,14 +27,18 @@ postMessage({
   },
 });
 
+type RapierBody = {
+  rapierBody: RAPIER.RigidBody;
+  rapierCollider: RAPIER.ColliderDesc;
+};
+
+let rapierBodies: RapierBody[] = [];
+
 const createRapierBody = (
   geometry: randomGeometry,
   position: [number, number, number],
   randomScale: number
-): {
-  rapierBody: RAPIER.RigidBody;
-  rapierCollider: RAPIER.ColliderDesc;
-} => {
+): RapierBody => {
   const [x, y, z] = position;
   const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
     .setCanSleep(true)
@@ -62,11 +66,39 @@ const createRapierBody = (
 };
 
 self.onmessage = ({ data: { type, payload } }) => {
-  console.log(type, payload);
+  // console.log(type, payload);
   if (type === "Add Objects") {
     const { data } = payload;
-    data.forEach(({ geometry, position, randomScale }: ObjectBody) => {
-      createRapierBody(geometry, position, randomScale);
+    console.log(data);
+    rapierBodies = data.map(
+      ({ geometry, position, randomScale }: ObjectBody) => {
+        return createRapierBody(geometry, position, randomScale);
+      }
+    );
+    console.log(rapierBodies);
+  }
+
+  if (type === "World Step") {
+    if (!world) return;
+    const { isFloorAnimating, floorRotationX, endFloorRotationAngle } = payload;
+    world.step();
+    postMessage({
+      type: "Update Meshes",
+      payload: {
+        data: rapierBodies.map((body) => {
+          const translation = body.rapierBody.translation();
+          const rotation = body.rapierBody.rotation();
+          return {
+            position: { x: translation.x, y: translation.y, z: translation.z },
+            rotation: {
+              x: rotation.x,
+              y: rotation.y,
+              z: rotation.z,
+              w: rotation.w,
+            },
+          };
+        }),
+      },
     });
   }
 };

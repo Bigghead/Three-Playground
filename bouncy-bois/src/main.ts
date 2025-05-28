@@ -70,6 +70,13 @@ worker.onmessage = ({ data: { type, payload } }) => {
         })),
       },
     });
+
+    generateObjects();
+  }
+
+  if (type === "Update Meshes") {
+    const { data } = payload;
+    console.log(data[0].position);
   }
 };
 
@@ -95,7 +102,6 @@ scene.add(floor);
 const generateObjects = (): void => {
   worldObjects.forEach(({ mesh }) => scene.add(mesh));
 };
-generateObjects();
 
 /**
  * Rapier Physics
@@ -244,6 +250,14 @@ const tick = (): void => {
   // Update controls
   controls.update();
 
+  worker.postMessage({
+    type: "World Step",
+    payload: {
+      isFloorAnimating: guiObj.isFloorAnimating,
+      floorRotationX: guiObj.floorRotationX,
+      endFloorRotationAngle: guiObj.endFloorRotationAngle,
+    },
+  });
   // world.step();
   // worldObjects.forEach(({ mesh, rapierBody }, index) => {
   //   /**
