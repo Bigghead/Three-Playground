@@ -108,7 +108,10 @@ self.onmessage = ({ data: { type, payload } }) => {
   }
 
   if (type === "Remove Body") {
-    world.removeRigidBody(rapierBodies[payload.index].rapierBody);
-    rapierBodies.splice(payload.index, 1);
+    const rigidBody = rapierBodies.get(payload.id);
+    if (rigidBody) {
+      world.removeRigidBody(rigidBody.rapierBody);
+      rapierBodies.delete(payload.id);
+    }
   }
 };

@@ -274,18 +274,19 @@ const tick = (): void => {
     },
   });
   // world.step();
-  worldObjects.forEach(({ mesh }, index) => {
+  worldObjects.forEach(({ id, mesh }, index) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    // if (mesh.position.y <= -20) {
-    //   scene.remove(mesh);
-    //   // worldObjects.splice(index, 1);
-    //   worker.postMessage({
-    //     type: "Remove Body",
-    //     payload: {
-    //       index,
-    //     },
-    //   });
-    // }
+    if (mesh.position.y <= -40) {
+      scene.remove(mesh);
+      worldObjects.delete(id);
+      // worldObjects.splice(index, 1);
+      worker.postMessage({
+        type: "Remove Body",
+        payload: {
+          id,
+        },
+      });
+    }
   });
 
   // if (guiObj.isFloorAnimating) {
