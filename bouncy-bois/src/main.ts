@@ -2,10 +2,10 @@ import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
-  buildRandomVertexPosition,
   floorWidth,
   type randomGeometry,
   type ObjectBody,
+  type PointPosition,
 } from "./utils";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { createMesh } from "./three-helper";
@@ -54,7 +54,6 @@ type WorldObjects = ObjectBody & {
 let worldObjects: Map<string, WorldObjects> = new Map();
 
 worker.onmessage = ({ data: { type, payload } }) => {
-  console.log(type);
   if (type === "Rapier Ready") {
     Array.from({ length: 20 }).forEach(() => {
       const threeMesh = createMesh("sphere");
@@ -79,10 +78,29 @@ worker.onmessage = ({ data: { type, payload } }) => {
 
   if (type === "Update Meshes") {
     const { data } = payload;
-    data.forEach(({ id, position, rotation }) => {
-      worldObjects.get(id)?.mesh.position.copy(position);
-      worldObjects.get(id)?.mesh.quaternion.copy(rotation);
-    });
+    data.forEach(
+      ({
+        id,
+        position,
+        rotation,
+      }: {
+        id: string;
+        position: PointPosition;
+        rotation: PointPosition & {
+          w: number;
+        };
+      }) => {
+        worldObjects.get(id)?.mesh.position.copy(position);
+        worldObjects.get(id)?.mesh.quaternion.copy(rotation);
+      }
+    );
+  }
+
+  if (type === "Rotate Floor") {
+    const { newFloorRotationX, translation, rotation } = payload;
+    guiObj.floorRotationX = newFloorRotationX;
+    floor.position.copy(translation);
+    floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
 };
 
@@ -101,17 +119,8 @@ const floorMaterial = new three.MeshStandardMaterial({
 
 // forgot standard material needs lighting
 const floor = new three.Mesh(floorGeometry, floorMaterial);
-// floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 scene.add(floor);
-
-// const generateObjects = (): void => {
-//   worldObjects.forEach(({ mesh }) => scene.add(mesh));
-// };
-
-/**
- * Rapier Physics
- */
 
 /**
  * GUI Functions
@@ -151,10 +160,6 @@ const guiObj = {
   resetFloor: () => {
     guiObj.isFloorAnimating = false;
     guiObj.floorRotationX = 0;
-
-    // trippy rapier rotation, setting all 0s doesnt put it back to 0
-    // needs that last 1 in the w param for some reason, but it works
-    // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
   },
 
   makeItRain: () => {
@@ -231,7 +236,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(0, 7, 25);
+camera.position.set(0, 10, 35);
 scene.add(camera);
 
 // Controls
@@ -271,6 +276,7 @@ const tick = (): void => {
       isFloorAnimating: guiObj.isFloorAnimating,
       floorRotationX: guiObj.floorRotationX,
       endFloorRotationAngle: guiObj.endFloorRotationAngle,
+      timeDelta,
     },
   });
   // world.step();
@@ -288,23 +294,6 @@ const tick = (): void => {
       });
     }
   });
-
-  // if (guiObj.isFloorAnimating) {
-  //   if (guiObj.floorRotationX <= guiObj.endFloorRotationAngle) {
-  //     guiObj.floorRotationX += timeDelta * 0.1;
-  //     const quat = new RAPIER.Quaternion(
-  //       0,
-  //       0,
-  //       Math.sin(guiObj.floorRotationX),
-  //       Math.cos(guiObj.floorRotationX)
-  //     );
-
-  //     rapierFloorBody.setRotation(quat, true);
-  //   }
-  // }
-  // floor.position.copy(rapierFloorBody.translation());
-  // const rQuat = rapierFloorBody.rotation();
-  // floor.quaternion.set(rQuat.x, rQuat.y, rQuat.z, rQuat.w);
 
   // Render
   renderer.render(scene, camera);

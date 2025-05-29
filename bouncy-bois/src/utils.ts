@@ -2,6 +2,12 @@ export const floorWidth = 12;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 
+export type PointPosition = {
+  x: number;
+  y: number;
+  z: number;
+};
+
 export type ObjectBody = {
   id: string;
   geometry: randomGeometry;

@@ -1,11 +1,6 @@
 import RAPIER from "@dimforge/rapier3d-compat";
+import { floorWidth, type ObjectBody, type randomGeometry } from "./utils";
 
-import {
-  floorWidth,
-  getRandomNumber,
-  type ObjectBody,
-  type randomGeometry,
-} from "./utils";
 await RAPIER.init();
 
 export const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
@@ -72,7 +67,6 @@ self.onmessage = ({ data: { type, payload } }) => {
   // console.log(type, payload);
   if (type === "Add Objects") {
     const { data } = payload;
-    console.log(data);
     data.forEach(({ id, geometry, position, randomScale }: ObjectBody) => {
       rapierBodies.set(
         id,
@@ -84,7 +78,6 @@ self.onmessage = ({ data: { type, payload } }) => {
   if (type === "World Step") {
     if (!world) return;
 
-    const { isFloorAnimating, floorRotationX, endFloorRotationAngle } = payload;
     world.step();
     postMessage({
       type: "Update Meshes",
@@ -105,6 +98,49 @@ self.onmessage = ({ data: { type, payload } }) => {
         }),
       },
     });
+
+    const {
+      isFloorAnimating,
+      floorRotationX,
+      endFloorRotationAngle,
+      timeDelta,
+    } = payload;
+
+    if (isFloorAnimating) {
+      if (floorRotationX <= endFloorRotationAngle) {
+        const newFloorRotationX = floorRotationX + timeDelta * 0.1;
+        const quat = new RAPIER.Quaternion(
+          0,
+          0,
+          Math.sin(newFloorRotationX),
+          Math.cos(newFloorRotationX)
+        );
+
+        rapierFloorBody.setRotation(quat, true);
+
+        postMessage({
+          type: "Rotate Floor",
+          payload: {
+            newFloorRotationX,
+            translation: rapierFloorBody.translation(),
+            rotation: rapierFloorBody.rotation(),
+          },
+        });
+      }
+    } else {
+      // trippy rapier rotation, setting all 0s doesnt put it back to 0
+      // needs that last 1 in the w param for some reason, but it works
+      // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+      rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+      postMessage({
+        type: "Rotate Floor",
+        payload: {
+          newFloorRotationX: 0,
+          translation: rapierFloorBody.translation(),
+          rotation: rapierFloorBody.rotation(),
+        },
+      });
+    }
   }
 
   if (type === "Remove Body") {
