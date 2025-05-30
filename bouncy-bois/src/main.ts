@@ -35,15 +35,23 @@ const ambientLight = new three.AmbientLight(0xffffff, 2.1);
 scene.add(ambientLight);
 
 const directionalLight = new three.DirectionalLight("#ffffff", 2);
-directionalLight.position.set(5, 5, 5);
+directionalLight.position.set(12, 10, 12);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
-directionalLight.shadow.camera.far = 15;
-directionalLight.shadow.camera.left = -7;
-directionalLight.shadow.camera.top = 7;
-directionalLight.shadow.camera.right = 7;
-directionalLight.shadow.camera.bottom = -7;
+directionalLight.shadow.camera.far = 30;
+directionalLight.shadow.camera.left = -floorWidth * 1.5;
+directionalLight.shadow.camera.top = floorWidth * 1.5;
+directionalLight.shadow.camera.right = floorWidth * 1.5;
+directionalLight.shadow.camera.bottom = -floorWidth * 1.5;
 scene.add(directionalLight);
+
+// const directionalLightHelper = new three.DirectionalLightHelper(
+//   directionalLight
+// );
+// const shadowCameraHelper = new three.CameraHelper(
+//   directionalLight.shadow.camera
+// );
+// scene.add(directionalLightHelper, shadowCameraHelper);
 
 /**
  * Meshes
