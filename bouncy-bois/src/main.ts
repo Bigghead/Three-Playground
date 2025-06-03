@@ -280,12 +280,11 @@ const tick = (): void => {
     },
   });
   // world.step();
-  worldObjects.forEach(({ id, mesh }, index) => {
+  worldObjects.forEach(({ id, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
     if (mesh.position.y <= -40) {
       scene.remove(mesh);
       worldObjects.delete(id);
-      // worldObjects.splice(index, 1);
       worker.postMessage({
         type: WorkerEnum.REMOVE_BODY,
         payload: {
