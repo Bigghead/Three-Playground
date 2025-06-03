@@ -34,7 +34,7 @@ const ambientLight = new three.AmbientLight(0xffffff, 2.1);
 scene.add(ambientLight);
 
 const directionalLight = new three.DirectionalLight("#ffffff", 2);
-directionalLight.position.set(10, 10, 10);
+directionalLight.position.set(-10, 10, -10);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.camera.far = 35;
@@ -253,7 +253,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(0, 10, 35);
+camera.position.set(12, 15, 35);
 scene.add(camera);
 
 // Controls
