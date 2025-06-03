@@ -8,9 +8,7 @@ import {
   type PointPosition,
   WorkerEnum,
 } from "./constants";
-import RAPIER from "@dimforge/rapier3d-compat";
 import { createMesh } from "./three-helper";
-await RAPIER.init();
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
