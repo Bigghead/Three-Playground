@@ -10,6 +10,8 @@ const textureMap = Array.from({ length: 14 }).map((_, index) =>
   textureLoader.load(`/matcaps/${index + 1}.webp`)
 );
 
+const defaultGeometry = new three.SphereGeometry(1);
+const boxGeometry = new three.BoxGeometry(1);
 const basicMaterial = new three.MeshMatcapMaterial({
   matcap: textureMap[0],
 });
@@ -24,11 +26,12 @@ export const createMesh = (
   randomScale: number;
   id: string;
 } => {
-  let body: three.BufferGeometry = new three.SphereGeometry(1);
+  // slight perf improvement by not creating a new geometry everytime
+  let body: three.BufferGeometry = defaultGeometry.clone();
 
   switch (geometry) {
     case "box":
-      body = new three.BoxGeometry(1);
+      body = boxGeometry.clone();
   }
 
   const material = basicMaterial.clone();
@@ -45,7 +48,6 @@ export const createMesh = (
     geometry,
     position,
     randomScale,
-    // mesh.uuid?
     id: mesh.uuid,
   };
 };

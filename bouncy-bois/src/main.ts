@@ -109,7 +109,7 @@ const floorGeometry = new three.BoxGeometry(
   floorWidth * 2
 );
 const floorMaterial = new three.MeshStandardMaterial({
-  color: "#777777",
+  color: "#fff4ce",
   metalness: 0.3,
   roughness: 0.4,
   envMapIntensity: 0.5,

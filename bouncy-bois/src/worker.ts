@@ -71,7 +71,6 @@ import {
   };
 
   self.onmessage = ({ data: { type, payload } }) => {
-    // console.log(type, payload);
     if (type === WorkerEnum.ADD_OBJECTS) {
       const { data } = payload;
       data.forEach(({ id, geometry, position, randomScale }: ObjectBody) => {
