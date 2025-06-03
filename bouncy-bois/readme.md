@@ -1,6 +1,6 @@
 # Three.js Physics Demo
 
-# Demo at -
+# Demo at - https://bouncy-bois.netlify.app/
 
 ---
 
@@ -12,13 +12,25 @@
 - Structuring object creation
 - Sync threejs meshes with rapier colliders
 
-### 2. **[WIP] Web Workers to Spin Off CPU Threads**
+### 2. **Web Worker to Spin Off CPU Threads**
 
-- Work in Progress but the idea is to make a worker to just handle physics ( position, rotation etc ) and have the main thread just render objects inside the animation frame
+- Add a worker to just handle physics ( position, rotation etc ) and have the main thread just render objects inside the animation frame
+- The worker has 0 access to the DOM / element event listeners
+- Pass simple data ( no full rapier bodies or threejs meshes ) like rapier body positions / floor rotation between worker / main thread.
+
+### 3. **Vite Build With Rapier Compat**
+
+- Fix ES Build / vite config cause rapier does top level await when it's instantiated
 
 ## Issues / Todos
 
-### 1. **Web Worker**
+### 1. **Floor Z Fighting**
+
+- There is a strong z fighting between floor / objects, only when the objects bounce off of the floor. Once objects are at terminal rest position, there is no issue. Can't figure this out, did logarithmic buffer in renderer, add a gap in the y axis of object, polygon offset in the mesh, etc.
+
+### 2. **Add New Base Geometries ( Cone / Pyramid, Torus, etc )**
+
+- Creating non default geometries with same dimensions that have to sync with the same threejs mesh is a bit difficult. Tried this with a cone and the way rapier does rotations on the cone is wildly different than threejs
 
 ---
 
