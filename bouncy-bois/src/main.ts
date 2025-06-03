@@ -6,7 +6,7 @@ import {
   type randomGeometry,
   type ObjectBody,
   type PointPosition,
-} from "./utils";
+} from "./constants";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { createMesh } from "./three-helper";
 await RAPIER.init();
@@ -44,14 +44,6 @@ directionalLight.shadow.camera.top = floorWidth * 1.5;
 directionalLight.shadow.camera.right = floorWidth * 1.5;
 directionalLight.shadow.camera.bottom = -floorWidth * 1.5;
 scene.add(directionalLight);
-
-// const directionalLightHelper = new three.DirectionalLightHelper(
-//   directionalLight
-// );
-// const shadowCameraHelper = new three.CameraHelper(
-//   directionalLight.shadow.camera
-// );
-// scene.add(directionalLightHelper, shadowCameraHelper);
 
 /**
  * Meshes
@@ -114,7 +106,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
 
 const floorGeometry = new three.BoxGeometry(
   floorWidth * 2,
-  0.01,
+  0.1,
   floorWidth * 2
 );
 const floorMaterial = new three.MeshStandardMaterial({
@@ -122,7 +114,6 @@ const floorMaterial = new three.MeshStandardMaterial({
   metalness: 0.3,
   roughness: 0.4,
   envMapIntensity: 0.5,
-  side: three.DoubleSide,
 });
 
 // forgot standard material needs lighting

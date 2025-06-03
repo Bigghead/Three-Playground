@@ -1,9 +1,6 @@
 import * as three from "three";
-import {
-  buildRandomVertexPosition,
-  getRandomNumber,
-  type randomGeometry,
-} from "./utils";
+import { buildRandomVertexPosition, getRandomNumber } from "./utils";
+import { type randomGeometry } from "./constants";
 
 /**
  * Textures
@@ -32,10 +29,8 @@ export const createMesh = (
   switch (geometry) {
     case "box":
       body = new three.BoxGeometry(1);
-    // case "cone":
-    //   body = new three.ConeGeometry(1);
-    //   break;
   }
+
   const material = basicMaterial.clone();
   material.matcap = textureMap[getRandomNumber(1, textureMap.length)];
   const mesh = new three.Mesh(body, material);
@@ -45,12 +40,12 @@ export const createMesh = (
   mesh.scale.set(randomScale, randomScale, randomScale);
 
   mesh.castShadow = true;
-
   return {
     mesh,
     geometry,
     position,
     randomScale,
-    id: `mesh_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    // mesh.uuid?
+    id: mesh.uuid,
   };
 };

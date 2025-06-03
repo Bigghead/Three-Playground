@@ -1,5 +1,5 @@
 import RAPIER from "@dimforge/rapier3d-compat";
-import { floorWidth, type ObjectBody, type randomGeometry } from "./utils";
+import { floorWidth, type ObjectBody, type randomGeometry } from "./constants";
 
 await RAPIER.init();
 
@@ -10,9 +10,10 @@ const rapierFloor =
 const rapierFloorBody = world.createRigidBody(rapierFloor);
 const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
   floorWidth,
-  0.001,
+  0.05,
   floorWidth
 ).setRestitution(0.5);
+
 world.createCollider(floorColliderDesc, rapierFloorBody);
 
 postMessage({
