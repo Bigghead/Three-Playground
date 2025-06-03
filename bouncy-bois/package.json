@@ -15,7 +15,7 @@
     "vite-plugin-restart": "^0.4.2"
   },
   "dependencies": {
-    "@dimforge/rapier3d": "^0.17.0",
+    "@dimforge/rapier3d-compat": "^0.17.3",
     "lil-gui": "^0.20.0",
     "three": "^0.176.0"
   }
