@@ -1,5 +1,10 @@
 import RAPIER from "@dimforge/rapier3d-compat";
-import { floorWidth, type ObjectBody, type randomGeometry } from "./constants";
+import {
+  floorWidth,
+  type ObjectBody,
+  type randomGeometry,
+  WorkerEnum,
+} from "./constants";
 
 await RAPIER.init();
 
@@ -17,7 +22,7 @@ const floorColliderDesc = RAPIER.ColliderDesc.cuboid(
 world.createCollider(floorColliderDesc, rapierFloorBody);
 
 postMessage({
-  type: "Rapier Ready",
+  type: WorkerEnum.RAPIER_READY,
   payload: {
     floor: rapierFloorBody,
   },
@@ -66,7 +71,7 @@ const createRapierBody = (
 
 self.onmessage = ({ data: { type, payload } }) => {
   // console.log(type, payload);
-  if (type === "Add Objects") {
+  if (type === WorkerEnum.ADD_OBJECTS) {
     const { data } = payload;
     data.forEach(({ id, geometry, position, randomScale }: ObjectBody) => {
       rapierBodies.set(
@@ -76,12 +81,12 @@ self.onmessage = ({ data: { type, payload } }) => {
     });
   }
 
-  if (type === "World Step") {
+  if (type === WorkerEnum.WORLD_STEP) {
     if (!world) return;
 
     world.step();
     postMessage({
-      type: "Update Meshes",
+      type: WorkerEnum.UPDATE_MESHES,
       payload: {
         data: Array.from(rapierBodies.values()).map((body) => {
           const translation = body.rapierBody.translation();
@@ -120,7 +125,7 @@ self.onmessage = ({ data: { type, payload } }) => {
         rapierFloorBody.setRotation(quat, true);
 
         postMessage({
-          type: "Rotate Floor",
+          type: WorkerEnum.ROTATE_FLOOR,
           payload: {
             newFloorRotationX,
             translation: rapierFloorBody.translation(),
@@ -134,7 +139,7 @@ self.onmessage = ({ data: { type, payload } }) => {
       // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
       rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
       postMessage({
-        type: "Rotate Floor",
+        type: WorkerEnum.ROTATE_FLOOR,
         payload: {
           newFloorRotationX: 0,
           translation: rapierFloorBody.translation(),
@@ -144,7 +149,7 @@ self.onmessage = ({ data: { type, payload } }) => {
     }
   }
 
-  if (type === "Remove Body") {
+  if (type === WorkerEnum.REMOVE_BODY) {
     const rigidBody = rapierBodies.get(payload.id);
     if (rigidBody) {
       world.removeRigidBody(rigidBody.rapierBody);

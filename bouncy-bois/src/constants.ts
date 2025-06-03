@@ -14,3 +14,12 @@ export type ObjectBody = {
   position: [number, number, number];
   randomScale: number;
 };
+
+export const WorkerEnum = {
+  RAPIER_READY: "Rapier Ready",
+  ADD_OBJECTS: "Add Objects",
+  WORLD_STEP: "World Step",
+  UPDATE_MESHES: "Update Meshes",
+  ROTATE_FLOOR: "Rotate Floor",
+  REMOVE_BODY: "Remove Body",
+};

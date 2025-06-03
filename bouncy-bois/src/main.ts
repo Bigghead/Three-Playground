@@ -6,6 +6,7 @@ import {
   type randomGeometry,
   type ObjectBody,
   type PointPosition,
+  WorkerEnum,
 } from "./constants";
 import RAPIER from "@dimforge/rapier3d-compat";
 import { createMesh } from "./three-helper";
@@ -54,7 +55,7 @@ type WorldObjects = ObjectBody & {
 let worldObjects: Map<string, WorldObjects> = new Map();
 
 worker.onmessage = ({ data: { type, payload } }) => {
-  if (type === "Rapier Ready") {
+  if (type === WorkerEnum.RAPIER_READY) {
     Array.from({ length: 20 }).forEach(() => {
       const threeMesh = createMesh("sphere");
       worldObjects.set(threeMesh.id, threeMesh);
@@ -62,7 +63,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
     });
 
     worker.postMessage({
-      type: "Add Objects",
+      type: WorkerEnum.ADD_OBJECTS,
       payload: {
         data: Array.from(worldObjects.values()).map(
           ({ id, geometry, position, randomScale }) => ({
@@ -76,7 +77,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
     });
   }
 
-  if (type === "Update Meshes") {
+  if (type === WorkerEnum.UPDATE_MESHES) {
     const { data } = payload;
     data.forEach(
       ({
@@ -96,7 +97,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
     );
   }
 
-  if (type === "Rotate Floor") {
+  if (type === WorkerEnum.ROTATE_FLOOR) {
     const { newFloorRotationX, translation, rotation } = payload;
     guiObj.floorRotationX = newFloorRotationX;
     floor.position.copy(translation);
@@ -138,7 +139,7 @@ const guiObj = {
     worldObjects.set(newMesh.id, newMesh);
     scene.add(newMesh.mesh);
     worker.postMessage({
-      type: "Add Objects",
+      type: WorkerEnum.ADD_OBJECTS,
       payload: {
         data: [
           {
@@ -270,7 +271,7 @@ const tick = (): void => {
   controls.update();
 
   worker.postMessage({
-    type: "World Step",
+    type: WorkerEnum.WORLD_STEP,
     payload: {
       isFloorAnimating: guiObj.isFloorAnimating,
       floorRotationX: guiObj.floorRotationX,
@@ -286,7 +287,7 @@ const tick = (): void => {
       worldObjects.delete(id);
       // worldObjects.splice(index, 1);
       worker.postMessage({
-        type: "Remove Body",
+        type: WorkerEnum.REMOVE_BODY,
         payload: {
           id,
         },
