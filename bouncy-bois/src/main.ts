@@ -34,14 +34,20 @@ const ambientLight = new three.AmbientLight(0xffffff, 2.1);
 scene.add(ambientLight);
 
 const directionalLight = new three.DirectionalLight("#ffffff", 2);
-directionalLight.position.set(12, 10, 12);
+directionalLight.position.set(10, 10, 10);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
-directionalLight.shadow.camera.far = 30;
+directionalLight.shadow.camera.far = 35;
 directionalLight.shadow.camera.left = -floorWidth * 1.5;
 directionalLight.shadow.camera.top = floorWidth * 1.5;
 directionalLight.shadow.camera.right = floorWidth * 1.5;
 directionalLight.shadow.camera.bottom = -floorWidth * 1.5;
+
+const directionalLighthelper = new three.DirectionalLightHelper(
+  directionalLight
+);
+const shadowHelper = new three.CameraHelper(directionalLight.shadow.camera);
+
 scene.add(directionalLight);
 
 /**
@@ -130,6 +136,8 @@ const guiObj = {
   isRaining: false,
   rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
+  isCameraHelperOn: false,
+
   createObject: (geometry = "sphere") => {
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
@@ -185,6 +193,16 @@ const guiObj = {
     guiObj.clearRain();
     guiObj.makeItRain();
   },
+
+  toggleShadowhelper: () => {
+    if (guiObj.isCameraHelperOn) {
+      scene.remove(directionalLighthelper, shadowHelper);
+      guiObj.isCameraHelperOn = false;
+    } else {
+      scene.add(directionalLighthelper, shadowHelper);
+      guiObj.isCameraHelperOn = true;
+    }
+  },
 };
 
 gui.add(guiObj, "createObject").name("Add Ball");
@@ -202,6 +220,7 @@ gui
   });
 
 gui.add(guiObj, "clearRain").name("Stop Rain!");
+gui.add(guiObj, "toggleShadowhelper").name("Toggle Shadow Helper");
 
 /**
  * Sizes
