@@ -32,11 +32,10 @@ export const createMesh = (
     case "box":
       body = boxGeometry.clone();
   }
-  const { x, y, z } = position;
   const material = basicMaterial.clone();
   material.matcap = textureMap[getRandomNumber(1, textureMap.length)];
   const mesh = new three.Mesh(body, material);
-  mesh.position.set(x, y, z);
+  mesh.position.set(...position);
 
   const randomScale = Math.random() + 0.2;
   mesh.scale.set(randomScale, randomScale, randomScale);

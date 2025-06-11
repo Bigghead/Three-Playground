@@ -40,13 +40,12 @@ import {
   const createRapierBody = (
     id: string,
     geometry: randomGeometry,
-    position: PointPosition,
+    position: [number, number, number],
     randomScale: number
   ): RapierBody => {
-    const { x, y, z } = position;
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
       .setCanSleep(true)
-      .setTranslation(x, y, z);
+      .setTranslation(...position);
     const rapierBody = world.createRigidBody(rigidBodyDesc);
     let rapierCollider: RAPIER.ColliderDesc = RAPIER.ColliderDesc.ball(
       1 * randomScale

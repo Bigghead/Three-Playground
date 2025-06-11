@@ -79,7 +79,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
           ({ id, geometry, mesh }) => ({
             id,
             geometry,
-            position: mesh.position,
+            position: mesh.position.toArray(),
             randomScale: mesh.scale.x,
           })
         ),
@@ -151,6 +151,7 @@ const guiObj = {
       const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
       console.log(pooledMesh);
       if (pooledMesh) {
+        pooledMesh.mesh.visible = true;
         worker.postMessage({
           type: WorkerEnum.ADD_OBJECTS,
           payload: {
@@ -176,7 +177,7 @@ const guiObj = {
             {
               id: newMesh.id,
               geometry: newMesh.geometry,
-              position: newMesh.mesh.position,
+              position: newMesh.mesh.position.toArray(),
               randomScale: newMesh.randomScale,
             },
           ],
@@ -346,6 +347,7 @@ const tick = (): void => {
           });
         } else {
           meshPool.push({ id, geometry, mesh });
+          mesh.visible = false;
         }
       }
     });
