@@ -1,3 +1,4 @@
+import * as three from "three";
 export const floorWidth = 15;
 
 export type randomGeometry = "sphere" | "cone" | "box";
@@ -11,8 +12,18 @@ export type PointPosition = {
 export type ObjectBody = {
   id: string;
   geometry: randomGeometry;
-  position: [number, number, number];
   randomScale: number;
+  position?: PointPosition;
+};
+
+export type WorldObjects = ObjectBody & {
+  mesh: three.Mesh;
+};
+
+export type MeshPool = {
+  id: string;
+  geometry: randomGeometry;
+  mesh: three.Mesh;
 };
 
 export const WorkerEnum = {

@@ -40,10 +40,10 @@ import {
   const createRapierBody = (
     id: string,
     geometry: randomGeometry,
-    position: [number, number, number],
+    position: PointPosition,
     randomScale: number
   ): RapierBody => {
-    const [x, y, z] = position;
+    const { x, y, z } = position;
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
       .setCanSleep(true)
       .setTranslation(x, y, z);

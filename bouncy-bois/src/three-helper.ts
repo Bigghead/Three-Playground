@@ -22,7 +22,6 @@ export const createMesh = (
 ): {
   mesh: three.Mesh;
   geometry: randomGeometry;
-  position: [number, number, number];
   randomScale: number;
   id: string;
 } => {
@@ -33,11 +32,11 @@ export const createMesh = (
     case "box":
       body = boxGeometry.clone();
   }
-
+  const { x, y, z } = position;
   const material = basicMaterial.clone();
   material.matcap = textureMap[getRandomNumber(1, textureMap.length)];
   const mesh = new three.Mesh(body, material);
-  mesh.position.set(...position);
+  mesh.position.set(x, y, z);
 
   const randomScale = Math.random() + 0.2;
   mesh.scale.set(randomScale, randomScale, randomScale);
@@ -46,7 +45,6 @@ export const createMesh = (
   return {
     mesh,
     geometry,
-    position,
     randomScale,
     id: mesh.uuid,
   };

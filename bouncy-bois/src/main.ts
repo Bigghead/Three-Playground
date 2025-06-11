@@ -5,11 +5,13 @@ import GUI from "lil-gui";
 import {
   floorWidth,
   type randomGeometry,
-  type ObjectBody,
   type PointPosition,
   WorkerEnum,
+  type WorldObjects,
+  type MeshPool,
 } from "./constants";
 import { createMesh, disposeMesh } from "./three-helper";
+import { buildRandomVertexPosition } from "./utils";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
@@ -57,10 +59,10 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-type WorldObjects = ObjectBody & {
-  mesh: three.Mesh;
-};
+
 let worldObjects: Map<string, WorldObjects> = new Map();
+
+let meshPool: MeshPool[] = [];
 
 worker.onmessage = ({ data: { type, payload } }) => {
   if (type === WorkerEnum.RAPIER_READY) {
@@ -74,11 +76,11 @@ worker.onmessage = ({ data: { type, payload } }) => {
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
         data: Array.from(worldObjects.values()).map(
-          ({ id, geometry, position, randomScale }) => ({
+          ({ id, geometry, mesh }) => ({
             id,
             geometry,
-            position,
-            randomScale,
+            position: mesh.position,
+            randomScale: mesh.scale.x,
           })
         ),
       },
@@ -143,25 +145,44 @@ const guiObj = {
   isCameraHelperOn: false,
 
   createObject: (geometry = "sphere") => {
-    // if (worldObjects.size >= 800) return;
-    // just do all spheres for now
-    // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    const newMesh = createMesh(geometry as randomGeometry);
-    worldObjects.set(newMesh.id, newMesh);
-    scene.add(newMesh.mesh);
-    worker.postMessage({
-      type: WorkerEnum.ADD_OBJECTS,
-      payload: {
-        data: [
-          {
-            id: newMesh.id,
-            geometry: newMesh.geometry,
-            position: newMesh.position,
-            randomScale: newMesh.randomScale,
+    // check if any pooled objects exist and use that vs creating new mesh
+
+    if (meshPool.length) {
+      const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
+      console.log(pooledMesh);
+      if (pooledMesh) {
+        worker.postMessage({
+          type: WorkerEnum.ADD_OBJECTS,
+          payload: {
+            data: [
+              {
+                id: pooledMesh.id,
+                geometry: pooledMesh.geometry,
+                position: buildRandomVertexPosition(),
+                randomScale: pooledMesh.mesh.scale.x,
+              },
+            ],
           },
-        ],
-      },
-    });
+        });
+      }
+    } else {
+      const newMesh = createMesh(geometry as randomGeometry);
+      worldObjects.set(newMesh.id, newMesh);
+      scene.add(newMesh.mesh);
+      worker.postMessage({
+        type: WorkerEnum.ADD_OBJECTS,
+        payload: {
+          data: [
+            {
+              id: newMesh.id,
+              geometry: newMesh.geometry,
+              position: newMesh.mesh.position,
+              randomScale: newMesh.randomScale,
+            },
+          ],
+        },
+      });
+    }
   },
 
   tipFloor: () => {
@@ -306,20 +327,26 @@ const tick = (): void => {
 
   // batched remove objects every second instead of every frame
   if (frameCount % 60 === 0) {
-    worldObjects.forEach(({ id, mesh }) => {
+    worldObjects.forEach(({ id, geometry, mesh }) => {
       // get rid of object if it's below floor ( assuming cause it fell off the sides )
       if (mesh.position.y <= -40) {
-        scene.remove(mesh);
-        disposeMesh(mesh);
         worldObjects.delete(id);
-        console.warn(worldObjects.size);
 
-        worker.postMessage({
-          type: WorkerEnum.REMOVE_BODY,
-          payload: {
-            id,
-          },
-        });
+        if (meshPool.length > 1000) {
+          scene.remove(mesh);
+          disposeMesh(mesh);
+
+          console.warn(worldObjects.size);
+
+          worker.postMessage({
+            type: WorkerEnum.REMOVE_BODY,
+            payload: {
+              id,
+            },
+          });
+        } else {
+          meshPool.push({ id, geometry, mesh });
+        }
       }
     });
   }
