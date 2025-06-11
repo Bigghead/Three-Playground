@@ -1,4 +1,5 @@
 import * as three from "three";
+import Stats from "stats.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
@@ -8,12 +9,15 @@ import {
   type PointPosition,
   WorkerEnum,
 } from "./constants";
-import { createMesh } from "./three-helper";
+import { createMesh, disposeMesh } from "./three-helper";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
 });
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 /**
  * Base
  */
@@ -139,6 +143,7 @@ const guiObj = {
   isCameraHelperOn: false,
 
   createObject: (geometry = "sphere") => {
+    // if (worldObjects.size >= 800) return;
     // just do all spheres for now
     // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
     const newMesh = createMesh(geometry as randomGeometry);
@@ -278,8 +283,10 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
  */
 const clock = new three.Clock();
 let deltaTime = 0;
+let frameCount = 0;
 
 const tick = (): void => {
+  stats.begin();
   const elapsedTime = clock.getElapsedTime();
   const timeDelta = elapsedTime - deltaTime;
   deltaTime = elapsedTime;
@@ -296,26 +303,34 @@ const tick = (): void => {
       timeDelta,
     },
   });
-  // world.step();
-  worldObjects.forEach(({ id, mesh }) => {
-    // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    if (mesh.position.y <= -40) {
-      scene.remove(mesh);
-      worldObjects.delete(id);
-      worker.postMessage({
-        type: WorkerEnum.REMOVE_BODY,
-        payload: {
-          id,
-        },
-      });
-    }
-  });
+
+  // batched remove objects every second instead of every frame
+  if (frameCount % 60 === 0) {
+    worldObjects.forEach(({ id, mesh }) => {
+      // get rid of object if it's below floor ( assuming cause it fell off the sides )
+      if (mesh.position.y <= -40) {
+        scene.remove(mesh);
+        disposeMesh(mesh);
+        worldObjects.delete(id);
+        console.warn(worldObjects.size);
+
+        worker.postMessage({
+          type: WorkerEnum.REMOVE_BODY,
+          payload: {
+            id,
+          },
+        });
+      }
+    });
+  }
 
   // Render
   renderer.render(scene, camera);
 
   // Call tick again on the next frame
+  stats.end();
   window.requestAnimationFrame(tick);
+  frameCount++;
 };
 
 tick();

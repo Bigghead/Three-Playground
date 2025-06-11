@@ -51,3 +51,14 @@ export const createMesh = (
     id: mesh.uuid,
   };
 };
+
+export const disposeMesh = (mesh: three.Mesh): void => {
+  mesh?.geometry.dispose();
+  if (mesh.material) {
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((mat) => mat.dispose());
+    } else {
+      mesh.material.dispose();
+    }
+  }
+};
