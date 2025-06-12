@@ -150,6 +150,8 @@ const guiObj = {
     if (meshPool.length) {
       const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
       console.log(pooledMesh);
+      const newPosition = buildRandomVertexPosition();
+      pooledMesh?.mesh.position.set(...newPosition);
       if (pooledMesh) {
         pooledMesh.mesh.visible = true;
         worker.postMessage({
@@ -159,7 +161,7 @@ const guiObj = {
               {
                 id: pooledMesh.id,
                 geometry: pooledMesh.geometry,
-                position: buildRandomVertexPosition(),
+                position: newPosition,
                 randomScale: pooledMesh.mesh.scale.x,
               },
             ],
@@ -331,24 +333,27 @@ const tick = (): void => {
     worldObjects.forEach(({ id, geometry, mesh }) => {
       // get rid of object if it's below floor ( assuming cause it fell off the sides )
       if (mesh.position.y <= -40) {
-        worldObjects.delete(id);
+        const workerMessage = {
+          type: WorkerEnum.REMOVE_BODY,
+          payload: {
+            id,
+            reusable: false,
+          },
+        };
 
-        if (meshPool.length > 1000) {
+        if (worldObjects.size > 1000) {
           scene.remove(mesh);
           disposeMesh(mesh);
+          worldObjects.delete(id);
 
           console.warn(worldObjects.size);
-
-          worker.postMessage({
-            type: WorkerEnum.REMOVE_BODY,
-            payload: {
-              id,
-            },
-          });
         } else {
           meshPool.push({ id, geometry, mesh });
           mesh.visible = false;
+          workerMessage.payload.reusable = true;
         }
+
+        worker.postMessage(workerMessage);
       }
     });
   }

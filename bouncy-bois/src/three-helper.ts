@@ -22,6 +22,7 @@ export const createMesh = (
 ): {
   mesh: three.Mesh;
   geometry: randomGeometry;
+  position: [number, number, number];
   randomScale: number;
   id: string;
 } => {
@@ -44,6 +45,7 @@ export const createMesh = (
   return {
     mesh,
     geometry,
+    position,
     randomScale,
     id: mesh.uuid,
   };

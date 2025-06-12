@@ -13,7 +13,7 @@ export type ObjectBody = {
   id: string;
   geometry: randomGeometry;
   randomScale: number;
-  position?: PointPosition;
+  position: [number, number, number];
 };
 
 export type WorldObjects = ObjectBody & {

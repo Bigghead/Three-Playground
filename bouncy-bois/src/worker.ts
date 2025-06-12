@@ -37,12 +37,38 @@ import {
 
   let rapierBodies: Map<string, RapierBody> = new Map();
 
+  type RapierPool = {
+    id: string;
+    body: RAPIER.RigidBody;
+    collider: RAPIER.ColliderDesc;
+  };
+  let pooledRapierBodies: RapierPool[] = [];
+
   const createRapierBody = (
     id: string,
     geometry: randomGeometry,
     position: [number, number, number],
     randomScale: number
   ): RapierBody => {
+    if (pooledRapierBodies.length) {
+      const pooledRapier = pooledRapierBodies.pop();
+      if (pooledRapier) {
+        const [x, y, z] = position;
+        pooledRapier.body.setTranslation({ x, y, z }, true);
+        pooledRapier.body.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+        pooledRapier.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        pooledRapier.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        pooledRapier.body.wakeUp();
+        pooledRapier.body.setEnabled(true);
+
+        console.log(pooledRapier.body.translation());
+        return {
+          id,
+          rapierBody: pooledRapier.body,
+          rapierCollider: pooledRapier.collider,
+        };
+      }
+    }
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
       .setCanSleep(true)
       .setTranslation(...position);
@@ -154,9 +180,19 @@ import {
 
     if (type === WorkerEnum.REMOVE_BODY) {
       const rigidBody = rapierBodies.get(payload.id);
+      const shoudReuseBody = payload.reusable;
       if (rigidBody) {
-        world.removeRigidBody(rigidBody.rapierBody);
-        rapierBodies.delete(payload.id);
+        if (!shoudReuseBody) {
+          world.removeRigidBody(rigidBody.rapierBody);
+          rapierBodies.delete(payload.id);
+        } else {
+          pooledRapierBodies.push({
+            id: payload.id,
+            body: rigidBody.rapierBody,
+            collider: rigidBody.rapierCollider,
+          });
+          rigidBody.rapierBody.setEnabled(false);
+        }
       }
     }
   };
