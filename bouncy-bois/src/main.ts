@@ -1,19 +1,25 @@
 import * as three from "three";
+import Stats from "stats.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
   floorWidth,
   type randomGeometry,
-  type ObjectBody,
   type PointPosition,
   WorkerEnum,
+  type WorldObjects,
+  type MeshPool,
 } from "./constants";
-import { createMesh } from "./three-helper";
+import { createMesh, disposeMesh } from "./three-helper";
+import { buildRandomVertexPosition } from "./utils";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
 });
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 /**
  * Base
  */
@@ -53,10 +59,10 @@ scene.add(directionalLight);
 /**
  * Meshes
  */
-type WorldObjects = ObjectBody & {
-  mesh: three.Mesh;
-};
+
 let worldObjects: Map<string, WorldObjects> = new Map();
+
+let meshPool: MeshPool[] = [];
 
 worker.onmessage = ({ data: { type, payload } }) => {
   if (type === WorkerEnum.RAPIER_READY) {
@@ -70,11 +76,11 @@ worker.onmessage = ({ data: { type, payload } }) => {
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
         data: Array.from(worldObjects.values()).map(
-          ({ id, geometry, position, randomScale }) => ({
+          ({ id, geometry, mesh }) => ({
             id,
             geometry,
-            position,
-            randomScale,
+            position: mesh.position.toArray(),
+            randomScale: mesh.scale.x,
           })
         ),
       },
@@ -139,22 +145,48 @@ const guiObj = {
   isCameraHelperOn: false,
 
   createObject: (geometry = "sphere") => {
-    // just do all spheres for now
-    // const geometryType = Math.random() < 0.5 ? "box" : "sphere";
-    const newMesh = createMesh(geometry as randomGeometry);
-    worldObjects.set(newMesh.id, newMesh);
-    scene.add(newMesh.mesh);
+    // check if any pooled objects exist and use that vs creating new mesh
+    let activeObject;
+    if (meshPool.length) {
+      const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
+
+      if (pooledMesh) {
+        const newPosition = buildRandomVertexPosition();
+        pooledMesh?.mesh.position.set(...newPosition);
+
+        pooledMesh.mesh.visible = true;
+        worldObjects.set(pooledMesh.id, {
+          id: pooledMesh.id,
+          geometry: pooledMesh.geometry,
+          randomScale: pooledMesh.mesh.scale.x,
+          position: pooledMesh.mesh.position.toArray(),
+          mesh: pooledMesh.mesh,
+        });
+
+        activeObject = {
+          id: pooledMesh.id,
+          geometry: pooledMesh.geometry,
+          position: newPosition,
+          randomScale: pooledMesh.mesh.scale.x,
+        };
+      }
+    } else {
+      const newMesh = createMesh(geometry as randomGeometry);
+      worldObjects.set(newMesh.id, newMesh);
+      scene.add(newMesh.mesh);
+
+      activeObject = {
+        id: newMesh.id,
+        geometry: newMesh.geometry,
+        position: newMesh.mesh.position.toArray(),
+        randomScale: newMesh.randomScale,
+      };
+    }
+
     worker.postMessage({
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
-        data: [
-          {
-            id: newMesh.id,
-            geometry: newMesh.geometry,
-            position: newMesh.position,
-            randomScale: newMesh.randomScale,
-          },
-        ],
+        data: [activeObject],
       },
     });
   },
@@ -278,8 +310,10 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
  */
 const clock = new three.Clock();
 let deltaTime = 0;
+let frameCount = 0;
 
 const tick = (): void => {
+  stats.begin();
   const elapsedTime = clock.getElapsedTime();
   const timeDelta = elapsedTime - deltaTime;
   deltaTime = elapsedTime;
@@ -296,26 +330,44 @@ const tick = (): void => {
       timeDelta,
     },
   });
-  // world.step();
-  worldObjects.forEach(({ id, mesh }) => {
-    // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    if (mesh.position.y <= -40) {
-      scene.remove(mesh);
-      worldObjects.delete(id);
-      worker.postMessage({
-        type: WorkerEnum.REMOVE_BODY,
-        payload: {
-          id,
-        },
-      });
-    }
-  });
+
+  // batched remove objects every second instead of every frame
+  if (frameCount % 30 === 0) {
+    console.warn(worldObjects.size, " - ", meshPool.length);
+    worldObjects.forEach(({ id, geometry, mesh }) => {
+      // get rid of object if it's below floor ( assuming cause it fell off the sides )
+      if (mesh.position.y <= -40) {
+        worldObjects.delete(id);
+
+        const workerMessage = {
+          type: WorkerEnum.REMOVE_BODY,
+          payload: {
+            id,
+            reusable: false,
+          },
+        };
+
+        if (meshPool.length > 500) {
+          scene.remove(mesh);
+          disposeMesh(mesh);
+        } else {
+          meshPool.push({ id, geometry, mesh });
+          mesh.visible = false;
+          workerMessage.payload.reusable = true;
+        }
+
+        worker.postMessage(workerMessage);
+      }
+    });
+  }
 
   // Render
   renderer.render(scene, camera);
 
   // Call tick again on the next frame
+  stats.end();
   window.requestAnimationFrame(tick);
+  frameCount++;
 };
 
 tick();

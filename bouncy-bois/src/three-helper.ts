@@ -33,7 +33,6 @@ export const createMesh = (
     case "box":
       body = boxGeometry.clone();
   }
-
   const material = basicMaterial.clone();
   material.matcap = textureMap[getRandomNumber(1, textureMap.length)];
   const mesh = new three.Mesh(body, material);
@@ -50,4 +49,15 @@ export const createMesh = (
     randomScale,
     id: mesh.uuid,
   };
+};
+
+export const disposeMesh = (mesh: three.Mesh): void => {
+  mesh?.geometry.dispose();
+  if (mesh.material) {
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((mat) => mat.dispose());
+    } else {
+      mesh.material.dispose();
+    }
+  }
 };
