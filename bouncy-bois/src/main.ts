@@ -146,46 +146,49 @@ const guiObj = {
 
   createObject: (geometry = "sphere") => {
     // check if any pooled objects exist and use that vs creating new mesh
-
+    let activeObject;
     if (meshPool.length) {
       const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
-      console.log(pooledMesh);
-      const newPosition = buildRandomVertexPosition();
-      pooledMesh?.mesh.position.set(...newPosition);
+
       if (pooledMesh) {
+        const newPosition = buildRandomVertexPosition();
+        pooledMesh?.mesh.position.set(...newPosition);
+
         pooledMesh.mesh.visible = true;
-        worker.postMessage({
-          type: WorkerEnum.ADD_OBJECTS,
-          payload: {
-            data: [
-              {
-                id: pooledMesh.id,
-                geometry: pooledMesh.geometry,
-                position: newPosition,
-                randomScale: pooledMesh.mesh.scale.x,
-              },
-            ],
-          },
+        worldObjects.set(pooledMesh.id, {
+          id: pooledMesh.id,
+          geometry: pooledMesh.geometry,
+          randomScale: pooledMesh.mesh.scale.x,
+          position: pooledMesh.mesh.position.toArray(),
+          mesh: pooledMesh.mesh,
         });
+
+        activeObject = {
+          id: pooledMesh.id,
+          geometry: pooledMesh.geometry,
+          position: newPosition,
+          randomScale: pooledMesh.mesh.scale.x,
+        };
       }
     } else {
       const newMesh = createMesh(geometry as randomGeometry);
       worldObjects.set(newMesh.id, newMesh);
       scene.add(newMesh.mesh);
-      worker.postMessage({
-        type: WorkerEnum.ADD_OBJECTS,
-        payload: {
-          data: [
-            {
-              id: newMesh.id,
-              geometry: newMesh.geometry,
-              position: newMesh.mesh.position.toArray(),
-              randomScale: newMesh.randomScale,
-            },
-          ],
-        },
-      });
+
+      activeObject = {
+        id: newMesh.id,
+        geometry: newMesh.geometry,
+        position: newMesh.mesh.position.toArray(),
+        randomScale: newMesh.randomScale,
+      };
     }
+
+    worker.postMessage({
+      type: WorkerEnum.ADD_OBJECTS,
+      payload: {
+        data: [activeObject],
+      },
+    });
   },
 
   tipFloor: () => {
@@ -329,10 +332,13 @@ const tick = (): void => {
   });
 
   // batched remove objects every second instead of every frame
-  if (frameCount % 60 === 0) {
+  if (frameCount % 30 === 0) {
+    console.warn(worldObjects.size, " - ", meshPool.length);
     worldObjects.forEach(({ id, geometry, mesh }) => {
       // get rid of object if it's below floor ( assuming cause it fell off the sides )
       if (mesh.position.y <= -40) {
+        worldObjects.delete(id);
+
         const workerMessage = {
           type: WorkerEnum.REMOVE_BODY,
           payload: {
@@ -341,12 +347,9 @@ const tick = (): void => {
           },
         };
 
-        if (worldObjects.size > 1000) {
+        if (meshPool.length > 500) {
           scene.remove(mesh);
           disposeMesh(mesh);
-          worldObjects.delete(id);
-
-          console.warn(worldObjects.size);
         } else {
           meshPool.push({ id, geometry, mesh });
           mesh.visible = false;
