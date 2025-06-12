@@ -1,6 +1,6 @@
 import * as three from "three";
 export const floorWidth = 15;
-export const INACTIVITY_THRESHOLD_MS = 5000;
+export const INACTIVITY_THRESHOLD_MS = 2500;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 

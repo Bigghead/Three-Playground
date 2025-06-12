@@ -54,43 +54,37 @@ import {
     position: [number, number, number],
     randomScale: number
   ): RapierBody => {
-    if (pooledRapierBodies.length) {
-      const pooledRapier = pooledRapierBodies.pop();
+    let rapierBody: RAPIER.RigidBody;
+    let rapierCollider: RAPIER.ColliderDesc;
+    const pooledRapier = pooledRapierBodies.length && pooledRapierBodies.pop();
 
-      if (pooledRapier) {
-        const { body, collider } = pooledRapier;
-        const [x, y, z] = position;
-        body.setTranslation({ x, y, z }, true);
-        body.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-        body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-        body.wakeUp();
-        body.setEnabled(true);
+    if (pooledRapier) {
+      const { body, collider } = pooledRapier;
+      const [x, y, z] = position;
+      body.setTranslation({ x, y, z }, true);
+      body.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      body.wakeUp();
+      body.setEnabled(true);
 
-        return {
-          id,
-          rapierBody: body,
-          rapierCollider: collider,
-          lastActiveTime: performance.now(),
-          isCurrentlySleeping: false,
-        };
+      rapierBody = body;
+      rapierCollider = collider;
+    } else {
+      const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+        .setCanSleep(true)
+        .setTranslation(...position);
+      rapierBody = world.createRigidBody(rigidBodyDesc);
+      rapierCollider = RAPIER.ColliderDesc.ball(1 * randomScale);
+
+      if (geometry === "box") {
+        const halfExtent = (1 * randomScale) / 2;
+        rapierCollider = RAPIER.ColliderDesc.cuboid(
+          halfExtent,
+          halfExtent,
+          halfExtent
+        );
       }
-    }
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-      .setCanSleep(true)
-      .setTranslation(...position);
-    const rapierBody = world.createRigidBody(rigidBodyDesc);
-    let rapierCollider: RAPIER.ColliderDesc = RAPIER.ColliderDesc.ball(
-      1 * randomScale
-    );
-
-    if (geometry === "box") {
-      const halfExtent = (1 * randomScale) / 2;
-      rapierCollider = RAPIER.ColliderDesc.cuboid(
-        halfExtent,
-        halfExtent,
-        halfExtent
-      );
     }
 
     rapierCollider.restitution = 0.5;
@@ -161,6 +155,8 @@ import {
           }
         });
 
+        // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
+        // will break the map structure loop
         idsToRemove.forEach((id) => {
           const bodyToRemove = rapierBodies.get(id);
           if (bodyToRemove) {
