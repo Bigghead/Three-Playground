@@ -81,6 +81,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
             geometry,
             position: mesh.position.toArray(),
             randomScale: mesh.scale.x,
+            isInitialObject: true,
           })
         ),
       },
@@ -154,6 +155,7 @@ const guiObj = {
   isRaining: false,
   rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
+  rainingDuration: 30,
   isCameraHelperOn: false,
 
   createObject: (geometry = "sphere") => {
@@ -214,6 +216,9 @@ const guiObj = {
   makeItRain: () => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
+      setTimeout(() => {
+        guiObj.clearRain();
+      }, guiObj.rainingDuration * 1000);
       guiObj.rainingInterval = setInterval(() => {
         guiObj.createObject(Math.random() <= 0.5 ? "sphere" : "box");
       }, guiObj.rainSpeedTimer);
@@ -230,9 +235,10 @@ const guiObj = {
     }
   },
 
-  changeRainSpeed: (speed: number) => {
+  updateRain: (speed: number, duration: number) => {
     if (!guiObj.isRaining) return;
     guiObj.rainSpeedTimer = speed;
+    guiObj.rainingDuration = duration;
     guiObj.clearRain();
     guiObj.makeItRain();
   },
@@ -259,7 +265,14 @@ gui
   .add(guiObj, "rainSpeedTimer", 5, 200, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
-    guiObj.changeRainSpeed(speed);
+    guiObj.updateRain(speed, guiObj.rainingDuration);
+  });
+
+gui
+  .add(guiObj, "rainingDuration", 1, 60, 1)
+  .name("Rain Duration ( Seconds )")
+  .onFinishChange((duration: number) => {
+    guiObj.updateRain(guiObj.rainSpeedTimer, duration);
   });
 
 gui.add(guiObj, "clearRain").name("Stop Rain!");
@@ -339,6 +352,7 @@ const tick = (): void => {
       floorRotationX: guiObj.floorRotationX,
       endFloorRotationAngle: guiObj.endFloorRotationAngle,
       timeDelta,
+      isRaining: guiObj.isRaining,
     },
   });
 

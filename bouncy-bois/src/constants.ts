@@ -1,6 +1,6 @@
 import * as three from "three";
 export const floorWidth = 15;
-export const INACTIVITY_THRESHOLD_MS = 2500;
+export const INACTIVITY_THRESHOLD_MS = 500;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 
@@ -15,6 +15,7 @@ export type ObjectBody = {
   geometry: randomGeometry;
   randomScale: number;
   position: [number, number, number];
+  isInitialObject?: boolean;
 };
 
 export type WorldObjects = ObjectBody & {
