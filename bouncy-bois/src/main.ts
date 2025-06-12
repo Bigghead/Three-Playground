@@ -113,6 +113,18 @@ worker.onmessage = ({ data: { type, payload } }) => {
     floor.position.copy(translation);
     floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
+
+  if (type === WorkerEnum.REMOVE_INACTIVES) {
+    const { ids } = payload;
+    ids.forEach((id: string) => {
+      const meshObject = worldObjects.get(id);
+      if (meshObject) {
+        worldObjects.delete(id);
+        scene.remove(meshObject.mesh);
+        disposeMesh(meshObject.mesh);
+      }
+    });
+  }
 };
 
 const floorGeometry = new three.BoxGeometry(
@@ -182,7 +194,6 @@ const guiObj = {
         randomScale: newMesh.randomScale,
       };
     }
-
     worker.postMessage({
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
@@ -331,12 +342,12 @@ const tick = (): void => {
     },
   });
 
-  // batched remove objects every second instead of every frame
-  if (frameCount % 30 === 0) {
+  // batched remove objects every 1/3 second instead of every frame
+  if (frameCount % 20 === 0) {
     console.warn(worldObjects.size, " - ", meshPool.length);
     worldObjects.forEach(({ id, geometry, mesh }) => {
       // get rid of object if it's below floor ( assuming cause it fell off the sides )
-      if (mesh.position.y <= -40) {
+      if (mesh.position.y <= -20) {
         worldObjects.delete(id);
 
         const workerMessage = {
@@ -347,7 +358,7 @@ const tick = (): void => {
           },
         };
 
-        if (meshPool.length > 500) {
+        if (worldObjects.size > 500) {
           scene.remove(mesh);
           disposeMesh(mesh);
         } else {

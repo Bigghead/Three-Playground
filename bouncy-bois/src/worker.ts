@@ -1,6 +1,7 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
 import {
   floorWidth,
+  INACTIVITY_THRESHOLD_MS,
   type ObjectBody,
   type randomGeometry,
   WorkerEnum,
@@ -13,6 +14,8 @@ import {
     id: string;
     rapierBody: RAPIER.RigidBody;
     rapierCollider: RAPIER.ColliderDesc;
+    lastActiveTime: number;
+    isCurrentlySleeping: boolean;
   };
 
   let rapierBodies: Map<string, RapierBody> = new Map();
@@ -63,12 +66,13 @@ import {
         body.setAngvel({ x: 0, y: 0, z: 0 }, true);
         body.wakeUp();
         body.setEnabled(true);
-        // pooledRapier.body.sleep();
 
         return {
           id,
           rapierBody: body,
           rapierCollider: collider,
+          lastActiveTime: performance.now(),
+          isCurrentlySleeping: false,
         };
       }
     }
@@ -95,6 +99,8 @@ import {
       id,
       rapierBody,
       rapierCollider,
+      lastActiveTime: performance.now(),
+      isCurrentlySleeping: false,
     };
   };
 
@@ -114,29 +120,61 @@ import {
         if (!world) return;
 
         world.step();
+
+        const currentTime = performance.now();
+
+        const physicsData: any[] = [];
+        rapierBodies.forEach((body) => {
+          if (!body.rapierBody.isSleeping()) {
+            body.lastActiveTime = currentTime;
+          } else if (!body.isCurrentlySleeping) {
+            body.lastActiveTime = currentTime;
+            body.isCurrentlySleeping = true;
+          }
+
+          const translation = body.rapierBody.translation();
+          const rotation = body.rapierBody.rotation();
+          physicsData.push({
+            id: body.id,
+            position: { x: translation.x, y: translation.y, z: translation.z },
+            rotation: {
+              x: rotation.x,
+              y: rotation.y,
+              z: rotation.z,
+              w: rotation.w,
+            },
+          });
+        });
+
         postMessage({
           type: WorkerEnum.UPDATE_MESHES,
-          payload: {
-            data: Array.from(rapierBodies.values()).map((body) => {
-              const translation = body.rapierBody.translation();
-              const rotation = body.rapierBody.rotation();
-              return {
-                id: body.id,
-                position: {
-                  x: translation.x,
-                  y: translation.y,
-                  z: translation.z,
-                },
-                rotation: {
-                  x: rotation.x,
-                  y: rotation.y,
-                  z: rotation.z,
-                  w: rotation.w,
-                },
-              };
-            }),
-          },
+          payload: { data: physicsData },
         });
+
+        const idsToRemove: string[] = [];
+        rapierBodies.forEach((body, id) => {
+          if (
+            body.rapierBody.isSleeping() &&
+            currentTime - body.lastActiveTime > INACTIVITY_THRESHOLD_MS
+          ) {
+            idsToRemove.push(id);
+          }
+        });
+
+        idsToRemove.forEach((id) => {
+          const bodyToRemove = rapierBodies.get(id);
+          if (bodyToRemove) {
+            world.removeRigidBody(bodyToRemove.rapierBody);
+            rapierBodies.delete(id);
+          }
+        });
+
+        if (idsToRemove.length > 0) {
+          postMessage({
+            type: WorkerEnum.REMOVE_INACTIVES,
+            payload: { ids: idsToRemove, reusable: true },
+          });
+        }
 
         const {
           isFloorAnimating,
@@ -187,8 +225,8 @@ import {
         const shoudReuseBody = payload.reusable;
         if (rigidBody) {
           if (!shoudReuseBody) {
-            world.removeRigidBody(rigidBody.rapierBody);
             rapierBodies.delete(payload.id);
+            world.removeRigidBody(rigidBody.rapierBody);
           } else {
             pooledRapierBodies.push({
               id: payload.id,

@@ -1,5 +1,6 @@
 import * as three from "three";
 export const floorWidth = 15;
+export const INACTIVITY_THRESHOLD_MS = 5000;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 
@@ -33,4 +34,5 @@ export const WorkerEnum = {
   UPDATE_MESHES: "Update Meshes",
   ROTATE_FLOOR: "Rotate Floor",
   REMOVE_BODY: "Remove Body",
+  REMOVE_INACTIVES: "Remove Inactives",
 };
