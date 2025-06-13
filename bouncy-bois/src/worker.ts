@@ -106,6 +106,7 @@ import {
     } else {
       if (isRainingTimeouts.length) {
         isRainingTimeouts.forEach((timeout) => clearTimeout(timeout));
+        isRainingTimeouts = [];
       }
     }
   };
@@ -117,6 +118,8 @@ import {
    * Todo - more efficient removal ( batch? )
    */
   const removeInactiveBodies = (): void => {
+    if (rapierBodies.size < 100) return;
+
     const idsToRemove: string[] = [];
 
     isRainingTimeouts.push(

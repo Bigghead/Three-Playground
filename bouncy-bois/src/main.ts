@@ -266,7 +266,7 @@ gui.add(guiObj, "makeItRain").name("Make It Rain!");
 // we're going to use this to check performance later
 // like defaulting to 1 to make that CPU work
 gui
-  .add(guiObj, "rainSpeedTimer", 5, 200, 5)
+  .add(guiObj, "rainSpeedTimer", 5, 25, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
     guiObj.updateRain(speed, guiObj.rainingDuration);

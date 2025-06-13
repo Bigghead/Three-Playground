@@ -2,7 +2,7 @@
 
 # Demo at - https://bouncy-bois.netlify.app/
 
-^ Kinda broken if you open the console while running this but not an issue if you don't see it :)
+One of the more interesting projects to learn web / rendering optimization tips / tricks.
 
 ---
 
@@ -14,22 +14,26 @@
 - Structuring object creation
 - Sync threejs meshes with rapier colliders
 
-### 2. **Web Worker to Spin Off CPU Threads**
+### 2. **Performance Optimizations ( oh boi )**
+
+#### **Web Worker to Spin Off CPU Threads**
 
 - Add a worker to just handle physics ( position, rotation etc ) and have the main thread just render objects inside the animation frame
 - The worker has 0 access to the DOM / element event listeners
 - Pass simple data ( no full rapier bodies or threejs meshes ) like rapier body positions / floor rotation between worker / main thread.
 
-### 3. **Object Pooling**
+#### **Object Pooling**
 
 - Kind of a big one; just using ^ web workers isn't enough for performance
 - Overtime, if you keep the "rain" running even if you dispose objects every frame the garbage collector will
   struggle with keeping track of newly created objects / removal in memory and the fps will start tanking.
-- The "fix" is to put created objects in a reusable pool to be repositioned, the tricky part is keeping the mesh / physics synced
+- The "fix" is to put created objects in a reusable pool to be repositioned vs creating new ones
+  and / or disposed. the tricky part is keeping the mesh / physics synced
 
-### 4. **Vite Build With Rapier Compat**
+#### **Background Removal of Inactive Objects**
 
-- Fix ES Build / vite config cause rapier does top level await when it's instantiated
+- Even with the above improvements it's still not enough if you run the rain long enough
+- Need to check which objects have been inactive long enough and remove in the rain
 
 ## Issues / Todos
 
