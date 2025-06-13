@@ -2,19 +2,12 @@
 
 # Demo at - https://bouncy-bois.netlify.app/
 
+Looks simple, didn't feel simple to get working.
 One of the more interesting projects to learn web / rendering optimization tips / tricks.
-
----
 
 ## Features / What We've Learned
 
-### 1. **Gravity, physics with bouncing objects**
-
-- Rapier vs Cannon
-- Structuring object creation
-- Sync threejs meshes with rapier colliders
-
-### 2. **Performance Optimizations ( oh boi )**
+### 1. **Performance Optimizations ( oh boi... )**
 
 #### **Web Worker to Spin Off CPU Threads**
 
@@ -29,11 +22,23 @@ One of the more interesting projects to learn web / rendering optimization tips 
   struggle with keeping track of newly created objects / removal in memory and the fps will start tanking.
 - The "fix" is to put created objects in a reusable pool to be repositioned vs creating new ones
   and / or disposed. the tricky part is keeping the mesh / physics synced
+- We have a very aggresive pooling in the mesh, while the rapier side is leaning on disposal
 
 #### **Background Removal of Inactive Objects**
 
 - Even with the above improvements it's still not enough if you run the rain long enough
 - Need to check which objects have been inactive long enough and remove in the rain
+
+#### **SharedArrayBuffer**
+
+- Even with all these ^^^^ optimization tricks, they're still not enough if your monitor runs at a higher refresh rate ( tested at 240 ).
+- Passing a regular array / objects back & forth into the threads is CPU consuming since the objects are deep cloned before getting passed. Using these probably boosted up performance the most
+
+### 2. **Gravity, physics with bouncing objects**
+
+- Rapier vs Cannon
+- Structuring object creation
+- Sync threejs meshes with rapier colliders
 
 ## Issues / Todos
 
