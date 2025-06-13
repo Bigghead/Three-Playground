@@ -113,6 +113,18 @@ worker.onmessage = ({ data: { type, payload } }) => {
     floor.position.copy(translation);
     floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
   }
+
+  if (type === WorkerEnum.REMOVE_INACTIVES) {
+    const { ids } = payload;
+    ids.forEach((id: string) => {
+      const meshObject = worldObjects.get(id);
+      if (meshObject) {
+        worldObjects.delete(id);
+        scene.remove(meshObject.mesh);
+        disposeMesh(meshObject.mesh);
+      }
+    });
+  }
 };
 
 const floorGeometry = new three.BoxGeometry(
@@ -142,9 +154,11 @@ const guiObj = {
   isRaining: false,
   rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
+  rainingDuration: 30,
+  rainingTimeout: null as number | null,
   isCameraHelperOn: false,
 
-  createObject: (geometry = "sphere") => {
+  createObject: (geometry = "sphere"): void => {
     // check if any pooled objects exist and use that vs creating new mesh
     let activeObject;
     if (meshPool.length) {
@@ -182,7 +196,6 @@ const guiObj = {
         randomScale: newMesh.randomScale,
       };
     }
-
     worker.postMessage({
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
@@ -191,42 +204,50 @@ const guiObj = {
     });
   },
 
-  tipFloor: () => {
+  tipFloor: (): void => {
     guiObj.isFloorAnimating = true;
   },
 
-  resetFloor: () => {
+  resetFloor: (): void => {
     guiObj.isFloorAnimating = false;
     guiObj.floorRotationX = 0;
   },
 
-  makeItRain: () => {
+  makeItRain: (): void => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
+
+      guiObj.rainingTimeout = setTimeout(() => {
+        guiObj.clearRain();
+      }, guiObj.rainingDuration * 1000);
+
       guiObj.rainingInterval = setInterval(() => {
         guiObj.createObject(Math.random() <= 0.5 ? "sphere" : "box");
       }, guiObj.rainSpeedTimer);
     }
   },
 
-  clearRain: () => {
-    // typescript, bruhh...
-    // it's screaming for type mismatch before this line check if null
+  clearRain: (): void => {
     if (guiObj.rainingInterval != null) {
       guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
       guiObj.rainingInterval = null;
     }
+    if (guiObj.rainingTimeout != null) {
+      clearTimeout(guiObj.rainingTimeout);
+      guiObj.rainingTimeout = null;
+    }
   },
 
-  changeRainSpeed: (speed: number) => {
+  updateRain: (speed: number, duration: number): void => {
     if (!guiObj.isRaining) return;
     guiObj.rainSpeedTimer = speed;
+    guiObj.rainingDuration = duration;
     guiObj.clearRain();
     guiObj.makeItRain();
   },
 
-  toggleShadowhelper: () => {
+  toggleShadowhelper: (): void => {
     if (guiObj.isCameraHelperOn) {
       scene.remove(directionalLighthelper, shadowHelper);
       guiObj.isCameraHelperOn = false;
@@ -245,10 +266,17 @@ gui.add(guiObj, "makeItRain").name("Make It Rain!");
 // we're going to use this to check performance later
 // like defaulting to 1 to make that CPU work
 gui
-  .add(guiObj, "rainSpeedTimer", 5, 200, 5)
+  .add(guiObj, "rainSpeedTimer", 5, 25, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
-    guiObj.changeRainSpeed(speed);
+    guiObj.updateRain(speed, guiObj.rainingDuration);
+  });
+
+gui
+  .add(guiObj, "rainingDuration", 1, 60, 1)
+  .name("Rain Duration ( Seconds )")
+  .onFinishChange((duration: number) => {
+    guiObj.updateRain(guiObj.rainSpeedTimer, duration);
   });
 
 gui.add(guiObj, "clearRain").name("Stop Rain!");
@@ -328,38 +356,36 @@ const tick = (): void => {
       floorRotationX: guiObj.floorRotationX,
       endFloorRotationAngle: guiObj.endFloorRotationAngle,
       timeDelta,
+      isRaining: guiObj.isRaining,
     },
   });
 
-  // batched remove objects every second instead of every frame
-  if (frameCount % 30 === 0) {
-    console.warn(worldObjects.size, " - ", meshPool.length);
-    worldObjects.forEach(({ id, geometry, mesh }) => {
-      // get rid of object if it's below floor ( assuming cause it fell off the sides )
-      if (mesh.position.y <= -40) {
-        worldObjects.delete(id);
+  console.warn(worldObjects.size, " - ", meshPool.length);
+  worldObjects.forEach(({ id, geometry, mesh }) => {
+    // get rid of object if it's below floor ( assuming cause it fell off the sides )
+    if (mesh.position.y <= -20) {
+      worldObjects.delete(id);
 
-        const workerMessage = {
-          type: WorkerEnum.REMOVE_BODY,
-          payload: {
-            id,
-            reusable: false,
-          },
-        };
+      const workerMessage = {
+        type: WorkerEnum.REMOVE_BODY,
+        payload: {
+          id,
+          reusable: false,
+        },
+      };
 
-        if (meshPool.length > 500) {
-          scene.remove(mesh);
-          disposeMesh(mesh);
-        } else {
-          meshPool.push({ id, geometry, mesh });
-          mesh.visible = false;
-          workerMessage.payload.reusable = true;
-        }
-
-        worker.postMessage(workerMessage);
+      if (worldObjects.size > 500) {
+        scene.remove(mesh);
+        disposeMesh(mesh);
+      } else {
+        meshPool.push({ id, geometry, mesh });
+        mesh.visible = false;
+        workerMessage.payload.reusable = true;
       }
-    });
-  }
+
+      worker.postMessage(workerMessage);
+    }
+  });
 
   // Render
   renderer.render(scene, camera);

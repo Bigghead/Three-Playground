@@ -1,5 +1,7 @@
 import * as three from "three";
 export const floorWidth = 15;
+export const INACTIVITY_THRESHOLD_MS = 500;
+export const OBJECT_REMOVAL_WHEN_RAINING_TIMER = 3000;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 
@@ -14,6 +16,7 @@ export type ObjectBody = {
   geometry: randomGeometry;
   randomScale: number;
   position: [number, number, number];
+  isInitialObject?: boolean;
 };
 
 export type WorldObjects = ObjectBody & {
@@ -33,4 +36,5 @@ export const WorkerEnum = {
   UPDATE_MESHES: "Update Meshes",
   ROTATE_FLOOR: "Rotate Floor",
   REMOVE_BODY: "Remove Body",
+  REMOVE_INACTIVES: "Remove Inactives",
 };
