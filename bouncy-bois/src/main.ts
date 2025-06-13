@@ -5,13 +5,12 @@ import GUI from "lil-gui";
 import {
   floorWidth,
   type randomGeometry,
-  type PointPosition,
   WorkerEnum,
   type WorldObjects,
   type MeshPool,
-} from "./constants";
-import { createMesh, disposeMesh } from "./three-helper";
-import { buildRandomVertexPosition } from "./utils";
+} from "./lib/constants";
+import { createMesh, disposeMesh } from "./lib/three-helper";
+import { buildRandomVertexPosition } from "./lib/utils";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
@@ -88,23 +87,32 @@ worker.onmessage = ({ data: { type, payload } }) => {
   }
 
   if (type === WorkerEnum.UPDATE_MESHES) {
-    const { data } = payload;
-    data.forEach(
-      ({
-        id,
-        position,
-        rotation,
-      }: {
-        id: string;
-        position: PointPosition;
-        rotation: PointPosition & {
-          w: number;
-        };
-      }) => {
-        worldObjects.get(id)?.mesh.position.copy(position);
-        worldObjects.get(id)?.mesh.quaternion.copy(rotation);
+    const sharedBuffer = payload.buffer as SharedArrayBuffer;
+    const objectCount = payload.count as number;
+    const sharedFloatArray = new Float32Array(sharedBuffer);
+
+    const ids = payload.ids as string[];
+
+    let i = 0;
+    for (let objIdx = 0; objIdx < objectCount; objIdx++) {
+      const id = ids[objIdx];
+
+      // 3 slices for each position x/y/z
+      const px = sharedFloatArray[i++];
+      const py = sharedFloatArray[i++];
+      const pz = sharedFloatArray[i++];
+      // 4 slices for rapier rotation x/y/z/w
+      const rx = sharedFloatArray[i++];
+      const ry = sharedFloatArray[i++];
+      const rz = sharedFloatArray[i++];
+      const rw = sharedFloatArray[i++];
+      const mesh = worldObjects.get(id.toString())?.mesh;
+
+      if (mesh) {
+        mesh.position.set(px, py, pz);
+        mesh.quaternion.set(rx, ry, rz, rw);
       }
-    );
+    }
   }
 
   if (type === WorkerEnum.ROTATE_FLOOR) {
@@ -266,14 +274,14 @@ gui.add(guiObj, "makeItRain").name("Make It Rain!");
 // we're going to use this to check performance later
 // like defaulting to 1 to make that CPU work
 gui
-  .add(guiObj, "rainSpeedTimer", 5, 25, 5)
+  .add(guiObj, "rainSpeedTimer", 5, 200, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
     guiObj.updateRain(speed, guiObj.rainingDuration);
   });
 
 gui
-  .add(guiObj, "rainingDuration", 1, 60, 1)
+  .add(guiObj, "rainingDuration", 1, 600, 1)
   .name("Rain Duration ( Seconds )")
   .onFinishChange((duration: number) => {
     guiObj.updateRain(guiObj.rainSpeedTimer, duration);
@@ -337,16 +345,24 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
  * Animate
  */
 const clock = new three.Clock();
-let deltaTime = 0;
-let frameCount = 0;
+let deltaTime = 0; // for smnoother rotation of the fllor
+const fpsCap = 240; // capping this at my personal monitor max, idk what this looks like at higher refresh rates
+const fpsInterval = 1 / fpsCap; // how many miiliseconds per frame
+let fpsDelta = 0;
 
 const tick = (): void => {
+  window.requestAnimationFrame(tick);
+
   stats.begin();
+  fpsDelta += clock.getDelta();
+  if (fpsDelta < fpsInterval) return;
+
   const elapsedTime = clock.getElapsedTime();
   const timeDelta = elapsedTime - deltaTime;
   deltaTime = elapsedTime;
 
-  // Update controls
+  fpsDelta = fpsDelta % fpsInterval;
+
   controls.update();
 
   worker.postMessage({
@@ -357,10 +373,10 @@ const tick = (): void => {
       endFloorRotationAngle: guiObj.endFloorRotationAngle,
       timeDelta,
       isRaining: guiObj.isRaining,
+      rainSpeedTimer: guiObj.rainSpeedTimer,
     },
   });
 
-  console.warn(worldObjects.size, " - ", meshPool.length);
   worldObjects.forEach(({ id, geometry, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
     if (mesh.position.y <= -20) {
@@ -374,26 +390,16 @@ const tick = (): void => {
         },
       };
 
-      if (worldObjects.size > 500) {
-        scene.remove(mesh);
-        disposeMesh(mesh);
-      } else {
-        meshPool.push({ id, geometry, mesh });
-        mesh.visible = false;
-        workerMessage.payload.reusable = true;
-      }
+      meshPool.push({ id, geometry, mesh });
+      mesh.visible = false;
+      workerMessage.payload.reusable = true;
 
       worker.postMessage(workerMessage);
     }
   });
 
-  // Render
   renderer.render(scene, camera);
-
-  // Call tick again on the next frame
   stats.end();
-  window.requestAnimationFrame(tick);
-  frameCount++;
 };
 
 tick();
