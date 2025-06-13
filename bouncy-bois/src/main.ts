@@ -88,23 +88,35 @@ worker.onmessage = ({ data: { type, payload } }) => {
   }
 
   if (type === WorkerEnum.UPDATE_MESHES) {
-    const { data } = payload;
-    data.forEach(
-      ({
-        id,
-        position,
-        rotation,
-      }: {
-        id: string;
-        position: PointPosition;
-        rotation: PointPosition & {
-          w: number;
-        };
-      }) => {
-        worldObjects.get(id)?.mesh.position.copy(position);
-        worldObjects.get(id)?.mesh.quaternion.copy(rotation);
+    const sharedBuffer = payload.buffer as SharedArrayBuffer;
+    const objectCount = payload.count as number;
+    const sharedFloatArray = new Float32Array(sharedBuffer);
+
+    const ids = payload.ids as string[];
+
+    let i = 0;
+    for (let objIdx = 0; objIdx < objectCount; objIdx++) {
+      const id = ids[objIdx];
+
+      // 3 slices for each position x/y/z
+      const px = sharedFloatArray[i++];
+      const py = sharedFloatArray[i++];
+      const pz = sharedFloatArray[i++];
+      // 4 slices for rapier rotation x/y/z/w
+      const rx = sharedFloatArray[i++];
+      const ry = sharedFloatArray[i++];
+      const rz = sharedFloatArray[i++];
+      const rw = sharedFloatArray[i++];
+      const mesh = worldObjects.get(id.toString())?.mesh;
+
+      if (mesh) {
+        mesh.position.set(px, py, pz);
+
+        mesh.quaternion.set(rx, ry, rz, rw);
+      } else {
+        // console.warn(`Mesh with ID ${id} not found in worldObjects.`);
       }
-    );
+    }
   }
 
   if (type === WorkerEnum.ROTATE_FLOOR) {
@@ -361,6 +373,7 @@ const tick = (): void => {
   });
 
   console.warn(worldObjects.size, " - ", meshPool.length);
+  // if (frameCount % 240 === 0) {
   worldObjects.forEach(({ id, geometry, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
     if (mesh.position.y <= -20) {
@@ -374,18 +387,14 @@ const tick = (): void => {
         },
       };
 
-      if (worldObjects.size > 500) {
-        scene.remove(mesh);
-        disposeMesh(mesh);
-      } else {
-        meshPool.push({ id, geometry, mesh });
-        mesh.visible = false;
-        workerMessage.payload.reusable = true;
-      }
+      meshPool.push({ id, geometry, mesh });
+      mesh.visible = false;
+      workerMessage.payload.reusable = true;
 
       worker.postMessage(workerMessage);
     }
   });
+  // }
 
   // Render
   renderer.render(scene, camera);
