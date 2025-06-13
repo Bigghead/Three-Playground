@@ -18,13 +18,13 @@ import {
 
   let rapierBodies: Map<string, RapierBody> = new Map();
 
-  type RapierPool = {
-    id: string;
-    body: RAPIER.RigidBody;
-    collider: RAPIER.ColliderDesc;
-  };
+  const maxObjects = 5000;
 
-  let pooledRapierBodies: RapierPool[] = [];
+  const buffer = new SharedArrayBuffer(
+    maxObjects * 7 * Float32Array.BYTES_PER_ELEMENT
+  );
+
+  const floatArray = new Float32Array(buffer);
 
   const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
@@ -56,35 +56,20 @@ import {
   ): RapierBody => {
     let rapierBody: RAPIER.RigidBody;
     let rapierCollider: RAPIER.ColliderDesc;
-    const pooledRapier = pooledRapierBodies.length && pooledRapierBodies.pop();
 
-    if (pooledRapier) {
-      const { body, collider } = pooledRapier;
-      const [x, y, z] = position;
-      body.setTranslation({ x, y, z }, true);
-      body.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-      body.wakeUp();
-      body.setEnabled(true);
+    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+      .setCanSleep(true)
+      .setTranslation(...position);
+    rapierBody = world.createRigidBody(rigidBodyDesc);
+    rapierCollider = RAPIER.ColliderDesc.ball(1 * randomScale);
 
-      rapierBody = body;
-      rapierCollider = collider;
-    } else {
-      const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-        .setCanSleep(true)
-        .setTranslation(...position);
-      rapierBody = world.createRigidBody(rigidBodyDesc);
-      rapierCollider = RAPIER.ColliderDesc.ball(1 * randomScale);
-
-      if (geometry === "box") {
-        const halfExtent = (1 * randomScale) / 2;
-        rapierCollider = RAPIER.ColliderDesc.cuboid(
-          halfExtent,
-          halfExtent,
-          halfExtent
-        );
-      }
+    if (geometry === "box") {
+      const halfExtent = (1 * randomScale) / 2;
+      rapierCollider = RAPIER.ColliderDesc.cuboid(
+        halfExtent,
+        halfExtent,
+        halfExtent
+      );
     }
 
     rapierCollider.restitution = 0.5;
@@ -122,55 +107,40 @@ import {
 
     const idsToRemove: string[] = [];
 
-    isRainingTimeouts.push(
-      setTimeout(() => {
-        rapierBodies.forEach((body, id) => {
-          if (body.rapierBody.isSleeping()) {
-            idsToRemove.push(id);
-          }
-        });
+    rapierBodies.forEach((body, id) => {
+      if (body.rapierBody.isSleeping()) {
+        idsToRemove.push(id);
+      }
+    });
 
-        // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
-        // will break the map structure loop
-        idsToRemove.forEach((id) => {
-          const bodyToRemove = rapierBodies.get(id);
-          if (bodyToRemove) {
-            world.removeRigidBody(bodyToRemove.rapierBody);
-            rapierBodies.delete(id);
-          }
-        });
+    // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
+    // will break the map structure loop
+    idsToRemove.forEach((id) => {
+      const bodyToRemove = rapierBodies.get(id);
+      if (bodyToRemove) {
+        world.removeRigidBody(bodyToRemove.rapierBody);
+        rapierBodies.delete(id);
+      }
+    });
 
-        if (idsToRemove.length > 0) {
-          postMessage({
-            type: WorkerEnum.REMOVE_INACTIVES,
-            payload: { ids: idsToRemove, reusable: true },
-          });
-        }
-      }, OBJECT_REMOVAL_WHEN_RAINING_TIMER)
-    );
+    if (idsToRemove.length > 0) {
+      postMessage({
+        type: WorkerEnum.REMOVE_INACTIVES,
+        payload: { ids: idsToRemove, reusable: true },
+      });
+    }
   };
 
   const removeFallingBody = ({
     id,
-    reusable,
   }: {
     id: string;
     reusable: boolean;
   }): void => {
     const rigidBody = rapierBodies.get(id);
-    const shoudReuseBody = reusable;
     if (rigidBody) {
-      if (!shoudReuseBody) {
-        rapierBodies.delete(id);
-        world.removeRigidBody(rigidBody.rapierBody);
-      } else {
-        pooledRapierBodies.push({
-          id: id,
-          body: rigidBody.rapierBody,
-          collider: rigidBody.rapierCollider,
-        });
-        rigidBody.rapierBody.setEnabled(false);
-      }
+      rapierBodies.delete(id);
+      world.removeRigidBody(rigidBody.rapierBody);
     }
   };
 
@@ -254,24 +224,34 @@ import {
         } = payload;
 
         const physicsData: any[] = [];
+
+        const idsToUpdate: string[] = [];
+
+        let i = 0;
         rapierBodies.forEach((body) => {
-          const translation = body.rapierBody.translation();
-          const rotation = body.rapierBody.rotation();
-          physicsData.push({
-            id: body.id,
-            position: { x: translation.x, y: translation.y, z: translation.z },
-            rotation: {
-              x: rotation.x,
-              y: rotation.y,
-              z: rotation.z,
-              w: rotation.w,
-            },
-          });
+          // push and pass the ids into the main
+          // why? because the sharedarraybuffer will only take in numbers
+          // so we keep track of ids in another array
+          idsToUpdate.push(body.id);
+          const t = body.rapierBody.translation();
+          const r = body.rapierBody.rotation();
+
+          floatArray[i++] = t.x;
+          floatArray[i++] = t.y;
+          floatArray[i++] = t.z;
+          floatArray[i++] = r.x;
+          floatArray[i++] = r.y;
+          floatArray[i++] = r.z;
+          floatArray[i++] = r.w;
         });
 
         postMessage({
           type: WorkerEnum.UPDATE_MESHES,
-          payload: { data: physicsData },
+          payload: {
+            buffer: floatArray.buffer,
+            count: rapierBodies.size,
+            ids: idsToUpdate,
+          },
         });
 
         shouldRemoveInactiveBodies({ isRaining });
