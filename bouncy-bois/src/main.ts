@@ -5,7 +5,6 @@ import GUI from "lil-gui";
 import {
   floorWidth,
   type randomGeometry,
-  type PointPosition,
   WorkerEnum,
   type WorldObjects,
   type MeshPool,
@@ -111,10 +110,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
 
       if (mesh) {
         mesh.position.set(px, py, pz);
-
         mesh.quaternion.set(rx, ry, rz, rw);
-      } else {
-        // console.warn(`Mesh with ID ${id} not found in worldObjects.`);
       }
     }
   }
@@ -351,13 +347,22 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
 const clock = new three.Clock();
 let deltaTime = 0;
 let frameCount = 0;
+const fpsCap = 240; // capping this at my personal monitor max, idk what this looks like at higher refresh rates
+const fpsInterval = 1 / fpsCap; // how many miiliseconds per frame
+let fpsDelta = 0;
 
 const tick = (): void => {
+  window.requestAnimationFrame(tick);
+
   stats.begin();
+  fpsDelta += clock.getDelta();
+  if (fpsDelta < fpsInterval) return;
+
   const elapsedTime = clock.getElapsedTime();
   const timeDelta = elapsedTime - deltaTime;
   deltaTime = elapsedTime;
 
+  fpsDelta = fpsDelta % fpsInterval;
   // Update controls
   controls.update();
 
@@ -372,8 +377,6 @@ const tick = (): void => {
     },
   });
 
-  console.warn(worldObjects.size, " - ", meshPool.length);
-  // if (frameCount % 240 === 0) {
   worldObjects.forEach(({ id, geometry, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
     if (mesh.position.y <= -20) {
@@ -394,14 +397,11 @@ const tick = (): void => {
       worker.postMessage(workerMessage);
     }
   });
-  // }
 
   // Render
   renderer.render(scene, camera);
 
-  // Call tick again on the next frame
   stats.end();
-  window.requestAnimationFrame(tick);
   frameCount++;
 };
 
