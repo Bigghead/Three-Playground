@@ -96,6 +96,126 @@ import {
     };
   };
 
+  const shouldRemoveInactiveBodies = ({
+    isRaining,
+  }: {
+    isRaining: boolean;
+  }): void => {
+    if (isRaining) {
+      removeInactiveBodies();
+    } else {
+      if (isRainingTimeout !== null) {
+        clearTimeout(isRainingTimeout);
+      }
+    }
+  };
+
+  const removeInactiveBodies = (): void => {
+    const idsToRemove: string[] = [];
+
+    // start clearing inactive objects, x seconds after rain has started
+    isRainingTimeout = setTimeout(() => {
+      rapierBodies.forEach((body, id) => {
+        if (body.rapierBody.isSleeping()) {
+          idsToRemove.push(id);
+        }
+      });
+
+      // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
+      // will break the map structure loop
+      idsToRemove.forEach((id) => {
+        const bodyToRemove = rapierBodies.get(id);
+        if (bodyToRemove) {
+          world.removeRigidBody(bodyToRemove.rapierBody);
+          rapierBodies.delete(id);
+        }
+      });
+
+      if (idsToRemove.length > 0) {
+        postMessage({
+          type: WorkerEnum.REMOVE_INACTIVES,
+          payload: { ids: idsToRemove, reusable: true },
+        });
+      }
+    }, OBJECT_REMOVAL_WHEN_RAINING_TIMER);
+  };
+
+  const removeFallingBody = ({
+    payload: { id, reusable },
+  }: {
+    payload: { id: string; reusable: boolean };
+  }): void => {
+    const rigidBody = rapierBodies.get(id);
+    const shoudReuseBody = reusable;
+    if (rigidBody) {
+      if (!shoudReuseBody) {
+        rapierBodies.delete(id);
+        world.removeRigidBody(rigidBody.rapierBody);
+      } else {
+        pooledRapierBodies.push({
+          id: id,
+          body: rigidBody.rapierBody,
+          collider: rigidBody.rapierCollider,
+        });
+        rigidBody.rapierBody.setEnabled(false);
+      }
+    }
+  };
+
+  const shouldRotateFloor = ({
+    isFloorAnimating,
+    floorRotationX,
+    endFloorRotationAngle,
+    timeDelta,
+  }: {
+    isFloorAnimating: boolean;
+    floorRotationX: number;
+    endFloorRotationAngle: number;
+    timeDelta: number;
+  }): void => {
+    if (isFloorAnimating) {
+      if (floorRotationX <= endFloorRotationAngle) {
+        const newFloorRotationX = floorRotationX + timeDelta * 0.1;
+        const quat = new RAPIER.Quaternion(
+          0,
+          0,
+          Math.sin(newFloorRotationX),
+          Math.cos(newFloorRotationX)
+        );
+
+        rapierFloorBody.setRotation(quat, true);
+
+        postMessage({
+          type: WorkerEnum.ROTATE_FLOOR,
+          payload: {
+            newFloorRotationX,
+            translation: rapierFloorBody.translation(),
+            rotation: rapierFloorBody.rotation(),
+          },
+        });
+      }
+    } else {
+      // trippy rapier rotation, setting all 0s doesnt put it back to 0
+      // needs that last 1 in the w param for some reason, but it works
+      // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+      rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
+      postMessage({
+        type: WorkerEnum.ROTATE_FLOOR,
+        payload: {
+          newFloorRotationX: 0,
+          translation: rapierFloorBody.translation(),
+          rotation: rapierFloorBody.rotation(),
+        },
+      });
+    }
+  };
+
+  /**
+   *
+   * Worker Event Capturing
+   * @param {Object} message The message event object from the main thread.
+   * @returns void
+   */
   self.onmessage = ({ data: { type, payload } }) => {
     try {
       if (type === WorkerEnum.ADD_OBJECTS) {
@@ -142,92 +262,18 @@ import {
           payload: { data: physicsData },
         });
 
-        const idsToRemove: string[] = [];
-        if (isRaining) {
-          // start clearing inactive objects, x seconds after rain has started
-          isRainingTimeout = setTimeout(() => {
-            rapierBodies.forEach((body, id) => {
-              if (body.rapierBody.isSleeping()) {
-                idsToRemove.push(id);
-              }
-            });
+        shouldRemoveInactiveBodies({ isRaining });
 
-            // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
-            // will break the map structure loop
-            idsToRemove.forEach((id) => {
-              const bodyToRemove = rapierBodies.get(id);
-              if (bodyToRemove) {
-                world.removeRigidBody(bodyToRemove.rapierBody);
-                rapierBodies.delete(id);
-              }
-            });
-
-            if (idsToRemove.length > 0) {
-              postMessage({
-                type: WorkerEnum.REMOVE_INACTIVES,
-                payload: { ids: idsToRemove, reusable: true },
-              });
-            }
-          }, OBJECT_REMOVAL_WHEN_RAINING_TIMER);
-        } else {
-          if (isRainingTimeout !== null) {
-            clearTimeout(isRainingTimeout);
-          }
-        }
-
-        if (isFloorAnimating) {
-          if (floorRotationX <= endFloorRotationAngle) {
-            const newFloorRotationX = floorRotationX + timeDelta * 0.1;
-            const quat = new RAPIER.Quaternion(
-              0,
-              0,
-              Math.sin(newFloorRotationX),
-              Math.cos(newFloorRotationX)
-            );
-
-            rapierFloorBody.setRotation(quat, true);
-
-            postMessage({
-              type: WorkerEnum.ROTATE_FLOOR,
-              payload: {
-                newFloorRotationX,
-                translation: rapierFloorBody.translation(),
-                rotation: rapierFloorBody.rotation(),
-              },
-            });
-          }
-        } else {
-          // trippy rapier rotation, setting all 0s doesnt put it back to 0
-          // needs that last 1 in the w param for some reason, but it works
-          // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-          rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-          postMessage({
-            type: WorkerEnum.ROTATE_FLOOR,
-            payload: {
-              newFloorRotationX: 0,
-              translation: rapierFloorBody.translation(),
-              rotation: rapierFloorBody.rotation(),
-            },
-          });
-        }
+        shouldRotateFloor({
+          isFloorAnimating,
+          floorRotationX,
+          endFloorRotationAngle,
+          timeDelta,
+        });
       }
 
       if (type === WorkerEnum.REMOVE_BODY) {
-        const rigidBody = rapierBodies.get(payload.id);
-        const shoudReuseBody = payload.reusable;
-        if (rigidBody) {
-          if (!shoudReuseBody) {
-            rapierBodies.delete(payload.id);
-            world.removeRigidBody(rigidBody.rapierBody);
-          } else {
-            pooledRapierBodies.push({
-              id: payload.id,
-              body: rigidBody.rapierBody,
-              collider: rigidBody.rapierCollider,
-            });
-            rigidBody.rapierBody.setEnabled(false);
-          }
-        }
+        removeFallingBody(payload);
       }
     } catch (e) {
       console.error(e);

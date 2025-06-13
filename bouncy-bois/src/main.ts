@@ -158,7 +158,7 @@ const guiObj = {
   rainingTimeout: null as number | null,
   isCameraHelperOn: false,
 
-  createObject: (geometry = "sphere") => {
+  createObject: (geometry = "sphere"): void => {
     // check if any pooled objects exist and use that vs creating new mesh
     let activeObject;
     if (meshPool.length) {
@@ -204,16 +204,16 @@ const guiObj = {
     });
   },
 
-  tipFloor: () => {
+  tipFloor: (): void => {
     guiObj.isFloorAnimating = true;
   },
 
-  resetFloor: () => {
+  resetFloor: (): void => {
     guiObj.isFloorAnimating = false;
     guiObj.floorRotationX = 0;
   },
 
-  makeItRain: () => {
+  makeItRain: (): void => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
 
@@ -227,7 +227,7 @@ const guiObj = {
     }
   },
 
-  clearRain: () => {
+  clearRain: (): void => {
     if (guiObj.rainingInterval != null) {
       guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
@@ -239,7 +239,7 @@ const guiObj = {
     }
   },
 
-  updateRain: (speed: number, duration: number) => {
+  updateRain: (speed: number, duration: number): void => {
     if (!guiObj.isRaining) return;
     guiObj.rainSpeedTimer = speed;
     guiObj.rainingDuration = duration;
@@ -247,7 +247,7 @@ const guiObj = {
     guiObj.makeItRain();
   },
 
-  toggleShadowhelper: () => {
+  toggleShadowhelper: (): void => {
     if (guiObj.isCameraHelperOn) {
       scene.remove(directionalLighthelper, shadowHelper);
       guiObj.isCameraHelperOn = false;
