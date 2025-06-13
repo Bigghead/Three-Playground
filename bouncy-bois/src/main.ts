@@ -8,9 +8,9 @@ import {
   WorkerEnum,
   type WorldObjects,
   type MeshPool,
-} from "./constants";
-import { createMesh, disposeMesh } from "./three-helper";
-import { buildRandomVertexPosition } from "./utils";
+} from "./lib/constants";
+import { createMesh, disposeMesh } from "./lib/three-helper";
+import { buildRandomVertexPosition } from "./lib/utils";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
@@ -274,14 +274,14 @@ gui.add(guiObj, "makeItRain").name("Make It Rain!");
 // we're going to use this to check performance later
 // like defaulting to 1 to make that CPU work
 gui
-  .add(guiObj, "rainSpeedTimer", 5, 25, 5)
+  .add(guiObj, "rainSpeedTimer", 5, 200, 5)
   .name("Rain Speed!")
   .onFinishChange((speed: number) => {
     guiObj.updateRain(speed, guiObj.rainingDuration);
   });
 
 gui
-  .add(guiObj, "rainingDuration", 1, 60, 1)
+  .add(guiObj, "rainingDuration", 1, 600, 1)
   .name("Rain Duration ( Seconds )")
   .onFinishChange((duration: number) => {
     guiObj.updateRain(guiObj.rainSpeedTimer, duration);
@@ -345,8 +345,7 @@ renderer.shadowMap.type = three.PCFSoftShadowMap;
  * Animate
  */
 const clock = new three.Clock();
-let deltaTime = 0;
-let frameCount = 0;
+let deltaTime = 0; // for smnoother rotation of the fllor
 const fpsCap = 240; // capping this at my personal monitor max, idk what this looks like at higher refresh rates
 const fpsInterval = 1 / fpsCap; // how many miiliseconds per frame
 let fpsDelta = 0;
@@ -363,7 +362,7 @@ const tick = (): void => {
   deltaTime = elapsedTime;
 
   fpsDelta = fpsDelta % fpsInterval;
-  // Update controls
+
   controls.update();
 
   worker.postMessage({
@@ -398,11 +397,8 @@ const tick = (): void => {
     }
   });
 
-  // Render
   renderer.render(scene, camera);
-
   stats.end();
-  frameCount++;
 };
 
 tick();

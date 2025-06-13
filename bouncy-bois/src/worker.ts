@@ -5,7 +5,7 @@ import {
   type ObjectBody,
   type randomGeometry,
   WorkerEnum,
-} from "./constants";
+} from "./lib/constants";
 
 (async () => {
   await RAPIER.init();
@@ -14,21 +14,21 @@ import {
     id: string;
     rapierBody: RAPIER.RigidBody;
     rapierCollider: RAPIER.ColliderDesc;
+    sleepStartTime?: number;
   };
 
   let rapierBodies: Map<string, RapierBody> = new Map();
 
+  // SharedArrayBuffer is like the name, shared across threads instead of deeply cloned.
+  // The deep cloning gets slow when your object data gets bigger over time
   const maxObjects = 5000;
-
   const buffer = new SharedArrayBuffer(
     maxObjects * 7 * Float32Array.BYTES_PER_ELEMENT
   );
-
   const floatArray = new Float32Array(buffer);
-
   const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
-  let isRainingTimeouts: number[] = [];
+  let rainStartTime: number | null = null;
 
   const rapierFloor =
     RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
@@ -86,19 +86,22 @@ import {
   }: {
     isRaining: boolean;
   }): void => {
+    startRain(isRaining);
     if (isRaining) {
       removeInactiveBodies();
     } else {
-      if (isRainingTimeouts.length) {
-        isRainingTimeouts.forEach((timeout) => clearTimeout(timeout));
-        isRainingTimeouts = [];
-      }
+      rainStartTime = null;
+    }
+  };
+
+  const startRain = (isRaining: boolean): void => {
+    if (isRaining && rainStartTime === null) {
+      rainStartTime = performance.now();
     }
   };
 
   /**
    * Start clearing inactive objects, x seconds after rain has started
-   * Works, but we're creating several hundred timers per each rain cycle
    *
    * Todo - more efficient removal ( batch? )
    */
@@ -106,15 +109,19 @@ import {
     if (rapierBodies.size < 100) return;
 
     const idsToRemove: string[] = [];
+    const removalThreshold =
+      performance.now() - OBJECT_REMOVAL_WHEN_RAINING_TIMER;
 
     rapierBodies.forEach((body, id) => {
-      if (body.rapierBody.isSleeping()) {
+      if (
+        body.rapierBody.isSleeping() &&
+        body.sleepStartTime &&
+        body.sleepStartTime > removalThreshold
+      ) {
         idsToRemove.push(id);
       }
     });
 
-    // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
-    // will break the map structure loop
     idsToRemove.forEach((id) => {
       const bodyToRemove = rapierBodies.get(id);
       if (bodyToRemove) {
@@ -223,8 +230,6 @@ import {
           isRaining,
         } = payload;
 
-        const physicsData: any[] = [];
-
         const idsToUpdate: string[] = [];
 
         let i = 0;
@@ -243,6 +248,12 @@ import {
           floatArray[i++] = r.y;
           floatArray[i++] = r.z;
           floatArray[i++] = r.w;
+
+          if (body.rapierBody.isSleeping()) {
+            if (!body.sleepStartTime) {
+              body.sleepStartTime = performance.now();
+            }
+          }
         });
 
         postMessage({
