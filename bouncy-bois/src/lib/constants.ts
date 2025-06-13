@@ -1,7 +1,7 @@
 import * as three from "three";
 export const floorWidth = 15;
 export const INACTIVITY_THRESHOLD_MS = 500;
-export const OBJECT_REMOVAL_WHEN_RAINING_TIMER = 3500;
+export const OBJECT_REMOVAL_WHEN_RAINING_TIMER = 1000;
 
 export type randomGeometry = "sphere" | "cone" | "box";
 

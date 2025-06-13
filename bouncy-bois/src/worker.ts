@@ -81,14 +81,53 @@ import {
     };
   };
 
+  const shouldUpdateMeshes = (): void => {
+    const idsToUpdate: string[] = [];
+
+    let i = 0;
+    rapierBodies.forEach((body) => {
+      // push and pass the ids into the main
+      // why? because the sharedarraybuffer will only take in numbers
+      // so we keep track of ids in another array
+      idsToUpdate.push(body.id);
+      const t = body.rapierBody.translation();
+      const r = body.rapierBody.rotation();
+
+      floatArray[i++] = t.x;
+      floatArray[i++] = t.y;
+      floatArray[i++] = t.z;
+      floatArray[i++] = r.x;
+      floatArray[i++] = r.y;
+      floatArray[i++] = r.z;
+      floatArray[i++] = r.w;
+
+      if (body.rapierBody.isSleeping()) {
+        if (!body.sleepStartTime) {
+          body.sleepStartTime = performance.now();
+        }
+      }
+    });
+
+    postMessage({
+      type: WorkerEnum.UPDATE_MESHES,
+      payload: {
+        buffer: floatArray.buffer,
+        count: rapierBodies.size,
+        ids: idsToUpdate,
+      },
+    });
+  };
+
   const shouldRemoveInactiveBodies = ({
     isRaining,
+    rainSpeedTimer,
   }: {
     isRaining: boolean;
+    rainSpeedTimer: number;
   }): void => {
     startRain(isRaining);
     if (isRaining) {
-      removeInactiveBodies();
+      removeInactiveBodies(rainSpeedTimer);
     } else {
       rainStartTime = null;
     }
@@ -105,8 +144,9 @@ import {
    *
    * Todo - more efficient removal ( batch? )
    */
-  const removeInactiveBodies = (): void => {
-    if (rapierBodies.size < 100) return;
+  const removeInactiveBodies = (rainSpeedTimer: number): void => {
+    // too little objects to remove / rain too slow
+    if (rapierBodies.size < 200 || rainSpeedTimer >= 30) return;
 
     const idsToRemove: string[] = [];
     const removalThreshold =
@@ -228,44 +268,12 @@ import {
           endFloorRotationAngle,
           timeDelta,
           isRaining,
+          rainSpeedTimer,
         } = payload;
 
-        const idsToUpdate: string[] = [];
+        shouldUpdateMeshes();
 
-        let i = 0;
-        rapierBodies.forEach((body) => {
-          // push and pass the ids into the main
-          // why? because the sharedarraybuffer will only take in numbers
-          // so we keep track of ids in another array
-          idsToUpdate.push(body.id);
-          const t = body.rapierBody.translation();
-          const r = body.rapierBody.rotation();
-
-          floatArray[i++] = t.x;
-          floatArray[i++] = t.y;
-          floatArray[i++] = t.z;
-          floatArray[i++] = r.x;
-          floatArray[i++] = r.y;
-          floatArray[i++] = r.z;
-          floatArray[i++] = r.w;
-
-          if (body.rapierBody.isSleeping()) {
-            if (!body.sleepStartTime) {
-              body.sleepStartTime = performance.now();
-            }
-          }
-        });
-
-        postMessage({
-          type: WorkerEnum.UPDATE_MESHES,
-          payload: {
-            buffer: floatArray.buffer,
-            count: rapierBodies.size,
-            ids: idsToUpdate,
-          },
-        });
-
-        shouldRemoveInactiveBodies({ isRaining });
+        shouldRemoveInactiveBodies({ isRaining, rainSpeedTimer });
 
         shouldRotateFloor({
           isFloorAnimating,

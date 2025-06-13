@@ -373,6 +373,7 @@ const tick = (): void => {
       endFloorRotationAngle: guiObj.endFloorRotationAngle,
       timeDelta,
       isRaining: guiObj.isRaining,
+      rainSpeedTimer: guiObj.rainSpeedTimer,
     },
   });
 
