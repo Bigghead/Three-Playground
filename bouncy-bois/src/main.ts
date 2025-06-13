@@ -81,7 +81,6 @@ worker.onmessage = ({ data: { type, payload } }) => {
             geometry,
             position: mesh.position.toArray(),
             randomScale: mesh.scale.x,
-            isInitialObject: true,
           })
         ),
       },
@@ -156,6 +155,7 @@ const guiObj = {
   rainSpeedTimer: 5,
   rainingInterval: null as number | null, // setInterval returns a number type
   rainingDuration: 30,
+  rainingTimeout: null as number | null,
   isCameraHelperOn: false,
 
   createObject: (geometry = "sphere") => {
@@ -216,9 +216,11 @@ const guiObj = {
   makeItRain: () => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
-      setTimeout(() => {
+
+      guiObj.rainingTimeout = setTimeout(() => {
         guiObj.clearRain();
       }, guiObj.rainingDuration * 1000);
+
       guiObj.rainingInterval = setInterval(() => {
         guiObj.createObject(Math.random() <= 0.5 ? "sphere" : "box");
       }, guiObj.rainSpeedTimer);
@@ -226,12 +228,14 @@ const guiObj = {
   },
 
   clearRain: () => {
-    // typescript, bruhh...
-    // it's screaming for type mismatch before this line check if null
     if (guiObj.rainingInterval != null) {
       guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
       guiObj.rainingInterval = null;
+    }
+    if (guiObj.rainingTimeout != null) {
+      clearTimeout(guiObj.rainingTimeout);
+      guiObj.rainingTimeout = null;
     }
   },
 
@@ -356,35 +360,32 @@ const tick = (): void => {
     },
   });
 
-  // batched remove objects every 1/3 second instead of every frame
-  if (frameCount % 20 === 0) {
-    console.warn(worldObjects.size, " - ", meshPool.length);
-    worldObjects.forEach(({ id, geometry, mesh }) => {
-      // get rid of object if it's below floor ( assuming cause it fell off the sides )
-      if (mesh.position.y <= -20) {
-        worldObjects.delete(id);
+  console.warn(worldObjects.size, " - ", meshPool.length);
+  worldObjects.forEach(({ id, geometry, mesh }) => {
+    // get rid of object if it's below floor ( assuming cause it fell off the sides )
+    if (mesh.position.y <= -20) {
+      worldObjects.delete(id);
 
-        const workerMessage = {
-          type: WorkerEnum.REMOVE_BODY,
-          payload: {
-            id,
-            reusable: false,
-          },
-        };
+      const workerMessage = {
+        type: WorkerEnum.REMOVE_BODY,
+        payload: {
+          id,
+          reusable: false,
+        },
+      };
 
-        if (worldObjects.size > 500) {
-          scene.remove(mesh);
-          disposeMesh(mesh);
-        } else {
-          meshPool.push({ id, geometry, mesh });
-          mesh.visible = false;
-          workerMessage.payload.reusable = true;
-        }
-
-        worker.postMessage(workerMessage);
+      if (worldObjects.size > 500) {
+        scene.remove(mesh);
+        disposeMesh(mesh);
+      } else {
+        meshPool.push({ id, geometry, mesh });
+        mesh.visible = false;
+        workerMessage.payload.reusable = true;
       }
-    });
-  }
+
+      worker.postMessage(workerMessage);
+    }
+  });
 
   // Render
   renderer.render(scene, camera);

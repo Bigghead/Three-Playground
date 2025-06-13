@@ -1,7 +1,7 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
 import {
   floorWidth,
-  INACTIVITY_THRESHOLD_MS,
+  OBJECT_REMOVAL_WHEN_RAINING_TIMER,
   type ObjectBody,
   type randomGeometry,
   WorkerEnum,
@@ -14,8 +14,6 @@ import {
     id: string;
     rapierBody: RAPIER.RigidBody;
     rapierCollider: RAPIER.ColliderDesc;
-    lastActiveTime: number;
-    isCurrentlySleeping: boolean;
   };
 
   let rapierBodies: Map<string, RapierBody> = new Map();
@@ -29,6 +27,8 @@ import {
   let pooledRapierBodies: RapierPool[] = [];
 
   const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
+
+  let isRainingTimeout: number | null = null;
 
   const rapierFloor =
     RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
@@ -93,8 +93,6 @@ import {
       id,
       rapierBody,
       rapierCollider,
-      lastActiveTime: performance.now(),
-      isCurrentlySleeping: false,
     };
   };
 
@@ -115,17 +113,16 @@ import {
 
         world.step();
 
-        const currentTime = performance.now();
+        const {
+          isFloorAnimating,
+          floorRotationX,
+          endFloorRotationAngle,
+          timeDelta,
+          isRaining,
+        } = payload;
 
         const physicsData: any[] = [];
         rapierBodies.forEach((body) => {
-          if (!body.rapierBody.isSleeping()) {
-            body.lastActiveTime = currentTime;
-          } else if (!body.isCurrentlySleeping) {
-            body.lastActiveTime = currentTime;
-            body.isCurrentlySleeping = true;
-          }
-
           const translation = body.rapierBody.translation();
           const rotation = body.rapierBody.rotation();
           physicsData.push({
@@ -146,38 +143,37 @@ import {
         });
 
         const idsToRemove: string[] = [];
-        rapierBodies.forEach((body, id) => {
-          if (
-            body.rapierBody.isSleeping() &&
-            currentTime - body.lastActiveTime > INACTIVITY_THRESHOLD_MS
-          ) {
-            idsToRemove.push(id);
-          }
-        });
+        if (isRaining) {
+          // start clearing inactive objects, x seconds after rain has started
+          isRainingTimeout = setTimeout(() => {
+            rapierBodies.forEach((body, id) => {
+              if (body.rapierBody.isSleeping()) {
+                idsToRemove.push(id);
+              }
+            });
 
-        // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
-        // will break the map structure loop
-        idsToRemove.forEach((id) => {
-          const bodyToRemove = rapierBodies.get(id);
-          if (bodyToRemove) {
-            world.removeRigidBody(bodyToRemove.rapierBody);
-            rapierBodies.delete(id);
-          }
-        });
+            // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
+            // will break the map structure loop
+            idsToRemove.forEach((id) => {
+              const bodyToRemove = rapierBodies.get(id);
+              if (bodyToRemove) {
+                world.removeRigidBody(bodyToRemove.rapierBody);
+                rapierBodies.delete(id);
+              }
+            });
 
-        if (idsToRemove.length > 0) {
-          postMessage({
-            type: WorkerEnum.REMOVE_INACTIVES,
-            payload: { ids: idsToRemove, reusable: true },
-          });
+            if (idsToRemove.length > 0) {
+              postMessage({
+                type: WorkerEnum.REMOVE_INACTIVES,
+                payload: { ids: idsToRemove, reusable: true },
+              });
+            }
+          }, OBJECT_REMOVAL_WHEN_RAINING_TIMER);
+        } else {
+          if (isRainingTimeout !== null) {
+            clearTimeout(isRainingTimeout);
+          }
         }
-
-        const {
-          isFloorAnimating,
-          floorRotationX,
-          endFloorRotationAngle,
-          timeDelta,
-        } = payload;
 
         if (isFloorAnimating) {
           if (floorRotationX <= endFloorRotationAngle) {
