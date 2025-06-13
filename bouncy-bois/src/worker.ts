@@ -28,7 +28,7 @@ import {
 
   const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
 
-  let isRainingTimeout: number | null = null;
+  let isRainingTimeouts: number[] = [];
 
   const rapierFloor =
     RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0, 0);
@@ -104,46 +104,55 @@ import {
     if (isRaining) {
       removeInactiveBodies();
     } else {
-      if (isRainingTimeout !== null) {
-        clearTimeout(isRainingTimeout);
+      if (isRainingTimeouts.length) {
+        isRainingTimeouts.forEach((timeout) => clearTimeout(timeout));
       }
     }
   };
 
+  /**
+   * Start clearing inactive objects, x seconds after rain has started
+   * Works, but we're creating several hundred timers per each rain cycle
+   *
+   * Todo - more efficient removal ( batch? )
+   */
   const removeInactiveBodies = (): void => {
     const idsToRemove: string[] = [];
 
-    // start clearing inactive objects, x seconds after rain has started
-    isRainingTimeout = setTimeout(() => {
-      rapierBodies.forEach((body, id) => {
-        if (body.rapierBody.isSleeping()) {
-          idsToRemove.push(id);
-        }
-      });
-
-      // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
-      // will break the map structure loop
-      idsToRemove.forEach((id) => {
-        const bodyToRemove = rapierBodies.get(id);
-        if (bodyToRemove) {
-          world.removeRigidBody(bodyToRemove.rapierBody);
-          rapierBodies.delete(id);
-        }
-      });
-
-      if (idsToRemove.length > 0) {
-        postMessage({
-          type: WorkerEnum.REMOVE_INACTIVES,
-          payload: { ids: idsToRemove, reusable: true },
+    isRainingTimeouts.push(
+      setTimeout(() => {
+        rapierBodies.forEach((body, id) => {
+          if (body.rapierBody.isSleeping()) {
+            idsToRemove.push(id);
+          }
         });
-      }
-    }, OBJECT_REMOVAL_WHEN_RAINING_TIMER);
+
+        // yes, we need 2 foreach loops here, because updaing the ^map while it's looping the 1st time
+        // will break the map structure loop
+        idsToRemove.forEach((id) => {
+          const bodyToRemove = rapierBodies.get(id);
+          if (bodyToRemove) {
+            world.removeRigidBody(bodyToRemove.rapierBody);
+            rapierBodies.delete(id);
+          }
+        });
+
+        if (idsToRemove.length > 0) {
+          postMessage({
+            type: WorkerEnum.REMOVE_INACTIVES,
+            payload: { ids: idsToRemove, reusable: true },
+          });
+        }
+      }, OBJECT_REMOVAL_WHEN_RAINING_TIMER)
+    );
   };
 
   const removeFallingBody = ({
-    payload: { id, reusable },
+    id,
+    reusable,
   }: {
-    payload: { id: string; reusable: boolean };
+    id: string;
+    reusable: boolean;
   }): void => {
     const rigidBody = rapierBodies.get(id);
     const shoudReuseBody = reusable;
