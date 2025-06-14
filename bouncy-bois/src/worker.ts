@@ -21,12 +21,13 @@ import {
 
   // SharedArrayBuffer is like the name, shared across threads instead of deeply cloned.
   // The deep cloning gets slow when your object data gets bigger over time
-  const maxObjects = 5000;
+  const maxObjects = 2000;
   const buffer = new SharedArrayBuffer(
     maxObjects * 7 * Float32Array.BYTES_PER_ELEMENT
   );
   const floatArray = new Float32Array(buffer);
   const world = new RAPIER.World({ x: 0.0, y: -9.81, z: 0.0 });
+  let idsToUpdate: string[] = new Array(maxObjects);
 
   let rainStartTime: number | null = null;
 
@@ -82,10 +83,9 @@ import {
   };
 
   const shouldUpdateMeshes = (): void => {
-    const idsToUpdate: string[] = [];
-
+    idsToUpdate.length = 0;
     let i = 0;
-    rapierBodies.forEach((body) => {
+    for (const [_, body] of rapierBodies) {
       // push and pass the ids into the main
       // why? because the sharedarraybuffer will only take in numbers
       // so we keep track of ids in another array
@@ -106,7 +106,7 @@ import {
           body.sleepStartTime = performance.now();
         }
       }
-    });
+    }
 
     postMessage({
       type: WorkerEnum.UPDATE_MESHES,
@@ -120,14 +120,13 @@ import {
 
   const shouldRemoveInactiveBodies = ({
     isRaining,
-    rainSpeedTimer,
   }: {
     isRaining: boolean;
     rainSpeedTimer: number;
   }): void => {
     startRain(isRaining);
     if (isRaining) {
-      removeInactiveBodies(rainSpeedTimer);
+      removeInactiveBodies();
     } else {
       rainStartTime = null;
     }
@@ -144,31 +143,26 @@ import {
    *
    * Todo - more efficient removal ( batch? )
    */
-  const removeInactiveBodies = (rainSpeedTimer: number): void => {
+  const removeInactiveBodies = (): void => {
     // too little objects to remove / rain too slow
-    if (rapierBodies.size < 200 || rainSpeedTimer >= 30) return;
+    if (rapierBodies.size < 100) return;
 
     const idsToRemove: string[] = [];
-    const removalThreshold =
-      performance.now() - OBJECT_REMOVAL_WHEN_RAINING_TIMER;
 
-    rapierBodies.forEach((body, id) => {
-      if (
-        body.rapierBody.isSleeping() &&
-        body.sleepStartTime &&
-        body.sleepStartTime > removalThreshold
-      ) {
+    for (const [id, body] of rapierBodies) {
+      if (body.rapierBody.isSleeping()) {
         idsToRemove.push(id);
+        body.sleepStartTime = undefined;
       }
-    });
+    }
 
-    idsToRemove.forEach((id) => {
+    for (const id of idsToRemove) {
       const bodyToRemove = rapierBodies.get(id);
       if (bodyToRemove) {
         world.removeRigidBody(bodyToRemove.rapierBody);
         rapierBodies.delete(id);
       }
-    });
+    }
 
     if (idsToRemove.length > 0) {
       postMessage({
@@ -206,9 +200,9 @@ import {
       if (floorRotationX <= endFloorRotationAngle) {
         const newFloorRotationX = floorRotationX + timeDelta * 0.1;
         const quat = new RAPIER.Quaternion(
-          0,
-          0,
           Math.sin(newFloorRotationX),
+          0,
+          0,
           Math.cos(newFloorRotationX)
         );
 
@@ -224,18 +218,27 @@ import {
         });
       }
     } else {
-      // trippy rapier rotation, setting all 0s doesnt put it back to 0
-      // needs that last 1 in the w param for some reason, but it works
-      // rapierFloor.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-      rapierFloorBody.setRotation(new RAPIER.Quaternion(0, 0, 0, 1), true);
-      postMessage({
-        type: WorkerEnum.ROTATE_FLOOR,
-        payload: {
-          newFloorRotationX: 0,
-          translation: rapierFloorBody.translation(),
-          rotation: rapierFloorBody.rotation(),
-        },
-      });
+      if (floorRotationX === 0) return;
+      if (floorRotationX > 0) {
+        const newFloorRotationX = floorRotationX - timeDelta * 0.1;
+        const quat = new RAPIER.Quaternion(
+          Math.sin(newFloorRotationX),
+          0,
+          0,
+          Math.cos(newFloorRotationX)
+        );
+
+        rapierFloorBody.setRotation(quat, true);
+
+        postMessage({
+          type: WorkerEnum.ROTATE_FLOOR,
+          payload: {
+            newFloorRotationX,
+            translation: rapierFloorBody.translation(),
+            rotation: rapierFloorBody.rotation(),
+          },
+        });
+      }
     }
   };
 
@@ -249,12 +252,12 @@ import {
     try {
       if (type === WorkerEnum.ADD_OBJECTS) {
         const { data } = payload;
-        data.forEach(({ id, geometry, position, randomScale }: ObjectBody) => {
+        for (const { id, geometry, position, randomScale } of data) {
           rapierBodies.set(
             id,
             createRapierBody(id, geometry, position, randomScale)
           );
-        });
+        }
       }
 
       if (type === WorkerEnum.WORLD_STEP) {
@@ -267,13 +270,13 @@ import {
           floorRotationX,
           endFloorRotationAngle,
           timeDelta,
-          isRaining,
-          rainSpeedTimer,
         } = payload;
 
         shouldUpdateMeshes();
 
-        shouldRemoveInactiveBodies({ isRaining, rainSpeedTimer });
+        // Dont really need this anymore since we're explicitly tipping the floor
+        // and removing fallen objects from main thread
+        // shouldRemoveInactiveBodies({ isRaining, rainSpeedTimer });
 
         shouldRotateFloor({
           isFloorAnimating,

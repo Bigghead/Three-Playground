@@ -7,7 +7,7 @@ export const getRandomNumber = (min: number, max: number): number => {
 export const buildRandomVertexPosition = (): [number, number, number] => {
   return [
     getRandomNumber(-floorWidth, floorWidth),
-    getRandomNumber(12, 20),
+    getRandomNumber(17, 22),
     getRandomNumber(-floorWidth, floorWidth),
   ];
 };

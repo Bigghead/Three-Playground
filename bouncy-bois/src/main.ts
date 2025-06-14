@@ -42,7 +42,7 @@ const directionalLight = new three.DirectionalLight("#ffffff", 2);
 directionalLight.position.set(-10, 10, -10);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
-directionalLight.shadow.camera.far = 35;
+directionalLight.shadow.camera.far = 40;
 directionalLight.shadow.camera.left = -floorWidth * 1.5;
 directionalLight.shadow.camera.top = floorWidth * 1.5;
 directionalLight.shadow.camera.right = floorWidth * 1.5;
@@ -62,6 +62,8 @@ scene.add(directionalLight);
 let worldObjects: Map<string, WorldObjects> = new Map();
 
 let meshPool: MeshPool[] = [];
+
+let sharedFloatArray: Float32Array | null = null;
 
 worker.onmessage = ({ data: { type, payload } }) => {
   if (type === WorkerEnum.RAPIER_READY) {
@@ -87,16 +89,17 @@ worker.onmessage = ({ data: { type, payload } }) => {
   }
 
   if (type === WorkerEnum.UPDATE_MESHES) {
-    const sharedBuffer = payload.buffer as SharedArrayBuffer;
-    const objectCount = payload.count as number;
-    const sharedFloatArray = new Float32Array(sharedBuffer);
-
+    const buffer = payload.buffer as SharedArrayBuffer;
     const ids = payload.ids as string[];
+    const objectCount = payload.count as number;
+
+    if (!sharedFloatArray || sharedFloatArray.buffer !== buffer) {
+      sharedFloatArray = new Float32Array(buffer);
+    }
 
     let i = 0;
     for (let objIdx = 0; objIdx < objectCount; objIdx++) {
       const id = ids[objIdx];
-
       // 3 slices for each position x/y/z
       const px = sharedFloatArray[i++];
       const py = sharedFloatArray[i++];
@@ -113,6 +116,9 @@ worker.onmessage = ({ data: { type, payload } }) => {
         mesh.quaternion.set(rx, ry, rz, rw);
       }
     }
+
+    // sharedFloatArray = null;
+    // payload.buffer = null;
   }
 
   if (type === WorkerEnum.ROTATE_FLOOR) {
@@ -218,12 +224,12 @@ const guiObj = {
 
   resetFloor: (): void => {
     guiObj.isFloorAnimating = false;
-    guiObj.floorRotationX = 0;
   },
 
   makeItRain: (): void => {
     if (!guiObj.isRaining) {
       guiObj.isRaining = true;
+      guiObj.tipFloor();
 
       guiObj.rainingTimeout = setTimeout(() => {
         guiObj.clearRain();
@@ -236,6 +242,7 @@ const guiObj = {
   },
 
   clearRain: (): void => {
+    guiObj.resetFloor();
     if (guiObj.rainingInterval != null) {
       guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
@@ -321,7 +328,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(12, 15, 35);
+camera.position.set(12, 20, 35);
 scene.add(camera);
 
 // Controls
@@ -376,6 +383,7 @@ const tick = (): void => {
       rainSpeedTimer: guiObj.rainSpeedTimer,
     },
   });
+  console.warn(worldObjects.size);
 
   worldObjects.forEach(({ id, geometry, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
