@@ -1,11 +1,5 @@
 import * as RAPIER from "@dimforge/rapier3d-compat";
-import {
-  floorWidth,
-  OBJECT_REMOVAL_WHEN_RAINING_TIMER,
-  type ObjectBody,
-  type randomGeometry,
-  WorkerEnum,
-} from "./lib/constants";
+import { floorWidth, type randomGeometry, WorkerEnum } from "./lib/constants";
 
 (async () => {
   await RAPIER.init();
@@ -118,6 +112,8 @@ import {
     });
   };
 
+  // @ts-ignore: TS6133 'shouldRemoveInactiveBodies' is declared but its value is never read.
+  // keeping this for reference
   const shouldRemoveInactiveBodies = ({
     isRaining,
   }: {
