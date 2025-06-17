@@ -4,14 +4,13 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
   floorWidth,
-  type randomGeometry,
   WorkerEnum,
   type WorldObjects,
   type MeshPool,
   type PointPosition,
 } from "./lib/constants";
 import { createMesh, disposeMesh } from "./lib/three-helper";
-import { buildRandomVertexPosition } from "./lib/utils";
+import { GUIManager } from "./lib/gui-manager";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
@@ -20,11 +19,6 @@ const worker = new Worker(new URL("worker.ts", import.meta.url), {
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
-/**
- * Base
- */
-// Debug
-const gui = new GUI();
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -65,6 +59,47 @@ let worldObjects: Map<string, WorldObjects> = new Map();
 let meshPool: MeshPool[] = [];
 
 let sharedFloatArray: Float32Array | null = null;
+
+/**
+ * GUI Functions
+ */
+const guiManager = new GUIManager(
+  meshPool,
+  worldObjects,
+  scene,
+  worker,
+  directionalLighthelper,
+  shadowHelper
+);
+const gui = new GUI();
+
+gui.add(guiManager, "createObject").name("Add Ball");
+gui.add(guiManager, "tipFloor").name("Tip Floor");
+gui.add(guiManager, "resetFloor").name("Reset Floor");
+gui.add(guiManager, "makeItRain").name("Make It Rain!");
+
+// we're going to use this to check performance later
+// like defaulting to 1 to make that CPU work
+gui
+  .add(guiManager, "rainSpeedTimer", 5, 100, 5)
+  .name("Rain Speed!")
+  .onFinishChange((speed: number) => {
+    guiManager.updateRain(speed, guiManager.rainingDuration);
+  });
+
+gui
+  .add(guiManager, "rainingDuration", 1, 60, 1)
+  .name("Rain Duration ( Seconds )")
+  .onFinishChange((duration: number) => {
+    guiManager.updateRain(guiManager.rainSpeedTimer, duration);
+  });
+
+gui.add(guiManager, "clearRain").name("Stop Rain!");
+gui.add(guiManager, "toggleShadowhelper").name("Toggle Shadow Helper");
+
+/**
+ * Worker Actions
+ */
 
 const initStartingObjects = (): void => {
   Array.from({ length: 20 }).forEach(() => {
@@ -131,7 +166,7 @@ const updateAndRotateFloor = ({
   translation: PointPosition;
   rotation: PointPosition & { w: number };
 }): void => {
-  guiObj.floorRotationX = newFloorRotationX;
+  guiManager.floorRotationX = newFloorRotationX;
   floor.position.copy(translation);
   floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
 };
@@ -185,145 +220,6 @@ const floorMaterial = new three.MeshStandardMaterial({
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.receiveShadow = true;
 scene.add(floor);
-
-/**
- * GUI Functions
- */
-const guiObj = {
-  floorRotationX: 0,
-  isFloorAnimating: false,
-  endFloorRotationAngle: 0.25, // stops at 25 degrees
-  isRaining: false,
-  rainSpeedTimer: 5,
-  rainingInterval: null as number | null, // setInterval returns a number type
-  rainingDuration: 30,
-  rainingTimeout: null as number | null,
-  isCameraHelperOn: false,
-
-  createObject: (geometry = "sphere"): void => {
-    // check if any pooled objects exist and use that vs creating new mesh
-    let activeObject;
-    if (meshPool.length) {
-      const pooledMesh = meshPool.pop(); // really need to be shift() / FIFO but pop is faster
-
-      if (pooledMesh) {
-        const newPosition = buildRandomVertexPosition();
-        pooledMesh?.mesh.position.set(...newPosition);
-
-        pooledMesh.mesh.visible = true;
-        worldObjects.set(pooledMesh.id, {
-          id: pooledMesh.id,
-          geometry: pooledMesh.geometry,
-          randomScale: pooledMesh.mesh.scale.x,
-          position: pooledMesh.mesh.position.toArray(),
-          mesh: pooledMesh.mesh,
-        });
-
-        activeObject = {
-          id: pooledMesh.id,
-          geometry: pooledMesh.geometry,
-          position: newPosition,
-          randomScale: pooledMesh.mesh.scale.x,
-        };
-      }
-    } else {
-      const newMesh = createMesh(geometry as randomGeometry);
-      worldObjects.set(newMesh.id, newMesh);
-      scene.add(newMesh.mesh);
-
-      activeObject = {
-        id: newMesh.id,
-        geometry: newMesh.geometry,
-        position: newMesh.mesh.position.toArray(),
-        randomScale: newMesh.randomScale,
-      };
-    }
-    worker.postMessage({
-      type: WorkerEnum.ADD_OBJECTS,
-      payload: {
-        data: [activeObject],
-      },
-    });
-  },
-
-  tipFloor: (): void => {
-    guiObj.isFloorAnimating = true;
-  },
-
-  resetFloor: (): void => {
-    guiObj.clearRain();
-  },
-
-  makeItRain: (): void => {
-    if (!guiObj.isRaining) {
-      guiObj.isRaining = true;
-      guiObj.tipFloor();
-
-      guiObj.rainingTimeout = setTimeout(() => {
-        guiObj.clearRain();
-      }, guiObj.rainingDuration * 1000);
-
-      guiObj.rainingInterval = setInterval(() => {
-        guiObj.createObject(Math.random() <= 0.5 ? "sphere" : "box");
-      }, guiObj.rainSpeedTimer);
-    }
-  },
-
-  clearRain: (): void => {
-    guiObj.isFloorAnimating = false;
-    if (guiObj.rainingInterval != null) {
-      guiObj.isRaining = false;
-      clearInterval(guiObj.rainingInterval);
-      guiObj.rainingInterval = null;
-    }
-    if (guiObj.rainingTimeout != null) {
-      clearTimeout(guiObj.rainingTimeout);
-      guiObj.rainingTimeout = null;
-    }
-  },
-
-  updateRain: (speed: number, duration: number): void => {
-    if (!guiObj.isRaining) return;
-    guiObj.rainSpeedTimer = speed;
-    guiObj.rainingDuration = duration;
-    guiObj.clearRain();
-    guiObj.makeItRain();
-  },
-
-  toggleShadowhelper: (): void => {
-    if (guiObj.isCameraHelperOn) {
-      scene.remove(directionalLighthelper, shadowHelper);
-      guiObj.isCameraHelperOn = false;
-    } else {
-      scene.add(directionalLighthelper, shadowHelper);
-      guiObj.isCameraHelperOn = true;
-    }
-  },
-};
-
-gui.add(guiObj, "createObject").name("Add Ball");
-gui.add(guiObj, "tipFloor").name("Tip Floor");
-gui.add(guiObj, "resetFloor").name("Reset Floor");
-gui.add(guiObj, "makeItRain").name("Make It Rain!");
-
-// we're going to use this to check performance later
-// like defaulting to 1 to make that CPU work
-gui
-  .add(guiObj, "rainSpeedTimer", 5, 100, 5)
-  .name("Rain Speed!")
-  .onFinishChange((speed: number) => {
-    guiObj.updateRain(speed, guiObj.rainingDuration);
-  });
-
-gui
-  .add(guiObj, "rainingDuration", 1, 60, 1)
-  .name("Rain Duration ( Seconds )")
-  .onFinishChange((duration: number) => {
-    guiObj.updateRain(guiObj.rainSpeedTimer, duration);
-  });
-
-gui.add(guiObj, "clearRain").name("Stop Rain!");
-gui.add(guiObj, "toggleShadowhelper").name("Toggle Shadow Helper");
 
 /**
  * Sizes
@@ -403,12 +299,12 @@ const tick = (): void => {
   worker.postMessage({
     type: WorkerEnum.WORLD_STEP,
     payload: {
-      isFloorAnimating: guiObj.isFloorAnimating,
-      floorRotationX: guiObj.floorRotationX,
-      endFloorRotationAngle: guiObj.endFloorRotationAngle,
+      isFloorAnimating: guiManager.isFloorAnimating,
+      floorRotationX: guiManager.floorRotationX,
+      endFloorRotationAngle: guiManager.endFloorRotationAngle,
       timeDelta,
-      isRaining: guiObj.isRaining,
-      rainSpeedTimer: guiObj.rainSpeedTimer,
+      isRaining: guiManager.isRaining,
+      rainSpeedTimer: guiManager.rainSpeedTimer,
     },
   });
 
