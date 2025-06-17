@@ -8,6 +8,7 @@ import {
   WorkerEnum,
   type WorldObjects,
   type MeshPool,
+  type PointPosition,
 } from "./lib/constants";
 import { createMesh, disposeMesh } from "./lib/three-helper";
 import { buildRandomVertexPosition } from "./lib/utils";
@@ -65,79 +66,106 @@ let meshPool: MeshPool[] = [];
 
 let sharedFloatArray: Float32Array | null = null;
 
+const initStartingObjects = (): void => {
+  Array.from({ length: 20 }).forEach(() => {
+    const threeMesh = createMesh("sphere");
+    worldObjects.set(threeMesh.id, threeMesh);
+    scene.add(threeMesh.mesh);
+  });
+
+  worker.postMessage({
+    type: WorkerEnum.ADD_OBJECTS,
+    payload: {
+      data: Array.from(worldObjects.values()).map(({ id, geometry, mesh }) => ({
+        id,
+        geometry,
+        position: mesh.position.toArray(),
+        randomScale: mesh.scale.x,
+      })),
+    },
+  });
+};
+
+const udpateAndSyncMeshBodies = ({
+  buffer,
+  ids,
+  count,
+}: {
+  buffer: SharedArrayBuffer;
+  ids: string[];
+  count: number;
+}): void => {
+  const objectCount = count;
+
+  if (!sharedFloatArray || sharedFloatArray.buffer !== buffer) {
+    sharedFloatArray = new Float32Array(buffer);
+  }
+
+  let i = 0;
+  for (let objIdx = 0; objIdx < objectCount; objIdx++) {
+    const id = ids[objIdx];
+    // 3 slices for each position x/y/z
+    const px = sharedFloatArray[i++];
+    const py = sharedFloatArray[i++];
+    const pz = sharedFloatArray[i++];
+    // 4 slices for rapier rotation x/y/z/w
+    const rx = sharedFloatArray[i++];
+    const ry = sharedFloatArray[i++];
+    const rz = sharedFloatArray[i++];
+    const rw = sharedFloatArray[i++];
+    const mesh = worldObjects.get(id.toString())?.mesh;
+
+    if (mesh) {
+      mesh.position.set(px, py, pz);
+      mesh.quaternion.set(rx, ry, rz, rw);
+    }
+  }
+};
+
+const updateAndRotateFloor = ({
+  newFloorRotationX,
+  translation,
+  rotation,
+}: {
+  newFloorRotationX: number;
+  translation: PointPosition;
+  rotation: PointPosition & { w: number };
+}): void => {
+  guiObj.floorRotationX = newFloorRotationX;
+  floor.position.copy(translation);
+  floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
+};
+
+const removeInactiveMeshBodies = (ids: string[]): void => {
+  ids.forEach((id: string) => {
+    const meshObject = worldObjects.get(id);
+    if (meshObject) {
+      worldObjects.delete(id);
+      scene.remove(meshObject.mesh);
+      disposeMesh(meshObject.mesh);
+    }
+  });
+};
+
+/**
+ *
+ * Worker Message Capture
+ */
 worker.onmessage = ({ data: { type, payload } }) => {
   if (type === WorkerEnum.RAPIER_READY) {
-    Array.from({ length: 20 }).forEach(() => {
-      const threeMesh = createMesh("sphere");
-      worldObjects.set(threeMesh.id, threeMesh);
-      scene.add(threeMesh.mesh);
-    });
-
-    worker.postMessage({
-      type: WorkerEnum.ADD_OBJECTS,
-      payload: {
-        data: Array.from(worldObjects.values()).map(
-          ({ id, geometry, mesh }) => ({
-            id,
-            geometry,
-            position: mesh.position.toArray(),
-            randomScale: mesh.scale.x,
-          })
-        ),
-      },
-    });
+    initStartingObjects();
   }
 
   if (type === WorkerEnum.UPDATE_MESHES) {
-    const buffer = payload.buffer as SharedArrayBuffer;
-    const ids = payload.ids as string[];
-    const objectCount = payload.count as number;
-
-    if (!sharedFloatArray || sharedFloatArray.buffer !== buffer) {
-      sharedFloatArray = new Float32Array(buffer);
-    }
-
-    let i = 0;
-    for (let objIdx = 0; objIdx < objectCount; objIdx++) {
-      const id = ids[objIdx];
-      // 3 slices for each position x/y/z
-      const px = sharedFloatArray[i++];
-      const py = sharedFloatArray[i++];
-      const pz = sharedFloatArray[i++];
-      // 4 slices for rapier rotation x/y/z/w
-      const rx = sharedFloatArray[i++];
-      const ry = sharedFloatArray[i++];
-      const rz = sharedFloatArray[i++];
-      const rw = sharedFloatArray[i++];
-      const mesh = worldObjects.get(id.toString())?.mesh;
-
-      if (mesh) {
-        mesh.position.set(px, py, pz);
-        mesh.quaternion.set(rx, ry, rz, rw);
-      }
-    }
-
-    // sharedFloatArray = null;
-    // payload.buffer = null;
+    udpateAndSyncMeshBodies(payload);
   }
 
   if (type === WorkerEnum.ROTATE_FLOOR) {
-    const { newFloorRotationX, translation, rotation } = payload;
-    guiObj.floorRotationX = newFloorRotationX;
-    floor.position.copy(translation);
-    floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
+    updateAndRotateFloor(payload);
   }
 
   if (type === WorkerEnum.REMOVE_INACTIVES) {
-    const { ids } = payload;
-    ids.forEach((id: string) => {
-      const meshObject = worldObjects.get(id);
-      if (meshObject) {
-        worldObjects.delete(id);
-        scene.remove(meshObject.mesh);
-        disposeMesh(meshObject.mesh);
-      }
-    });
+    removeInactiveMeshBodies(payload.ids);
   }
 };
 
@@ -223,7 +251,7 @@ const guiObj = {
   },
 
   resetFloor: (): void => {
-    guiObj.isFloorAnimating = false;
+    guiObj.clearRain();
   },
 
   makeItRain: (): void => {
@@ -242,7 +270,7 @@ const guiObj = {
   },
 
   clearRain: (): void => {
-    guiObj.resetFloor();
+    guiObj.isFloorAnimating = false;
     if (guiObj.rainingInterval != null) {
       guiObj.isRaining = false;
       clearInterval(guiObj.rainingInterval);
@@ -328,7 +356,7 @@ const camera = new three.PerspectiveCamera(
   0.1,
   100
 );
-camera.position.set(12, 20, 35);
+camera.position.set(35, 18, 25);
 scene.add(camera);
 
 // Controls
@@ -383,7 +411,6 @@ const tick = (): void => {
       rainSpeedTimer: guiObj.rainSpeedTimer,
     },
   });
-  console.warn(worldObjects.size);
 
   worldObjects.forEach(({ id, geometry, mesh }) => {
     // get rid of object if it's below floor ( assuming cause it fell off the sides )
