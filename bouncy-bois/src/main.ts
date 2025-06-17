@@ -1,6 +1,5 @@
 import * as three from "three";
 import Stats from "stats.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
   floorWidth,
@@ -11,6 +10,7 @@ import {
 } from "./lib/constants";
 import { createMesh, disposeMesh } from "./lib/three-helper";
 import { GUIManager } from "./lib/gui-manager";
+import { ThreeCanvas } from "./lib/canvas";
 
 const worker = new Worker(new URL("worker.ts", import.meta.url), {
   type: "module",
@@ -22,38 +22,9 @@ document.body.appendChild(stats.dom);
 
 // Canvas
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
+const threeCanvas = new ThreeCanvas(canvas);
 
-// Scene
-const scene = new three.Scene();
-
-/**
- * Light
- */
-
-const ambientLight = new three.AmbientLight(0xffffff, 2.1);
-scene.add(ambientLight);
-
-const directionalLight = new three.DirectionalLight("#ffffff", 2);
-directionalLight.position.set(-10, 10, -10);
-directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.set(1024, 1024);
-directionalLight.shadow.camera.far = 40;
-directionalLight.shadow.camera.left = -floorWidth * 1.5;
-directionalLight.shadow.camera.top = floorWidth * 1.5;
-directionalLight.shadow.camera.right = floorWidth * 1.5;
-directionalLight.shadow.camera.bottom = -floorWidth * 1.5;
-
-const directionalLighthelper = new three.DirectionalLightHelper(
-  directionalLight
-);
-const shadowHelper = new three.CameraHelper(directionalLight.shadow.camera);
-
-scene.add(directionalLight);
-
-/**
- * Meshes
- */
-
+// Object Containers
 let worldObjects: Map<string, WorldObjects> = new Map();
 
 let meshPool: MeshPool[] = [];
@@ -66,10 +37,10 @@ let sharedFloatArray: Float32Array | null = null;
 const guiManager = new GUIManager(
   meshPool,
   worldObjects,
-  scene,
+  threeCanvas.scene,
   worker,
-  directionalLighthelper,
-  shadowHelper
+  threeCanvas.directionalLighthelper,
+  threeCanvas.shadowHelper
 );
 const gui = new GUI();
 
@@ -105,7 +76,7 @@ const initStartingObjects = (): void => {
   Array.from({ length: 20 }).forEach(() => {
     const threeMesh = createMesh("sphere");
     worldObjects.set(threeMesh.id, threeMesh);
-    scene.add(threeMesh.mesh);
+    threeCanvas.scene.add(threeMesh.mesh);
   });
 
   worker.postMessage({
@@ -176,8 +147,31 @@ const removeInactiveMeshBodies = (ids: string[]): void => {
     const meshObject = worldObjects.get(id);
     if (meshObject) {
       worldObjects.delete(id);
-      scene.remove(meshObject.mesh);
+      threeCanvas.scene.remove(meshObject.mesh);
       disposeMesh(meshObject.mesh);
+    }
+  });
+};
+
+const checkAndRemoveFallingObjects = (): void => {
+  worldObjects.forEach(({ id, geometry, mesh }) => {
+    // get rid of object if it's below floor ( assuming cause it fell off the sides )
+    if (mesh.position.y <= -20) {
+      worldObjects.delete(id);
+
+      const workerMessage = {
+        type: WorkerEnum.REMOVE_BODY,
+        payload: {
+          id,
+          reusable: false,
+        },
+      };
+
+      meshPool.push({ id, geometry, mesh });
+      mesh.visible = false;
+      workerMessage.payload.reusable = true;
+
+      worker.postMessage(workerMessage);
     }
   });
 };
@@ -219,58 +213,11 @@ const floorMaterial = new three.MeshStandardMaterial({
 // forgot standard material needs lighting
 const floor = new three.Mesh(floorGeometry, floorMaterial);
 floor.receiveShadow = true;
-scene.add(floor);
-
-/**
- * Sizes
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
+threeCanvas.scene.add(floor);
 
 window.addEventListener("resize", () => {
-  // Update sizes
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  // Update camera
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  // Update renderer
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  threeCanvas.resizeCanvas();
 });
-
-/**
- * Camera
- */
-const camera = new three.PerspectiveCamera(
-  75,
-  sizes.width / sizes.height,
-  0.1,
-  100
-);
-camera.position.set(35, 18, 25);
-scene.add(camera);
-
-// Controls
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-
-/**
- * Renderer
- */
-const renderer = new three.WebGLRenderer({
-  canvas: canvas,
-});
-renderer.setSize(sizes.width, sizes.height);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-// always forget about this with shadows
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = three.PCFSoftShadowMap;
 
 /**
  * Animate
@@ -294,7 +241,7 @@ const tick = (): void => {
 
   fpsDelta = fpsDelta % fpsInterval;
 
-  controls.update();
+  threeCanvas.controls.update();
 
   worker.postMessage({
     type: WorkerEnum.WORLD_STEP,
@@ -308,28 +255,9 @@ const tick = (): void => {
     },
   });
 
-  worldObjects.forEach(({ id, geometry, mesh }) => {
-    // get rid of object if it's below floor ( assuming cause it fell off the sides )
-    if (mesh.position.y <= -20) {
-      worldObjects.delete(id);
+  checkAndRemoveFallingObjects();
 
-      const workerMessage = {
-        type: WorkerEnum.REMOVE_BODY,
-        payload: {
-          id,
-          reusable: false,
-        },
-      };
-
-      meshPool.push({ id, geometry, mesh });
-      mesh.visible = false;
-      workerMessage.payload.reusable = true;
-
-      worker.postMessage(workerMessage);
-    }
-  });
-
-  renderer.render(scene, camera);
+  threeCanvas.renderer.render(threeCanvas.scene, threeCanvas.camera);
   stats.end();
 };
 
