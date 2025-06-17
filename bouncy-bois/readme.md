@@ -2,8 +2,9 @@
 
 # Demo at - https://bouncy-bois.netlify.app/
 
-Looks simple, didn't feel simple to get working.
+Looks simple, didn't feel simple to get working well.
 One of the more interesting projects to learn web / rendering optimization tips / tricks.
+Way more fun than making yet another react table / form
 
 ## Features / What We've Learned
 
