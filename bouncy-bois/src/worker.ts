@@ -192,50 +192,39 @@ import { floorWidth, type randomGeometry, WorkerEnum } from "./lib/constants";
     endFloorRotationAngle: number;
     timeDelta: number;
   }): void => {
+    let newFloorRotationX = 0;
     if (isFloorAnimating) {
-      if (floorRotationX <= endFloorRotationAngle) {
-        const newFloorRotationX = floorRotationX + timeDelta * 0.1;
-        const quat = new RAPIER.Quaternion(
-          Math.sin(newFloorRotationX),
-          0,
-          0,
-          Math.cos(newFloorRotationX)
-        );
-
-        rapierFloorBody.setRotation(quat, true);
-
-        postMessage({
-          type: WorkerEnum.ROTATE_FLOOR,
-          payload: {
-            newFloorRotationX,
-            translation: rapierFloorBody.translation(),
-            rotation: rapierFloorBody.rotation(),
-          },
-        });
-      }
+      // floor angle at our stop angle?
+      if (floorRotationX > endFloorRotationAngle) return;
+      newFloorRotationX = Math.min(
+        floorRotationX + timeDelta * 0.1,
+        endFloorRotationAngle
+      );
     } else {
-      if (floorRotationX === 0) return;
-      if (floorRotationX > 0) {
-        const newFloorRotationX = floorRotationX - timeDelta * 0.1;
-        const quat = new RAPIER.Quaternion(
-          Math.sin(newFloorRotationX),
-          0,
-          0,
-          Math.cos(newFloorRotationX)
-        );
-
-        rapierFloorBody.setRotation(quat, true);
-
-        postMessage({
-          type: WorkerEnum.ROTATE_FLOOR,
-          payload: {
-            newFloorRotationX,
-            translation: rapierFloorBody.translation(),
-            rotation: rapierFloorBody.rotation(),
-          },
-        });
-      }
+      // reverse it
+      newFloorRotationX = Math.min(
+        floorRotationX - timeDelta * 0.1,
+        endFloorRotationAngle
+      );
+      if (floorRotationX <= 0) return;
     }
+
+    const quat = new RAPIER.Quaternion(
+      Math.sin(newFloorRotationX),
+      0,
+      0,
+      Math.cos(newFloorRotationX)
+    );
+    rapierFloorBody.setRotation(quat, true);
+
+    postMessage({
+      type: WorkerEnum.ROTATE_FLOOR,
+      payload: {
+        newFloorRotationX,
+        translation: rapierFloorBody.translation(),
+        rotation: rapierFloorBody.rotation(),
+      },
+    });
   };
 
   /**
