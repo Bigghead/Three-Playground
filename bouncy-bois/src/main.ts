@@ -142,7 +142,7 @@ const updateAndRotateFloor = ({
   floor.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
 };
 
-const removeInactiveMeshBodies = (ids: string[]): void => {
+const removeInactiveMeshBodies = ({ ids }: { ids: string[] }): void => {
   ids.forEach((id: string) => {
     const meshObject = worldObjects.get(id);
     if (meshObject) {
@@ -176,6 +176,20 @@ const checkAndRemoveFallingObjects = (): void => {
   });
 };
 
+const worldStepTick = (timeDelta: number): void => {
+  worker.postMessage({
+    type: WorkerEnum.WORLD_STEP,
+    payload: {
+      isFloorAnimating: guiManager.isFloorAnimating,
+      floorRotationX: guiManager.floorRotationX,
+      endFloorRotationAngle: guiManager.endFloorRotationAngle,
+      timeDelta,
+      isRaining: guiManager.isRaining,
+      rainSpeedTimer: guiManager.rainSpeedTimer,
+    },
+  });
+};
+
 /**
  *
  * Worker Message Capture
@@ -194,7 +208,7 @@ worker.onmessage = ({ data: { type, payload } }) => {
   }
 
   if (type === WorkerEnum.REMOVE_INACTIVES) {
-    removeInactiveMeshBodies(payload.ids);
+    removeInactiveMeshBodies(payload);
   }
 };
 
@@ -243,18 +257,7 @@ const tick = (): void => {
 
   threeCanvas.controls.update();
 
-  worker.postMessage({
-    type: WorkerEnum.WORLD_STEP,
-    payload: {
-      isFloorAnimating: guiManager.isFloorAnimating,
-      floorRotationX: guiManager.floorRotationX,
-      endFloorRotationAngle: guiManager.endFloorRotationAngle,
-      timeDelta,
-      isRaining: guiManager.isRaining,
-      rainSpeedTimer: guiManager.rainSpeedTimer,
-    },
-  });
-
+  worldStepTick(timeDelta);
   checkAndRemoveFallingObjects();
 
   threeCanvas.renderer.render(threeCanvas.scene, threeCanvas.camera);
