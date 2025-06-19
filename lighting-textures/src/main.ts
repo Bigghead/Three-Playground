@@ -13,14 +13,11 @@ const scene = new three.Scene();
 const gui = new GUI({
   closeFolders: true,
 });
-gui.add(document, "title");
 gui.close();
 
 /**
  * Utils
  */
-// const axes = new three.AxesHelper(5);
-// scene.add(axes);
 
 /**
  * Camera
@@ -39,13 +36,13 @@ controls.enableDamping = true;
  * Lighting
  */
 const ambientLight = new three.AmbientLight();
-const pointLight = new three.PointLight(0xffa500, 200);
+const pointLight = new three.PointLight(0xffa500, 350);
 pointLight.position.set(2, 3, 4);
 const pointLightHelper = new three.PointLightHelper(pointLight);
 scene.add(ambientLight, pointLight, pointLightHelper);
 
 const pointLightTweaks = gui.addFolder("Point Light");
-pointLightTweaks.add(pointLight, "intensity", 100, 500, 10);
+pointLightTweaks.add(pointLight, "intensity", 100, 700, 10);
 pointLightTweaks.add(pointLight.position, "x", -20, 20, 0.5);
 pointLightTweaks.add(pointLight.position, "y", -20, 20, 0.5);
 pointLightTweaks.add(pointLight.position, "z", -20, 20, 0.5);
@@ -55,22 +52,22 @@ pointLightTweaks.add(pointLight.position, "z", -20, 20, 0.5);
  */
 const textureLoader = new three.TextureLoader();
 const textureMap = {
-  metal_sheet: textureLoader.load("/textures/metal_sheet.jpg"),
-  blue_metal: textureLoader.load("/textures/blue_metal.jpg"),
-  coast_land: textureLoader.load("/textures/coast_land.jpg"),
-  rock_wall: textureLoader.load("/textures/rock_wall.jpg"),
-  blue_metal_normal: textureLoader.load("/textures/blue_plate_normal.png"),
-  coast_land_normal: textureLoader.load("/textures/coast_land_normal.png"),
-  mud_normal: textureLoader.load("/textures/mud_cracked-min.png"),
-  rusty_normal: textureLoader.load("/textures/rusty_metal_normal.png"),
-  rusty_metal: textureLoader.load("/textures/rusty_metal_metal.png"),
+  metal_sheet: textureLoader.load("/textures/metal_sheet.webp"),
+  blue_metal: textureLoader.load("/textures/blue_metal.webp"),
+  coast_land: textureLoader.load("/textures/coast_land.webp"),
+  rock_wall: textureLoader.load("/textures/rock_wall.webp"),
+  blue_metal_normal: textureLoader.load("/textures/blue_plate_normal.webp"),
+  coast_land_normal: textureLoader.load("/textures/coast_land_normal.webp"),
+  mud_normal: textureLoader.load("/textures/mud_cracked-min.webp"),
+  rusty_normal: textureLoader.load("/textures/rusty_metal_normal.webp"),
+  rusty_metal: textureLoader.load("/textures/rusty_metal_metal.webp"),
+  metal_plate: textureLoader.load("/textures/metal_plate.webp"),
 };
 textureMap.metal_sheet.colorSpace = three.SRGBColorSpace;
-// textureMap.metal_sheet.magFilter = three.NearestFilter;
-// textureMap.metal_sheet.minFilter = three.LinearMipMapLinearFilter;
 textureMap.blue_metal.colorSpace = three.SRGBColorSpace;
 textureMap.coast_land.colorSpace = three.SRGBColorSpace;
 textureMap.rock_wall.colorSpace = three.SRGBColorSpace;
+textureMap.metal_plate.colorSpace = three.SRGBColorSpace;
 
 /**
  * Objects
@@ -106,15 +103,11 @@ const metalSphere = new three.Mesh(
   new three.MeshStandardMaterial({
     metalness: 0.7,
     roughness: 0.02,
-    map: textureLoader.load("/textures/metal_plate.png"),
+    map: textureMap.metal_plate,
   })
 );
 gui.add(metalSphere.material, "metalness", 0, 5, 0.01);
 gui.add(metalSphere.material, "roughness", 0, 5, 0.01);
-
-// testing geometry to see where the pointlight is
-// const box = new three.Mesh(new three.BoxGeometry(), new three.MeshBasicMaterial({ color: 'red' }))
-// box.position.set(2, 3, 4)
 
 scene.add(blueMetalSphere, rockSphere, coastSphere, redSphere, metalSphere);
 
@@ -133,9 +126,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const loader = new HDRJPGLoader(renderer);
 
 const result = await loader.loadAsync(
-  "/environment/rogland_clear_night_4k.jpg"
+  "/environment/rogland_clear_night_4k.webp"
 );
-console.log(result);
+
 scene.background = result.renderTarget.texture;
 scene.background.mapping = three.EquirectangularReflectionMapping;
 
