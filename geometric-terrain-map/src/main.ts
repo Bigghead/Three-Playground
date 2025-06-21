@@ -6,7 +6,10 @@ if (!canvas) {
   console.error("Canvas element with class 'webgl' not found.");
 }
 
-const threeCanvas = new ThreeCanvas(canvas);
+const threeCanvas = new ThreeCanvas({
+  canvas,
+  initShadow: false,
+});
 
 const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
   new three.Mesh(

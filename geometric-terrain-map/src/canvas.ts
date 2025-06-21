@@ -13,45 +13,36 @@ export class ThreeCanvas {
     width: window.innerWidth,
     height: window.innerHeight,
   };
-
   cursor = { x: 0, y: 0 };
 
   scene = new three.Scene();
   ambientLight = new three.AmbientLight(0xffffff, 2.1);
   directionalLight = new three.DirectionalLight("#ffffff", 2);
-
   camera = new three.PerspectiveCamera(
     75,
     this.sizes.width / this.sizes.height,
     0.1,
     100
   );
-  directionalLighthelper: three.DirectionalLightHelper;
-  shadowHelper: three.CameraHelper;
+  clock = new three.Clock();
+
+  directionalLighthelper: three.DirectionalLightHelper | null = null;
+  shadowHelper: three.CameraHelper | null = null;
   controls: OrbitControls;
   renderer: three.WebGLRenderer;
 
-  clock = new three.Clock();
-
-  constructor(canvas: HTMLCanvasElement) {
+  constructor({
+    canvas,
+    initShadow,
+  }: {
+    canvas: HTMLCanvasElement;
+    initShadow: boolean;
+  }) {
     this.directionalLight.position.set(-10, 10, -10);
-    this.directionalLight.castShadow = true;
-    this.directionalLight.shadow.mapSize.set(1024, 1024);
-    this.directionalLight.shadow.camera.far = 40;
-    this.directionalLight.shadow.camera.left = 10;
-    this.directionalLight.shadow.camera.top = 10;
-    this.directionalLight.shadow.camera.right = 10;
-    this.directionalLight.shadow.camera.bottom = 10;
 
-    this.directionalLighthelper = new three.DirectionalLightHelper(
-      this.directionalLight
-    );
-    this.shadowHelper = new three.CameraHelper(
-      this.directionalLight.shadow.camera
-    );
-    this.directionalLighthelper.update();
-    this.shadowHelper.update();
-
+    if (initShadow) {
+      this.initShadow();
+    }
     this.camera.position.set(3, 3, 3);
 
     this.controls = new OrbitControls(this.camera, canvas);
@@ -76,6 +67,27 @@ export class ThreeCanvas {
 
     this.animationTick();
   }
+
+  initShadow = (): void => {
+    this.directionalLight.castShadow = true;
+    this.directionalLight.shadow.mapSize.set(1024, 1024);
+    this.directionalLight.shadow.camera.far = 40;
+    this.directionalLight.shadow.camera.left = 10;
+    this.directionalLight.shadow.camera.top = 10;
+    this.directionalLight.shadow.camera.right = 10;
+    this.directionalLight.shadow.camera.bottom = 10;
+
+    this.directionalLighthelper = new three.DirectionalLightHelper(
+      this.directionalLight
+    );
+    this.shadowHelper = new three.CameraHelper(
+      this.directionalLight.shadow.camera
+    );
+    this.directionalLighthelper.update();
+    this.shadowHelper.update();
+    this.scene.add(this.directionalLighthelper);
+    this.scene.add(this.shadowHelper);
+  };
 
   /**
    * Event Actions
