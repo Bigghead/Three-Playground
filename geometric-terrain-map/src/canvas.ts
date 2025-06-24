@@ -24,6 +24,7 @@ export class ThreeCanvas {
     0.1,
     100
   );
+  textureLoader = new three.TextureLoader();
   clock = new three.Clock();
 
   directionalLighthelper: three.DirectionalLightHelper | null = null;
