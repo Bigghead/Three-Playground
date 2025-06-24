@@ -44,7 +44,7 @@ export class ThreeCanvas {
     if (initShadow) {
       this.initShadow();
     }
-    this.camera.position.set(3, 3, 3);
+    this.camera.position.set(3, 12, 20);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;

@@ -1,4 +1,5 @@
 import * as three from "three";
+import { createNoise2D } from "simplex-noise";
 import { ThreeCanvas } from "./canvas";
 import { positionNeighbors } from "./lib/utils";
 
@@ -7,7 +8,9 @@ if (!canvas) {
   console.error("Canvas element with class 'webgl' not found.");
 }
 
-const hexagonGroupWidth = 8;
+const noise2D = createNoise2D();
+
+const hexagonGroupWidth = 15;
 
 const threeCanvas = new ThreeCanvas({
   canvas,
@@ -20,19 +23,23 @@ const textures = [
 ];
 
 const basicMaterial = new three.MeshMatcapMaterial({
-  // color: 0x00ff00,
   flatShading: true,
-  matcap: textures[1],
+  matcap: textures[0],
 });
 
-threeCanvas.scene.add(new three.AxesHelper(20));
+// threeCanvas.scene.add(new three.AxesHelper(20));
 
 const createHexagons = (): three.Group => {
   const hexagonGroup = new three.Group();
 
   for (let i = -hexagonGroupWidth; i < hexagonGroupWidth; i++) {
     for (let j = -hexagonGroupWidth; j < hexagonGroupWidth; j++) {
-      const height = Math.random() * 2;
+      // doing random y axis height with math.random kinda works but randomized and not smoothed
+
+      // using simplex noise for gradient height mapping
+      // just passing in the i/j index works for simplex, but too tall
+      const height = Math.pow(Math.abs(noise2D(i * 0.1, j * 0.1)), 1.3) * 10;
+
       const hexagon = new three.Mesh(
         new three.CylinderGeometry(1, 1, height, 6, 1, false),
         basicMaterial
@@ -41,8 +48,8 @@ const createHexagons = (): three.Group => {
 
       // how far from the origin ( 0, 0, 0 )
       // we want a circle grid ( or square if you want, up to you )
-      if (newPosition.length() < 12) {
-        const { x, y, z } = newPosition;
+      if (newPosition.length() < hexagonGroupWidth + 3) {
+        const { x, z } = newPosition;
         hexagon.position.set(x, height / 2, z);
         hexagonGroup.add(hexagon);
       }
