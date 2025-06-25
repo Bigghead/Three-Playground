@@ -20,11 +20,24 @@ const threeCanvas = new ThreeCanvas({
 const textures = [
   threeCanvas.textureLoader.load("/matcap/1.webp"),
   threeCanvas.textureLoader.load("/matcap/2.webp"),
+  threeCanvas.textureLoader.load("/textures/dirt.webp"),
+  threeCanvas.textureLoader.load("/textures/dirt2.webp"),
+  threeCanvas.textureLoader.load("/textures/grass.webp"),
+  threeCanvas.textureLoader.load("/textures/sand.webp"),
+  threeCanvas.textureLoader.load("/textures/stone.webp"),
+  threeCanvas.textureLoader.load("/textures/water.webp"),
 ];
+
+for (const [index, texture] of textures.entries()) {
+  if (index > 1) {
+    texture.colorSpace = three.SRGBColorSpace;
+  }
+}
 
 const basicMaterial = new three.MeshMatcapMaterial({
   flatShading: true,
-  matcap: textures[0],
+  matcap: textures[1],
+  map: textures[2],
 });
 
 // threeCanvas.scene.add(new three.AxesHelper(20));
@@ -40,9 +53,12 @@ const createHexagons = (): three.Group => {
       // just passing in the i/j index works for simplex, but too tall
       const height = Math.pow(Math.abs(noise2D(i * 0.1, j * 0.1)), 1.3) * 10;
 
+      const material = basicMaterial.clone();
+      material.map =
+        textures[Math.floor(Math.random() * (textures.length - 2 + 1)) + 2];
       const hexagon = new three.Mesh(
         new three.CylinderGeometry(1, 1, height, 6, 1, false),
-        basicMaterial
+        material
       );
       const newPosition = positionNeighbors(i, j);
 
