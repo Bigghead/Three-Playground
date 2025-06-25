@@ -41,10 +41,7 @@ export class ThreeCanvas {
   }) {
     this.directionalLight.position.set(-10, 10, -10);
 
-    if (initShadow) {
-      this.initShadow();
-    }
-    this.camera.position.set(3, 12, 20);
+    this.camera.position.set(3, 15, 25);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
@@ -55,10 +52,9 @@ export class ThreeCanvas {
     this.renderer.setSize(this.sizes.width, this.sizes.height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // always forget about this with shadows
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = three.PCFSoftShadowMap;
-
+    if (initShadow) {
+      this.initShadow();
+    }
     this.scene.add(this.ambientLight, this.directionalLight, this.camera);
 
     // Add event listeners (important for functionality)
@@ -73,10 +69,12 @@ export class ThreeCanvas {
     this.directionalLight.castShadow = true;
     this.directionalLight.shadow.mapSize.set(1024, 1024);
     this.directionalLight.shadow.camera.far = 40;
-    this.directionalLight.shadow.camera.left = 10;
+    this.directionalLight.shadow.camera.left = -10;
     this.directionalLight.shadow.camera.top = 10;
     this.directionalLight.shadow.camera.right = 10;
-    this.directionalLight.shadow.camera.bottom = 10;
+    this.directionalLight.shadow.camera.bottom = -10;
+
+    this.directionalLight.shadow.camera.updateProjectionMatrix();
 
     this.directionalLighthelper = new three.DirectionalLightHelper(
       this.directionalLight
@@ -88,6 +86,8 @@ export class ThreeCanvas {
     this.shadowHelper.update();
     this.scene.add(this.directionalLighthelper);
     this.scene.add(this.shadowHelper);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = three.PCFSoftShadowMap;
   };
 
   /**
