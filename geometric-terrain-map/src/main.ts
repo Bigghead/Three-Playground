@@ -1,7 +1,7 @@
 import * as three from "three";
 import { createNoise2D } from "simplex-noise";
 import { ThreeCanvas } from "./canvas";
-import { positionNeighbors } from "./lib/utils";
+import { getLayer, positionNeighbors } from "./lib/utils";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -20,6 +20,7 @@ const threeCanvas = new ThreeCanvas({
 const textures = {
   matcap1: threeCanvas.textureLoader.load("/matcap/1.webp"),
   matcap2: threeCanvas.textureLoader.load("/matcap/2.webp"),
+  gradient: threeCanvas.textureLoader.load("/textures/gradient.webp"),
   dirt: threeCanvas.textureLoader.load("/textures/dirt.webp"),
   dirt2: threeCanvas.textureLoader.load("/textures/dirt2.webp"),
   grass: threeCanvas.textureLoader.load("/textures/grass.webp"),
@@ -28,8 +29,19 @@ const textures = {
   water: threeCanvas.textureLoader.load("/textures/water.webp"),
 };
 
+const gradientBackground = getLayer({
+  hue: 0.5,
+  numSprites: 8,
+  opacity: 0.2,
+  radius: 10,
+  size: 100,
+  z: -20,
+  map: textures.gradient,
+});
+threeCanvas.scene.add(gradientBackground);
+
 for (const [key, texture] of Object.entries(textures)) {
-  if (!key.includes("matcap")) {
+  if (!key.includes("matcap") || !key.includes("gradient")) {
     texture.colorSpace = three.SRGBColorSpace;
   }
 }
@@ -49,8 +61,6 @@ const createHexagons = (): three.Group => {
 
       // using simplex noise for gradient height mapping
       // just passing in the i/j index works for simplex, but too tall
-      // let height = (noise2D(i * 0.1, j * 0.1) + 1) * 0.5;
-      // height = Math.pow(height, 1.5) * 10;
       const height =
         Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) * 10;
 

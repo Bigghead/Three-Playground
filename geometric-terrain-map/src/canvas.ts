@@ -16,8 +16,8 @@ export class ThreeCanvas {
   cursor = { x: 0, y: 0 };
 
   scene = new three.Scene();
-  ambientLight = new three.AmbientLight(0xffffff, 2.1);
-  directionalLight = new three.DirectionalLight("#ffffff", 2);
+  ambientLight = new three.AmbientLight(0xffffff, 0.3);
+  directionalLight = new three.DirectionalLight("#ffffff", 5);
   camera = new three.PerspectiveCamera(
     75,
     this.sizes.width / this.sizes.height,
@@ -39,7 +39,7 @@ export class ThreeCanvas {
     canvas: HTMLCanvasElement;
     initShadow: boolean;
   }) {
-    this.directionalLight.position.set(-10, 10, -10);
+    this.directionalLight.position.set(-10, 15, -10);
 
     this.camera.position.set(3, 15, 25);
 
@@ -69,10 +69,10 @@ export class ThreeCanvas {
     this.directionalLight.castShadow = true;
     this.directionalLight.shadow.mapSize.set(1024, 1024);
     this.directionalLight.shadow.camera.far = 40;
-    this.directionalLight.shadow.camera.left = -10;
-    this.directionalLight.shadow.camera.top = 10;
-    this.directionalLight.shadow.camera.right = 10;
-    this.directionalLight.shadow.camera.bottom = -10;
+    this.directionalLight.shadow.camera.left = -20;
+    this.directionalLight.shadow.camera.top = 20;
+    this.directionalLight.shadow.camera.right = 20;
+    this.directionalLight.shadow.camera.bottom = -20;
 
     this.directionalLight.shadow.camera.updateProjectionMatrix();
 
