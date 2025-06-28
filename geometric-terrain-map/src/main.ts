@@ -11,6 +11,7 @@ if (!canvas) {
 const noise2D = createNoise2D();
 
 const hexagonGroupWidth = 15;
+const maxHeight = 10;
 
 const threeCanvas = new ThreeCanvas({
   canvas,
@@ -28,17 +29,6 @@ const textures = {
   stone: threeCanvas.textureLoader.load("/textures/stone.webp"),
   water: threeCanvas.textureLoader.load("/textures/water.webp"),
 };
-
-const gradientBackground = getLayer({
-  hue: 0.5,
-  numSprites: 8,
-  opacity: 0.2,
-  radius: 10,
-  size: 100,
-  z: -20,
-  map: textures.gradient,
-});
-threeCanvas.scene.add(gradientBackground);
 
 for (const [key, texture] of Object.entries(textures)) {
   if (!key.includes("matcap") || !key.includes("gradient")) {
@@ -62,7 +52,8 @@ const createHexagons = (): three.Group => {
       // using simplex noise for gradient height mapping
       // just passing in the i/j index works for simplex, but too tall
       const height =
-        Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) * 10;
+        Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) *
+        maxHeight;
 
       const material = basicMaterial.clone();
       material.map = getTextureMap(height);
@@ -103,4 +94,41 @@ const getTextureMap = (height: number): three.Texture => {
 };
 
 const hexagonGroup = createHexagons();
-threeCanvas.scene.add(hexagonGroup);
+const gradientBackground = getLayer({
+  hue: 0.5,
+  numSprites: 8,
+  opacity: 0.2,
+  radius: 10,
+  size: 100,
+  z: -20,
+  map: textures.gradient,
+});
+gradientBackground.position.set(3, 18, -30);
+
+/**
+ * Water "texture", this is easier than we thought and slick af
+ */
+const sea = new three.Mesh(
+  new three.CylinderGeometry(
+    hexagonGroupWidth + 5,
+    hexagonGroupWidth + 5,
+    maxHeight * 0.2
+  ),
+  new three.MeshPhysicalMaterial({
+    color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
+    // index of refraction? How light passes
+    ior: 1.4,
+    transmission: 1,
+    transparent: true,
+    thickness: 2,
+    roughness: 1,
+    metalness: 0.025,
+    roughnessMap: textures.water,
+    metalnessMap: textures.water,
+  })
+);
+sea.receiveShadow = true;
+sea.position.y = (maxHeight * 0.2) / 2 - 0.002;
+
+// gradientBackground is still a maybe if we want it
+threeCanvas.scene.add(hexagonGroup, sea);

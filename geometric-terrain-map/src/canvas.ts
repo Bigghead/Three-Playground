@@ -41,7 +41,7 @@ export class ThreeCanvas {
   }) {
     this.directionalLight.position.set(-10, 15, -10);
 
-    this.camera.position.set(3, 15, 25);
+    this.camera.position.set(3, 18, 30);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
