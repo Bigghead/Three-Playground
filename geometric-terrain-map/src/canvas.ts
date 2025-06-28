@@ -8,6 +8,26 @@ import GUI from "lil-gui";
 // Debug
 const gui = new GUI();
 
+export class GUIManager {
+  constructor({
+    canvas,
+    initCamera,
+  }: {
+    canvas: ThreeCanvas;
+    initCamera: boolean;
+  }) {
+    this.init(canvas, initCamera);
+  }
+
+  init(canvas: ThreeCanvas, initCamera: boolean) {
+    if (initCamera) {
+      gui.add(canvas.camera.position, "x", -70, 70, 1);
+      gui.add(canvas.camera.position, "y", -70, 70, 1);
+      gui.add(canvas.camera.position, "z", -70, 70, 1);
+    }
+  }
+}
+
 export class ThreeCanvas {
   sizes = {
     width: window.innerWidth,
@@ -39,12 +59,17 @@ export class ThreeCanvas {
     canvas: HTMLCanvasElement;
     initShadow: boolean;
   }) {
-    this.directionalLight.position.set(-10, 15, -10);
+    this.directionalLight.position.set(0, 15, 10);
 
-    this.camera.position.set(3, 18, 30);
+    this.camera.position.set(10.5, 18, -33);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
+
+    // camera check, leaving this in
+    // this.controls.addEventListener("change", () =>
+    //   console.log(this.controls.object.position)
+    // );
 
     this.renderer = new three.WebGLRenderer({
       canvas,
@@ -84,8 +109,7 @@ export class ThreeCanvas {
     );
     this.directionalLighthelper.update();
     this.shadowHelper.update();
-    this.scene.add(this.directionalLighthelper);
-    this.scene.add(this.shadowHelper);
+
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = three.PCFSoftShadowMap;
   };

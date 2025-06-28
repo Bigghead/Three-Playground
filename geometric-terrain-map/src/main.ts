@@ -1,6 +1,8 @@
 import * as three from "three";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { createNoise2D } from "simplex-noise";
-import { ThreeCanvas } from "./canvas";
+
+import { GUIManager, ThreeCanvas } from "./canvas";
 import { getLayer, positionNeighbors } from "./lib/utils";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -17,6 +19,11 @@ const threeCanvas = new ThreeCanvas({
   canvas,
   initShadow: true,
 });
+
+const { scene } = threeCanvas;
+scene.background = new three.Color("#f3f0f0");
+
+const guiManager = new GUIManager({ canvas: threeCanvas, initCamera: false });
 
 const textures = {
   matcap1: threeCanvas.textureLoader.load("/matcap/1.webp"),
@@ -39,8 +46,6 @@ for (const [key, texture] of Object.entries(textures)) {
 const basicMaterial = new three.MeshStandardMaterial({
   flatShading: true,
 });
-
-// threeCanvas.scene.add(new three.AxesHelper(20));
 
 const createHexagons = (): three.Group => {
   const hexagonGroup = new three.Group();
@@ -130,5 +135,18 @@ const sea = new three.Mesh(
 sea.receiveShadow = true;
 sea.position.y = (maxHeight * 0.2) / 2 - 0.002;
 
+const sky = new Sky();
+const {
+  material: { uniforms },
+} = sky;
+uniforms["turbidity"].value = 10;
+uniforms["rayleigh"].value = 3;
+uniforms["mieCoefficient"].value = 0.005;
+uniforms["mieDirectionalG"].value = 0.7;
+uniforms["sunPosition"].value.set(0, 0.3, 15);
+uniforms["sunPosition"].value.normalize();
+
+sky.scale.setScalar(10000);
+
 // gradientBackground is still a maybe if we want it
-threeCanvas.scene.add(hexagonGroup, sea);
+scene.add(hexagonGroup, sea, sky);
