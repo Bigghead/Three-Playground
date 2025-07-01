@@ -28,6 +28,11 @@ export class GUIManager {
   }
 }
 
+type AnimatedObject = {
+  object: three.Mesh;
+  animationFunc: (object: three.Mesh) => void;
+};
+
 export class ThreeCanvas {
   sizes = {
     width: window.innerWidth,
@@ -51,13 +56,17 @@ export class ThreeCanvas {
   shadowHelper: three.CameraHelper | null = null;
   controls: OrbitControls;
   renderer: three.WebGLRenderer;
+  stats: Stats;
+  objectsToAnimate: AnimatedObject[] = [];
 
   constructor({
     canvas,
     initShadow,
+    stats,
   }: {
     canvas: HTMLCanvasElement;
     initShadow: boolean;
+    stats: Stats;
   }) {
     this.directionalLight.position.set(0, 15, 10);
 
@@ -66,6 +75,7 @@ export class ThreeCanvas {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
 
+    this.stats = stats;
     // camera check, leaving this in
     // this.controls.addEventListener("change", () =>
     //   console.log(this.controls.object.position)
@@ -112,6 +122,7 @@ export class ThreeCanvas {
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = three.PCFSoftShadowMap;
+    this.scene.add(this.directionalLighthelper, this.shadowHelper);
   };
 
   /**
@@ -146,16 +157,25 @@ export class ThreeCanvas {
    * Animate
    */
   public animationTick = (): void => {
+    if (this.stats) this.stats.begin();
     const elapsedTime = this.clock.getElapsedTime();
 
     // Update controls
     this.controls.update();
 
+    this.objectsToAnimate.forEach(({ object, animationFunc }) => {
+      animationFunc(object);
+    });
     // Render
     this.renderer.render(this.scene, this.camera);
 
     // Call tick again on the next frame
+    if (this.stats) this.stats.end();
     window.requestAnimationFrame(this.animationTick);
+  };
+
+  public addAnimatedObject = (object: AnimatedObject): void => {
+    this.objectsToAnimate.push(object);
   };
 
   public dispose = (): void => {

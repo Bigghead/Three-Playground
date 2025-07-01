@@ -1,4 +1,5 @@
 import * as three from "three";
+import Stats from "stats.js";
 import { createNoise2D } from "simplex-noise";
 
 import { GUIManager, ThreeCanvas } from "./canvas";
@@ -17,6 +18,10 @@ if (!canvas) {
   console.error("Canvas element with class 'webgl' not found.");
 }
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 const noise2D = createNoise2D();
 
 const hexagonGroupWidth = 15;
@@ -25,12 +30,13 @@ const maxHeight = 10;
 const threeCanvas = new ThreeCanvas({
   canvas,
   initShadow: true,
+  stats,
 });
 
 const { scene } = threeCanvas;
 scene.background = new three.Color("#f3f0f0");
 
-const guiManager = new GUIManager({ canvas: threeCanvas, initCamera: false });
+// const guiManager = new GUIManager({ canvas: threeCanvas, initCamera: false });
 
 const textures = {
   matcap1: threeCanvas.textureLoader.load("/matcap/1.webp"),
@@ -56,27 +62,28 @@ const createHexagons = (): three.Group => {
   for (let i = -hexagonGroupWidth; i < hexagonGroupWidth; i++) {
     for (let j = -hexagonGroupWidth; j < hexagonGroupWidth; j++) {
       // doing random y axis height with math.random kinda works but randomized and not smoothed
-
-      // using simplex noise for gradient height mapping
       // just passing in the i/j index works for simplex, but too tall
-      const height =
-        Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) *
-        maxHeight;
 
-      const material = basicMaterial.clone();
-      const { type, map } = getTextureMap(height);
-      material.map = map;
-      const hexagon = new three.Mesh(
-        new three.CylinderGeometry(1, 1, height, 6, 1, false),
-        material
-      );
       const newPosition = positionNeighbors(i, j);
-      hexagon.castShadow = true;
-      hexagon.receiveShadow = true;
 
       // how far from the origin ( 0, 0, 0 )
       // we want a circle grid ( or square if you want, up to you )
       if (newPosition.length() < hexagonGroupWidth + 3) {
+        // using simplex noise for gradient height mapping
+        const height =
+          Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) *
+          maxHeight;
+
+        const material = basicMaterial.clone();
+        const { type, map } = getTextureMap(height);
+        material.map = map;
+        const hexagon = new three.Mesh(
+          new three.CylinderGeometry(1, 1, height, 6, 1, false),
+          material
+        );
+        hexagon.castShadow = true;
+        hexagon.receiveShadow = true;
+
         const { x, z } = newPosition;
         hexagon.position.set(x, height / 2, z);
         hexagonGroup.add(hexagon);
@@ -94,7 +101,7 @@ const createHexagons = (): three.Group => {
             textureMap: textures.stone,
             position,
           });
-          scene.add(stoneMesh);
+          hexagonGroup.add(stoneMesh);
         }
 
         if (type === "grass") {
@@ -103,7 +110,7 @@ const createHexagons = (): three.Group => {
             texture: textures.grass,
             position,
           });
-          scene.add(tree);
+          hexagonGroup.add(tree);
         }
       }
     }

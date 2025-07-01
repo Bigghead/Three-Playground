@@ -86,9 +86,9 @@ export const createSea = ({
       color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
       // index of refraction? How light passes
       ior: 1.4,
-      transmission: 0.2,
+      transmission: 0.25,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.75,
       thickness: 2,
       roughness: 1,
       metalness: 0.025,
