@@ -61,7 +61,8 @@ const createHexagons = (): three.Group => {
         maxHeight;
 
       const material = basicMaterial.clone();
-      material.map = getTextureMap(height);
+      const { type, map } = getTextureMap(height);
+      material.map = map;
       const hexagon = new three.Mesh(
         new three.CylinderGeometry(1, 1, height, 6, 1, false),
         material
@@ -76,6 +77,23 @@ const createHexagons = (): three.Group => {
         const { x, z } = newPosition;
         hexagon.position.set(x, height / 2, z);
         hexagonGroup.add(hexagon);
+
+        if (type === "stone") {
+          const stoneMesh = new three.Mesh(
+            new three.SphereGeometry(1, 6, 6),
+            new three.MeshStandardMaterial({
+              map: textures.stone,
+            })
+          );
+          const randomScale = Math.random() / 2;
+          stoneMesh.scale.set(randomScale, randomScale, randomScale);
+          stoneMesh.position.set(
+            Math.random() * 0.4 + x,
+            height,
+            Math.random() * 0.4 + z
+          );
+          scene.add(stoneMesh);
+        }
       }
     }
   }
@@ -83,19 +101,31 @@ const createHexagons = (): three.Group => {
   return hexagonGroup;
 };
 
-const getTextureMap = (height: number): three.Texture => {
+type TextureMapGeometry = {
+  type: string;
+  map: three.Texture;
+};
+const getTextureMap = (height: number): TextureMapGeometry => {
+  const textureGeo = {
+    type: "dirt2",
+    map: textures.dirt2,
+  };
   if (height > 8) {
-    return textures.stone;
+    textureGeo.type = "stone";
+    textureGeo.map = textures.stone;
   } else if (height > 7) {
-    return textures.dirt;
+    textureGeo.type = "dirt";
+    textureGeo.map = textures.dirt;
   } else if (height > 5) {
-    return textures.grass;
+    textureGeo.type = "grass";
+    textureGeo.map = textures.grass;
   } else if (height > 3) {
-    return textures.sand;
+    textureGeo.type = "sand";
+    textureGeo.map = textures.sand;
   } else if (height > 0) {
-    return textures.dirt2;
+    return textureGeo;
   }
-  return textures.dirt2;
+  return textureGeo;
 };
 
 const hexagonGroup = createHexagons();
@@ -119,12 +149,14 @@ const sea = new three.Mesh(
     hexagonGroupWidth + 5,
     maxHeight * 0.2
   ),
+
   new three.MeshPhysicalMaterial({
     color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
     // index of refraction? How light passes
     ior: 1.4,
-    transmission: 1,
+    transmission: 0.2,
     transparent: true,
+    opacity: 0.85,
     thickness: 2,
     roughness: 1,
     metalness: 0.025,
@@ -148,5 +180,19 @@ uniforms["sunPosition"].value.normalize();
 
 sky.scale.setScalar(10000);
 
+const floor = new three.Mesh(
+  new three.CylinderGeometry(
+    hexagonGroupWidth + 6,
+    hexagonGroupWidth + 6,
+    maxHeight * 0.2
+  ),
+
+  new three.MeshStandardMaterial({
+    map: textures.dirt2,
+    side: three.DoubleSide,
+  })
+);
+floor.position.y = (maxHeight * 0.2) / 2 - 1.5;
+
 // gradientBackground is still a maybe if we want it
-scene.add(hexagonGroup, sea, sky);
+scene.add(hexagonGroup, sea, floor, sky);
