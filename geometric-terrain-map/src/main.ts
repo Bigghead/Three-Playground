@@ -4,6 +4,7 @@ import { createNoise2D } from "simplex-noise";
 
 import { GUIManager, ThreeCanvas } from "./canvas";
 import { getLayer, positionNeighbors } from "./lib/utils";
+import { basicMaterial, createStone, createTree } from "./lib/meshes";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -43,10 +44,6 @@ for (const [key, texture] of Object.entries(textures)) {
   }
 }
 
-const basicMaterial = new three.MeshStandardMaterial({
-  flatShading: true,
-});
-
 const createHexagons = (): three.Group => {
   const hexagonGroup = new three.Group();
 
@@ -78,21 +75,29 @@ const createHexagons = (): three.Group => {
         hexagon.position.set(x, height / 2, z);
         hexagonGroup.add(hexagon);
 
+        const planeOffset = Math.random() * 0.4;
+        const position: [number, number, number] = [
+          planeOffset + x,
+          height,
+          planeOffset + z,
+        ];
+
         if (type === "stone") {
-          const stoneMesh = new three.Mesh(
-            new three.SphereGeometry(1, 6, 6),
-            new three.MeshStandardMaterial({
-              map: textures.stone,
-            })
-          );
-          const randomScale = Math.random() / 2;
-          stoneMesh.scale.set(randomScale, randomScale, randomScale);
-          stoneMesh.position.set(
-            Math.random() * 0.4 + x,
-            height,
-            Math.random() * 0.4 + z
-          );
+          const stoneMesh = createStone({
+            meshType: "stone",
+            textureMap: textures.stone,
+            position,
+          });
           scene.add(stoneMesh);
+        }
+
+        if (type === "grass") {
+          const tree = createTree({
+            height: 6,
+            texture: textures.grass,
+            position,
+          });
+          scene.add(tree);
         }
       }
     }
