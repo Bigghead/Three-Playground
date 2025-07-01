@@ -1,10 +1,16 @@
 import * as three from "three";
-import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { createNoise2D } from "simplex-noise";
 
 import { GUIManager, ThreeCanvas } from "./canvas";
 import { getLayer, positionNeighbors } from "./lib/utils";
-import { basicMaterial, createStone, createTree } from "./lib/meshes";
+import {
+  basicMaterial,
+  createDirtFloor,
+  createSea,
+  createSky,
+  createStone,
+  createTree,
+} from "./lib/meshes";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -145,59 +151,19 @@ const gradientBackground = getLayer({
 });
 gradientBackground.position.set(3, 18, -30);
 
-/**
- * Water "texture", this is easier than we thought and slick af
- */
-const sea = new three.Mesh(
-  new three.CylinderGeometry(
-    hexagonGroupWidth + 5,
-    hexagonGroupWidth + 5,
-    maxHeight * 0.2
-  ),
+const sea = createSea({
+  width: hexagonGroupWidth + 5,
+  maxHeight: maxHeight * 0.2,
+  texture: textures.water,
+});
 
-  new three.MeshPhysicalMaterial({
-    color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
-    // index of refraction? How light passes
-    ior: 1.4,
-    transmission: 0.2,
-    transparent: true,
-    opacity: 0.85,
-    thickness: 2,
-    roughness: 1,
-    metalness: 0.025,
-    roughnessMap: textures.water,
-    metalnessMap: textures.water,
-  })
-);
-sea.receiveShadow = true;
-sea.position.y = (maxHeight * 0.2) / 2 - 0.002;
+const sky = createSky();
 
-const sky = new Sky();
-const {
-  material: { uniforms },
-} = sky;
-uniforms["turbidity"].value = 10;
-uniforms["rayleigh"].value = 3;
-uniforms["mieCoefficient"].value = 0.005;
-uniforms["mieDirectionalG"].value = 0.7;
-uniforms["sunPosition"].value.set(0, 0.3, 15);
-uniforms["sunPosition"].value.normalize();
-
-sky.scale.setScalar(10000);
-
-const floor = new three.Mesh(
-  new three.CylinderGeometry(
-    hexagonGroupWidth + 6,
-    hexagonGroupWidth + 6,
-    maxHeight * 0.2
-  ),
-
-  new three.MeshStandardMaterial({
-    map: textures.dirt2,
-    side: three.DoubleSide,
-  })
-);
-floor.position.y = (maxHeight * 0.2) / 2 - 1.5;
+const floor = createDirtFloor({
+  width: hexagonGroupWidth + 6,
+  maxHeight: maxHeight * 0.2,
+  texture: textures.dirt2,
+});
 
 // gradientBackground is still a maybe if we want it
 scene.add(hexagonGroup, sea, floor, sky);

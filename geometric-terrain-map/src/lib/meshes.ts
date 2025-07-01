@@ -1,4 +1,5 @@
 import * as three from "three";
+import { Sky } from "three/examples/jsm/objects/Sky.js";
 
 export const basicMaterial = new three.MeshStandardMaterial({
   flatShading: true,
@@ -64,4 +65,76 @@ export const createTree = ({
 
   tree.position.set(...position);
   return tree;
+};
+
+/**
+ * Water "texture", this is easier than we thought and slick af
+ */
+export const createSea = ({
+  width,
+  maxHeight,
+  texture,
+}: {
+  width: number;
+  maxHeight: number;
+  texture: three.Texture;
+}): three.Mesh => {
+  const sea = new three.Mesh(
+    new three.CylinderGeometry(width, width, maxHeight),
+
+    new three.MeshPhysicalMaterial({
+      color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
+      // index of refraction? How light passes
+      ior: 1.4,
+      transmission: 0.2,
+      transparent: true,
+      opacity: 0.85,
+      thickness: 2,
+      roughness: 1,
+      metalness: 0.025,
+      roughnessMap: texture,
+      metalnessMap: texture,
+    })
+  );
+  sea.receiveShadow = true;
+  sea.position.y = maxHeight / 2 - 0.002;
+  return sea;
+};
+
+export const createSky = (): Sky => {
+  const sky = new Sky();
+  const {
+    material: { uniforms },
+  } = sky;
+  uniforms["turbidity"].value = 10;
+  uniforms["rayleigh"].value = 3;
+  uniforms["mieCoefficient"].value = 0.005;
+  uniforms["mieDirectionalG"].value = 0.7;
+  uniforms["sunPosition"].value.set(0, 0.3, 15);
+  uniforms["sunPosition"].value.normalize();
+
+  sky.scale.setScalar(10000);
+
+  return sky;
+};
+
+export const createDirtFloor = ({
+  width,
+  maxHeight,
+  texture,
+}: {
+  width: number;
+  maxHeight: number;
+  texture: three.Texture;
+}): three.Mesh => {
+  const material = basicMaterial.clone();
+  const floor = new three.Mesh(
+    new three.CylinderGeometry(width, width, maxHeight),
+    material
+  );
+
+  floor.material.map = texture;
+  floor.material.side = three.DoubleSide;
+  floor.position.y = maxHeight / 2 - 1.5;
+  return floor;
 };
