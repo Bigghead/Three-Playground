@@ -68,9 +68,9 @@ export class ThreeCanvas {
     initShadow: boolean;
     stats: Stats;
   }) {
-    this.directionalLight.position.set(0, 15, 10);
+    this.directionalLight.position.set(0, 15, 15);
 
-    this.camera.position.set(16, 15, -25);
+    this.camera.position.set(23, 22, -28.5);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
@@ -103,11 +103,11 @@ export class ThreeCanvas {
   initShadow = (): void => {
     this.directionalLight.castShadow = true;
     this.directionalLight.shadow.mapSize.set(1024, 1024);
-    this.directionalLight.shadow.camera.far = 40;
-    this.directionalLight.shadow.camera.left = -20;
-    this.directionalLight.shadow.camera.top = 20;
-    this.directionalLight.shadow.camera.right = 20;
-    this.directionalLight.shadow.camera.bottom = -20;
+    this.directionalLight.shadow.camera.far = 50;
+    this.directionalLight.shadow.camera.left = -30;
+    this.directionalLight.shadow.camera.top = 30;
+    this.directionalLight.shadow.camera.right = 30;
+    this.directionalLight.shadow.camera.bottom = -30;
 
     this.directionalLight.shadow.camera.updateProjectionMatrix();
 
@@ -122,7 +122,7 @@ export class ThreeCanvas {
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = three.PCFSoftShadowMap;
-    this.scene.add(this.directionalLighthelper, this.shadowHelper);
+    // this.scene.add(this.directionalLighthelper, this.shadowHelper);
   };
 
   /**

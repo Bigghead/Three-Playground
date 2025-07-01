@@ -82,22 +82,18 @@ export const createSea = ({
   const sea = new three.Mesh(
     new three.CylinderGeometry(width, width, maxHeight),
 
-    new three.MeshPhysicalMaterial({
+    new three.MeshStandardMaterial({
       color: new three.Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
-      // index of refraction? How light passes
-      ior: 1.4,
-      transmission: 0.25,
       transparent: true,
       opacity: 0.75,
-      thickness: 2,
-      roughness: 1,
+      roughness: 0.9,
       metalness: 0.025,
       roughnessMap: texture,
       metalnessMap: texture,
     })
   );
   sea.receiveShadow = true;
-  sea.position.y = maxHeight / 2 - 0.002;
+  sea.position.y = maxHeight / 2;
   return sea;
 };
 

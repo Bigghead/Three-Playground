@@ -24,7 +24,7 @@ document.body.appendChild(stats.dom);
 
 const noise2D = createNoise2D();
 
-const hexagonGroupWidth = 15;
+const hexagonGroupWidth = 20;
 const maxHeight = 10;
 
 const threeCanvas = new ThreeCanvas({
@@ -72,7 +72,7 @@ const createHexagons = (): three.Group => {
         // using simplex noise for gradient height mapping
         const height =
           Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) *
-          maxHeight;
+          (maxHeight * 0.999); // z fighting with water
 
         const material = basicMaterial.clone();
         const { type, map } = getTextureMap(height);
