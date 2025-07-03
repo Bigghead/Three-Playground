@@ -3,6 +3,7 @@ import { Sky } from "three/examples/jsm/objects/Sky.js";
 
 export const basicMaterial = new three.MeshStandardMaterial({
   flatShading: true,
+  envMapIntensity: 0.2,
 });
 
 export const createStone = ({

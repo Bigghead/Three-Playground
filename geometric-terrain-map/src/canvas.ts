@@ -42,7 +42,7 @@ export class ThreeCanvas {
 
   scene = new three.Scene();
   ambientLight = new three.AmbientLight(0xffffff, 0.3);
-  directionalLight = new three.DirectionalLight("#ffffff", 5);
+  directionalLight = new three.DirectionalLight(new three.Color("#FFCB8E"), 5);
   camera = new three.PerspectiveCamera(
     75,
     this.sizes.width / this.sizes.height,

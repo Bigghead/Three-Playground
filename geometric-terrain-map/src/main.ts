@@ -12,6 +12,7 @@ import {
   createStone,
   createTree,
 } from "./lib/meshes";
+import type { HexagonMesh, TextureMapGeometry } from "./lib/types";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -69,31 +70,12 @@ const createHexagons = (): three.Group => {
       // how far from the origin ( 0, 0, 0 )
       // we want a circle grid ( or square if you want, up to you )
       if (newPosition.length() < hexagonGroupWidth + 3) {
-        // using simplex noise for gradient height mapping
-        const height =
-          Math.pow(Math.abs((noise2D(i * 0.1, j * 0.1) + 1) / 2), 1.3) *
-          (maxHeight * 0.999); // z fighting with water
-
-        const material = basicMaterial.clone();
-        const { type, map } = getTextureMap(height);
-        material.map = map;
-        const hexagon = new three.Mesh(
-          new three.CylinderGeometry(1, 1, height, 6, 1, false),
-          material
+        const height = getGradientHeightPosition(i, j);
+        const { hexagon, type, position } = createRandomHeightHexagon(
+          newPosition,
+          height
         );
-        hexagon.castShadow = true;
-        hexagon.receiveShadow = true;
-
-        const { x, z } = newPosition;
-        hexagon.position.set(x, height / 2, z);
         hexagonGroup.add(hexagon);
-
-        const planeOffset = Math.random() * 0.4;
-        const position: [number, number, number] = [
-          planeOffset + x,
-          height,
-          planeOffset + z,
-        ];
 
         if (type === "stone") {
           const stoneMesh = createStone({
@@ -119,10 +101,45 @@ const createHexagons = (): three.Group => {
   return hexagonGroup;
 };
 
-type TextureMapGeometry = {
-  type: string;
-  map: three.Texture;
+const getGradientHeightPosition = (x: number, z: number): number => {
+  // using simplex noise for gradient height mapping
+  const height =
+    Math.pow(Math.abs((noise2D(x * 0.1, z * 0.1) + 1) / 2), 1.3) *
+    (maxHeight * 0.999); // z fighting with water
+  return height;
 };
+
+const createRandomHeightHexagon = (
+  newPosition: three.Vector3,
+  height: number
+): HexagonMesh => {
+  const material = basicMaterial.clone();
+  const { type, map } = getTextureMap(height);
+  material.map = map;
+  const hexagon = new three.Mesh(
+    new three.CylinderGeometry(1, 1, height, 6, 1, false),
+    material
+  );
+  hexagon.castShadow = true;
+  hexagon.receiveShadow = true;
+
+  const { x, z } = newPosition;
+  hexagon.position.set(x, height / 2, z);
+
+  const planeOffset = Math.random() * 0.4;
+  const position: [number, number, number] = [
+    planeOffset + x,
+    height,
+    planeOffset + z,
+  ];
+
+  return {
+    hexagon,
+    type,
+    position,
+  };
+};
+
 const getTextureMap = (height: number): TextureMapGeometry => {
   const textureGeo = {
     type: "dirt2",
