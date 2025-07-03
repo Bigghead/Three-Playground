@@ -12,7 +12,7 @@ import {
   createStone,
   createTree,
 } from "./lib/meshes";
-import type { HexagonMesh, TextureMapGeometry } from "./lib/types";
+import type { HexagonMesh, Position, TextureMapGeometry } from "./lib/types";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -77,22 +77,9 @@ const createHexagons = (): three.Group => {
         );
         hexagonGroup.add(hexagon);
 
-        if (type === "stone") {
-          const stoneMesh = createStone({
-            meshType: "stone",
-            textureMap: textures.stone,
-            position,
-          });
-          hexagonGroup.add(stoneMesh);
-        }
-
-        if (type === "grass") {
-          const tree = createTree({
-            height: 6,
-            texture: textures.grass,
-            position,
-          });
-          hexagonGroup.add(tree);
+        const decorationMesh = createDecorationMesh(type, position);
+        if (decorationMesh) {
+          hexagonGroup.add(decorationMesh);
         }
       }
     }
@@ -138,6 +125,31 @@ const createRandomHeightHexagon = (
     type,
     position,
   };
+};
+
+const createDecorationMesh = (
+  type: string,
+  position: Position
+): three.Mesh | three.Group | null => {
+  // randomize how often to add decorations
+  if (Math.random() <= 0.6) return null;
+  if (type === "stone") {
+    return createStone({
+      meshType: "stone",
+      textureMap: textures.stone,
+      position,
+    });
+  }
+
+  if (type === "grass") {
+    return createTree({
+      height: 6,
+      texture: textures.grass,
+      position,
+    });
+  }
+
+  return null;
 };
 
 const getTextureMap = (height: number): TextureMapGeometry => {
