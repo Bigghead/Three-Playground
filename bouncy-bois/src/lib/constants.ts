@@ -11,9 +11,12 @@ export type PointPosition = {
   z: number;
 };
 
-export type ObjectBody = {
+type DefaultMesh = {
   id: string;
   geometry: randomGeometry;
+};
+
+export type ObjectBody = DefaultMesh & {
   randomScale: number;
   position: [number, number, number];
   isInitialObject?: boolean;
@@ -23,10 +26,13 @@ export type WorldObjects = ObjectBody & {
   mesh: three.Mesh;
 };
 
-export type MeshPool = {
-  id: string;
-  geometry: randomGeometry;
+export type MeshPool = DefaultMesh & {
   mesh: three.Mesh;
+};
+
+export type ActivePoolMesh = DefaultMesh & {
+  position: three.Vector3Tuple;
+  randomScale: number;
 };
 
 export const WorkerEnum = {

@@ -1,5 +1,6 @@
 import {
   WorkerEnum,
+  type ActivePoolMesh,
   type MeshPool,
   type randomGeometry,
   type WorldObjects,
@@ -47,48 +48,55 @@ export class GUIManager {
 
   public createObject = (geometry = "sphere"): void => {
     // check if any pooled objects exist and use that vs creating new mesh
-    let activeObject;
+    let activeObject: ActivePoolMesh;
+
     if (this._meshPool.length) {
-      const pooledMesh = this._meshPool.pop(); // really need to be shift() / FIFO but pop is faster
-
-      if (pooledMesh) {
-        const newPosition = buildRandomVertexPosition();
-        pooledMesh?.mesh.position.set(...newPosition);
-
-        pooledMesh.mesh.visible = true;
-        this._worldObjects.set(pooledMesh.id, {
-          id: pooledMesh.id,
-          geometry: pooledMesh.geometry,
-          randomScale: pooledMesh.mesh.scale.x,
-          position: pooledMesh.mesh.position.toArray(),
-          mesh: pooledMesh.mesh,
-        });
-
-        activeObject = {
-          id: pooledMesh.id,
-          geometry: pooledMesh.geometry,
-          position: newPosition,
-          randomScale: pooledMesh.mesh.scale.x,
-        };
-      }
+      const pooledMesh = this._meshPool.pop()!; // really need to be shift() / FIFO but pop is faster
+      activeObject = this.createObjectFromPool(pooledMesh);
     } else {
-      const newMesh = createMesh(geometry as randomGeometry);
-      this._worldObjects.set(newMesh.id, newMesh);
-      this._scene.add(newMesh.mesh);
-
-      activeObject = {
-        id: newMesh.id,
-        geometry: newMesh.geometry,
-        position: newMesh.mesh.position.toArray(),
-        randomScale: newMesh.randomScale,
-      };
+      activeObject = this.createObjectNew(geometry);
     }
+
     this._worker.postMessage({
       type: WorkerEnum.ADD_OBJECTS,
       payload: {
         data: [activeObject],
       },
     });
+  };
+
+  private createObjectFromPool = (pooledMesh: MeshPool): ActivePoolMesh => {
+    const newPosition = buildRandomVertexPosition();
+    pooledMesh?.mesh.position.set(...newPosition);
+
+    pooledMesh.mesh.visible = true;
+    this._worldObjects.set(pooledMesh.id, {
+      id: pooledMesh.id,
+      geometry: pooledMesh.geometry,
+      randomScale: pooledMesh.mesh.scale.x,
+      position: pooledMesh.mesh.position.toArray(),
+      mesh: pooledMesh.mesh,
+    });
+
+    return {
+      id: pooledMesh.id,
+      geometry: pooledMesh.geometry,
+      position: newPosition,
+      randomScale: pooledMesh.mesh.scale.x,
+    };
+  };
+
+  private createObjectNew = (geometry: string): ActivePoolMesh => {
+    const newMesh = createMesh(geometry as randomGeometry);
+    this._worldObjects.set(newMesh.id, newMesh);
+    this._scene.add(newMesh.mesh);
+
+    return {
+      id: newMesh.id,
+      geometry: newMesh.geometry,
+      position: newMesh.mesh.position.toArray(),
+      randomScale: newMesh.randomScale,
+    };
   };
 
   public tipFloor = (): void => {

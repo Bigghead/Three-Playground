@@ -58,6 +58,7 @@ export class ThreeCanvas {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = three.PCFSoftShadowMap;
 
+    this.scene.background = new three.Color("#FFCB8E");
     this.scene.add(this.ambientLight, this.directionalLight, this.camera);
   }
 
