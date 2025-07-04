@@ -114,7 +114,7 @@ export const createSea = ({
     })
   );
   sea.receiveShadow = true;
-  sea.position.y = maxHeight / 2;
+  sea.position.y = maxHeight / 2 + 0.05;
   return sea;
 };
 

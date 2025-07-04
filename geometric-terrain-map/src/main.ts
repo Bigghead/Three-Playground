@@ -122,7 +122,7 @@ const getGradientHeightPosition = (x: number, z: number): number => {
   // using simplex noise for gradient height mapping
   const height =
     Math.pow(Math.abs((noise2D(x * 0.1, z * 0.1) + 1) / 2), 1.3) *
-    (maxHeight * 0.995); // z fighting with water
+    (maxHeight * 0.98); // z fighting with water
   return height;
 };
 
