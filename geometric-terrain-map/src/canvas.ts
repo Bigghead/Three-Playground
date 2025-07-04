@@ -2,6 +2,7 @@ import * as three from "three";
 import Stats from "stats.js";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import type { Position } from "./lib/types";
 
 /**
  * Base
@@ -11,6 +12,18 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
 const gui = new GUI();
+
+const defaultCamera: Record<string, Position> = {
+  mobile: [25, 60, -115],
+  tablet: [30, 35, -80],
+  desktop: [34, 30, -45.5],
+};
+
+const getDefaultCamera = (width: number): Position => {
+  if (width <= 768) return defaultCamera.mobile;
+  if (width <= 1024) return defaultCamera.tablet;
+  return defaultCamera.desktop;
+};
 
 export class GUIManager {
   constructor({
@@ -73,16 +86,16 @@ export class ThreeCanvas {
   }) {
     this.directionalLight.position.set(0, 15, 15);
 
-    this.camera.position.set(34, 30, -45.5);
+    this.camera.position.set(...getDefaultCamera(this.sizes.width));
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
 
     this.stats = stats;
     // camera check, leaving this in
-    // this.controls.addEventListener("change", () =>
-    //   console.log(this.controls.object.position)
-    // );
+    this.controls.addEventListener("change", () =>
+      console.log(this.controls.object.position)
+    );
 
     this.renderer = new three.WebGLRenderer({
       canvas,
