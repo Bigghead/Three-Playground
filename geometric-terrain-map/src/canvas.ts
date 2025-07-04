@@ -174,7 +174,6 @@ export class ThreeCanvas {
    */
   public animationTick = (): void => {
     if (this.stats) this.stats.begin();
-    const elapsedTime = this.clock.getElapsedTime();
 
     // Update controls
     this.controls.update();
