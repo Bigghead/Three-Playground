@@ -1,7 +1,7 @@
 import * as three from "three";
 import { createNoise2D } from "simplex-noise";
 
-import { GUIManager, ThreeCanvas } from "./canvas";
+import { ThreeCanvas } from "./canvas";
 import { getLayer, positionNeighbors } from "./lib/utils";
 import {
   basicMaterial,
