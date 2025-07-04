@@ -12,7 +12,13 @@ import {
   createStone,
   createTree,
 } from "./lib/meshes";
-import type { HexagonMesh, Position, TextureMapGeometry } from "./lib/types";
+import type {
+  HexagonMesh,
+  InstancedHexagon,
+  MaterialType,
+  Position,
+  TextureMapGeometry,
+} from "./lib/types";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -25,7 +31,7 @@ document.body.appendChild(stats.dom);
 
 const noise2D = createNoise2D();
 
-const hexagonGroupWidth = 20;
+const hexagonGroupWidth = 50;
 const maxHeight = 10;
 
 const threeCanvas = new ThreeCanvas({
@@ -39,7 +45,7 @@ scene.background = new three.Color("#f3f0f0");
 
 // const guiManager = new GUIManager({ canvas: threeCanvas, initCamera: false });
 
-const textures = {
+const textures: Record<string, three.Texture> = {
   matcap1: threeCanvas.textureLoader.load("/matcap/1.webp"),
   matcap2: threeCanvas.textureLoader.load("/matcap/2.webp"),
   gradient: threeCanvas.textureLoader.load("/textures/gradient.webp"),
@@ -57,8 +63,36 @@ for (const [key, texture] of Object.entries(textures)) {
   }
 }
 
+const createInstancedHexagons = (): InstancedHexagon => {
+  const materialTypes: MaterialType[] = [
+    "dirt",
+    "dirt2",
+    "stone",
+    "sand",
+    "grass",
+  ];
+
+  const instances: InstancedHexagon = {};
+  materialTypes.forEach((mat) => {
+    const material = basicMaterial.clone();
+    material.map = textures[mat];
+    instances[mat] = {
+      mesh: new three.InstancedMesh(
+        new three.CylinderGeometry(1, 1, 1, 6, 1, false),
+        material,
+        hexagonGroupWidth * hexagonGroupWidth
+      ),
+      count: 0,
+    };
+  });
+  return instances;
+};
+
+const instancedHexagons: InstancedHexagon = createInstancedHexagons();
+
 const createHexagons = (): three.Group => {
   const hexagonGroup = new three.Group();
+  const dummyInstance = new three.Object3D();
 
   for (let i = -hexagonGroupWidth; i < hexagonGroupWidth; i++) {
     for (let j = -hexagonGroupWidth; j < hexagonGroupWidth; j++) {
@@ -71,11 +105,12 @@ const createHexagons = (): three.Group => {
       // we want a circle grid ( or square if you want, up to you )
       if (newPosition.length() < hexagonGroupWidth + 3) {
         const height = getGradientHeightPosition(i, j);
-        const { hexagon, type, position } = createRandomHeightHexagon(
+
+        const { type, position } = createRandomHeightHexagon(
           newPosition,
-          height
+          height,
+          dummyInstance
         );
-        hexagonGroup.add(hexagon);
 
         const decorationMesh = createDecorationMesh(type, position);
         if (decorationMesh) {
@@ -98,20 +133,22 @@ const getGradientHeightPosition = (x: number, z: number): number => {
 
 const createRandomHeightHexagon = (
   newPosition: three.Vector3,
-  height: number
+  height: number,
+  dummy: three.Object3D
 ): HexagonMesh => {
-  const material = basicMaterial.clone();
-  const { type, map } = getTextureMap(height);
-  material.map = map;
-  const hexagon = new three.Mesh(
-    new three.CylinderGeometry(1, 1, height, 6, 1, false),
-    material
-  );
-  hexagon.castShadow = true;
-  hexagon.receiveShadow = true;
+  const { type } = getTextureMap(height);
 
   const { x, z } = newPosition;
-  hexagon.position.set(x, height / 2, z);
+
+  const { mesh, count } = instancedHexagons[type];
+
+  dummy.position.set(x, height / 2, z);
+  dummy.scale.set(1, height, 1);
+  dummy.updateMatrix();
+
+  // this is where the instancedMesh is getting "drawn"
+  mesh.setMatrixAt(count, dummy.matrix);
+  instancedHexagons[type].count++;
 
   const planeOffset = Math.random() * 0.4;
   const position: [number, number, number] = [
@@ -121,7 +158,6 @@ const createRandomHeightHexagon = (
   ];
 
   return {
-    hexagon,
     type,
     position,
   };
@@ -152,6 +188,13 @@ const createDecorationMesh = (
   return null;
 };
 
+const drawInstancedMeshes = () => {
+  for (const [_, value] of Object.entries(instancedHexagons)) {
+    const { mesh } = value;
+    hexagonGroup.add(mesh);
+  }
+};
+
 const getTextureMap = (height: number): TextureMapGeometry => {
   const textureGeo = {
     type: "dirt2",
@@ -176,6 +219,8 @@ const getTextureMap = (height: number): TextureMapGeometry => {
 };
 
 const hexagonGroup = createHexagons();
+drawInstancedMeshes();
+
 const gradientBackground = getLayer({
   hue: 0.5,
   numSprites: 8,

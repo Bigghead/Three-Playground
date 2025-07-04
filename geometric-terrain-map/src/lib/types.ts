@@ -1,9 +1,18 @@
 import * as three from "three";
 
+export type MaterialType = "dirt" | "dirt2" | "stone" | "sand" | "grass";
+
+export type InstancedHexagon = Record<
+  string,
+  {
+    mesh: three.InstancedMesh;
+    count: number;
+  }
+>;
+
 export type Position = [number, number, number];
 
 export type HexagonMesh = {
-  hexagon: three.Mesh;
   type: string;
   position: Position;
 };
