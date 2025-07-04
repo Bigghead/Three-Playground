@@ -21,8 +21,9 @@ const defaultCamera: Record<string, Position> = {
 };
 
 const getDefaultCamera = (width: number): Position => {
+  if (width <= 500) return defaultCamera.superSmol;
   if (width <= 768) return defaultCamera.mobile;
-  if (width <= 1024) return defaultCamera.tablet;
+  if (width <= 1200) return defaultCamera.tablet;
   return defaultCamera.desktop;
 };
 
