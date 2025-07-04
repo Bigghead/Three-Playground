@@ -1,5 +1,4 @@
 import * as three from "three";
-import Stats from "stats.js";
 import { createNoise2D } from "simplex-noise";
 
 import { GUIManager, ThreeCanvas } from "./canvas";
@@ -26,10 +25,6 @@ if (!canvas) {
   console.error("Canvas element with class 'webgl' not found.");
 }
 
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
-
 const noise2D = createNoise2D();
 
 const hexagonGroupWidth = 35;
@@ -38,7 +33,6 @@ const maxHeight = 10;
 const threeCanvas = new ThreeCanvas({
   canvas,
   initShadow: true,
-  stats,
 });
 
 const { scene } = threeCanvas;
@@ -220,9 +214,6 @@ const getTextureMap = (height: number): TextureMapGeometry => {
   return textureGeo;
 };
 
-const hexagonGroup = createHexagons();
-drawInstancedMeshes();
-
 const gradientBackground = getLayer({
   hue: 0.5,
   numSprites: 8,
@@ -248,5 +239,15 @@ const floor = createDirtFloor({
   texture: textures.dirt2,
 });
 
+const hexagonGroup = createHexagons();
+drawInstancedMeshes();
+hexagonGroup.add(sea, floor);
+
+threeCanvas.addAnimatedObject({
+  object: hexagonGroup,
+  animationFunc: () => {
+    hexagonGroup.rotation.y += 0.0001;
+  },
+});
 // gradientBackground is still a maybe if we want it
-scene.add(hexagonGroup, sea, floor, sky);
+scene.add(hexagonGroup, sky);

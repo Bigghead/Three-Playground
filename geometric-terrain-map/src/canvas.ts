@@ -1,11 +1,15 @@
 import * as three from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import Stats from "stats.js";
 import GUI from "lil-gui";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 /**
  * Base
  */
-// Debug
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 const gui = new GUI();
 
 export class GUIManager {
@@ -28,9 +32,10 @@ export class GUIManager {
   }
 }
 
+type AnimatedMesh = three.Mesh | three.Group;
 type AnimatedObject = {
-  object: three.Mesh;
-  animationFunc: (object: three.Mesh) => void;
+  object: AnimatedMesh;
+  animationFunc: (object: AnimatedMesh) => void;
 };
 
 export class ThreeCanvas {
@@ -62,11 +67,9 @@ export class ThreeCanvas {
   constructor({
     canvas,
     initShadow,
-    stats,
   }: {
     canvas: HTMLCanvasElement;
     initShadow: boolean;
-    stats: Stats;
   }) {
     this.directionalLight.position.set(0, 15, 15);
 
