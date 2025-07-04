@@ -6,6 +6,26 @@ export const basicMaterial = new three.MeshStandardMaterial({
   envMapIntensity: 0.2,
 });
 
+let dummyStone = new three.Object3D();
+let dummyStoneIndex = 1;
+let instancedStone: three.InstancedMesh | null = null;
+
+export const getInstancedStone = (
+  texture: three.Texture
+): three.InstancedMesh => {
+  if (!instancedStone) {
+    const stoneMaterial = basicMaterial.clone();
+    stoneMaterial.map = texture;
+    instancedStone = new three.InstancedMesh(
+      new three.SphereGeometry(1, 6, 6),
+      stoneMaterial,
+      100
+    );
+  }
+
+  return instancedStone;
+};
+
 export const createStone = ({
   textureMap,
   position,
@@ -13,16 +33,16 @@ export const createStone = ({
   meshType: string;
   textureMap: three.Texture;
   position: [number, number, number];
-}): three.Mesh => {
-  const stoneMesh = new three.Mesh(
-    new three.SphereGeometry(1, 6, 6),
-    basicMaterial.clone()
-  );
-  stoneMesh.material.map = textureMap;
+}): void => {
   const randomScale = Math.random() / 2;
-  stoneMesh.scale.set(randomScale, randomScale, randomScale);
-  stoneMesh.position.set(...position);
-  return stoneMesh;
+
+  const instancedStone = getInstancedStone(textureMap);
+  dummyStone.position.set(...position);
+  dummyStone.scale.set(randomScale, randomScale, randomScale);
+  dummyStone.updateMatrix();
+
+  instancedStone.setMatrixAt(dummyStoneIndex, dummyStone.matrix);
+  dummyStoneIndex++;
 };
 
 export const createTree = ({

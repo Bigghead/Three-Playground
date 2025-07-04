@@ -11,6 +11,7 @@ import {
   createSky,
   createStone,
   createTree,
+  getInstancedStone,
 } from "./lib/meshes";
 import type {
   HexagonMesh,
@@ -31,7 +32,7 @@ document.body.appendChild(stats.dom);
 
 const noise2D = createNoise2D();
 
-const hexagonGroupWidth = 50;
+const hexagonGroupWidth = 35;
 const maxHeight = 10;
 
 const threeCanvas = new ThreeCanvas({
@@ -127,7 +128,7 @@ const getGradientHeightPosition = (x: number, z: number): number => {
   // using simplex noise for gradient height mapping
   const height =
     Math.pow(Math.abs((noise2D(x * 0.1, z * 0.1) + 1) / 2), 1.3) *
-    (maxHeight * 0.999); // z fighting with water
+    (maxHeight * 0.995); // z fighting with water
   return height;
 };
 
@@ -166,11 +167,11 @@ const createRandomHeightHexagon = (
 const createDecorationMesh = (
   type: string,
   position: Position
-): three.Mesh | three.Group | null => {
+): three.Group | null => {
   // randomize how often to add decorations
-  if (Math.random() <= 0.6) return null;
+  if (Math.random() <= 0.5) return null;
   if (type === "stone") {
-    return createStone({
+    createStone({
       meshType: "stone",
       textureMap: textures.stone,
       position,
@@ -193,6 +194,7 @@ const drawInstancedMeshes = () => {
     const { mesh } = value;
     hexagonGroup.add(mesh);
   }
+  hexagonGroup.add(getInstancedStone(textures.stone));
 };
 
 const getTextureMap = (height: number): TextureMapGeometry => {

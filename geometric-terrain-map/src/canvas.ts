@@ -47,7 +47,7 @@ export class ThreeCanvas {
     75,
     this.sizes.width / this.sizes.height,
     0.1,
-    100
+    500
   );
   textureLoader = new three.TextureLoader();
   clock = new three.Clock();
@@ -70,7 +70,7 @@ export class ThreeCanvas {
   }) {
     this.directionalLight.position.set(0, 15, 15);
 
-    this.camera.position.set(23, 22, -28.5);
+    this.camera.position.set(34, 30, -45.5);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
