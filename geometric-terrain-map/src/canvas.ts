@@ -14,14 +14,16 @@ document.body.appendChild(stats.dom);
 const gui = new GUI();
 
 const defaultCamera: Record<string, Position> = {
-  mobile: [25, 60, -115],
-  tablet: [30, 35, -80],
+  superSmol: [20, 48, -92],
+  mobile: [25, 60, -110],
+  tablet: [30, 35, -72],
   desktop: [34, 30, -45.5],
 };
 
 const getDefaultCamera = (width: number): Position => {
+  if (width <= 500) return defaultCamera.superSmol;
   if (width <= 768) return defaultCamera.mobile;
-  if (width <= 1024) return defaultCamera.tablet;
+  if (width <= 1200) return defaultCamera.tablet;
   return defaultCamera.desktop;
 };
 
@@ -64,7 +66,7 @@ export class ThreeCanvas {
   camera = new three.PerspectiveCamera(
     75,
     this.sizes.width / this.sizes.height,
-    0.1,
+    1,
     500
   );
   textureLoader = new three.TextureLoader();
