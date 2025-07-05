@@ -15,10 +15,10 @@ const gui = new GUI();
 gui.close();
 
 const defaultCamera: Record<string, Position> = {
-  superSmol: [85, 50, -35],
-  mobile: [72, 38, -43],
-  tablet: [65, 44, -44],
-  desktop: [56, 33, -18],
+  superSmol: [20, 65, -145],
+  mobile: [25, 60, -110],
+  tablet: [25, 35, -80],
+  desktop: [33, 33, -55],
 };
 
 const getDefaultCamera = (width: number): Position => {
