@@ -12,12 +12,13 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
 const gui = new GUI();
+gui.close();
 
 const defaultCamera: Record<string, Position> = {
-  superSmol: [20, 48, -92],
-  mobile: [25, 60, -110],
-  tablet: [30, 35, -72],
-  desktop: [34, 30, -45.5],
+  superSmol: [85, 50, -35],
+  mobile: [72, 38, -43],
+  tablet: [65, 44, -44],
+  desktop: [56, 33, -18],
 };
 
 const getDefaultCamera = (width: number): Position => {
@@ -86,7 +87,7 @@ export class ThreeCanvas {
     canvas: HTMLCanvasElement;
     initShadow: boolean;
   }) {
-    this.directionalLight.position.set(0, 15, 15);
+    this.directionalLight.position.set(0, 25, 30);
 
     this.camera.position.set(...getDefaultCamera(this.sizes.width));
 
@@ -121,11 +122,11 @@ export class ThreeCanvas {
   initShadow = (): void => {
     this.directionalLight.castShadow = true;
     this.directionalLight.shadow.mapSize.set(1024, 1024);
-    this.directionalLight.shadow.camera.far = 50;
-    this.directionalLight.shadow.camera.left = -30;
-    this.directionalLight.shadow.camera.top = 30;
-    this.directionalLight.shadow.camera.right = 30;
-    this.directionalLight.shadow.camera.bottom = -30;
+    this.directionalLight.shadow.camera.far = 70;
+    this.directionalLight.shadow.camera.left = -40;
+    this.directionalLight.shadow.camera.top = 40;
+    this.directionalLight.shadow.camera.right = 40;
+    this.directionalLight.shadow.camera.bottom = -40;
 
     this.directionalLight.shadow.camera.updateProjectionMatrix();
 

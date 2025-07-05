@@ -71,12 +71,16 @@ const createInstancedHexagons = (): InstancedHexagon => {
   materialTypes.forEach((mat) => {
     const material = basicMaterial.clone();
     material.map = textures[mat];
+    const mesh = new three.InstancedMesh(
+      new three.CylinderGeometry(1, 1, 1, 6, 1, false),
+      material,
+      hexagonGroupWidth * hexagonGroupWidth
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     instances[mat] = {
-      mesh: new three.InstancedMesh(
-        new three.CylinderGeometry(1, 1, 1, 6, 1, false),
-        material,
-        hexagonGroupWidth * hexagonGroupWidth
-      ),
+      mesh,
       count: 0,
     };
   });
@@ -243,11 +247,5 @@ const hexagonGroup = createHexagons();
 drawInstancedMeshes();
 hexagonGroup.add(sea, floor);
 
-threeCanvas.addAnimatedObject({
-  object: hexagonGroup,
-  animationFunc: () => {
-    hexagonGroup.rotation.y += 0.0001;
-  },
-});
 // gradientBackground is still a maybe if we want it
 scene.add(hexagonGroup, sky);

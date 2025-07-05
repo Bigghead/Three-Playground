@@ -85,6 +85,13 @@ export const createTree = ({
   tree.scale.set(randomScale, randomScale, randomScale);
 
   tree.position.set(...position);
+
+  tree.traverse((child) => {
+    if (child instanceof three.Mesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
   return tree;
 };
 
