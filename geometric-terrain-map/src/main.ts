@@ -68,19 +68,24 @@ const createInstancedHexagons = (): InstancedHexagon => {
   ];
 
   const instances: InstancedHexagon = {};
-  materialTypes.forEach((mat) => {
-    const material = basicMaterial.clone();
-    material.map = textures[mat];
-    instances[mat] = {
-      mesh: new three.InstancedMesh(
-        new three.CylinderGeometry(1, 1, 1, 6, 1, false),
-        material,
-        hexagonGroupWidth * hexagonGroupWidth
-      ),
-      count: 0,
-    };
-  });
+  materialTypes.forEach((mat) => makeHexagonInstance(mat, instances));
   return instances;
+};
+
+const makeHexagonInstance = (
+  mat: MaterialType,
+  instances: InstancedHexagon
+): void => {
+  const material = basicMaterial.clone();
+  material.map = textures[mat];
+  instances[mat] = {
+    mesh: new three.InstancedMesh(
+      new three.CylinderGeometry(1, 1, 1, 6, 1, false),
+      material,
+      hexagonGroupWidth * hexagonGroupWidth
+    ),
+    count: 0,
+  };
 };
 
 const instancedHexagons: InstancedHexagon = createInstancedHexagons();

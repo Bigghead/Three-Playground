@@ -59,6 +59,29 @@ export const createTree = ({
   const bottomRadius = 1;
   const material = basicMaterial.clone();
 
+  const { treeTop, treeMiddle, treeTrunk } = getTreeParts(
+    height,
+    texture,
+    material,
+    bottomRadius,
+    y
+  );
+  tree.add(treeTop, treeMiddle, treeTrunk);
+
+  const randomScale = Math.random() * 0.4;
+  tree.scale.set(randomScale, randomScale, randomScale);
+
+  tree.position.set(...position);
+  return tree;
+};
+
+const getTreeParts = (
+  height: number,
+  texture: three.Texture,
+  material: three.MeshStandardMaterial,
+  bottomRadius: number,
+  y: number
+): { treeTop: three.Mesh; treeMiddle: three.Mesh; treeTrunk: three.Mesh } => {
   const treeTop = new three.Mesh(
     new three.CylinderGeometry(0, bottomRadius + 1, height / 1.5),
     material
@@ -79,13 +102,11 @@ export const createTree = ({
   );
   treeTrunk.material.color = new three.Color("brown");
 
-  tree.add(treeTop, treeMiddle, treeTrunk);
-
-  const randomScale = Math.random() * 0.4;
-  tree.scale.set(randomScale, randomScale, randomScale);
-
-  tree.position.set(...position);
-  return tree;
+  return {
+    treeTop,
+    treeMiddle,
+    treeTrunk,
+  };
 };
 
 /**
