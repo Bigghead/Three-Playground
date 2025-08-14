@@ -30,7 +30,7 @@ class ThreeCamera {
 			0.1,
 			100
 		);
-		this.camera.position.set(3, 3, 3);
+		this.camera.position.set(0, 5, 8);
 	}
 
 	public resize() {
