@@ -26,28 +26,59 @@ const wallGeo = new three.BoxGeometry(10, 3, 0.3);
 const wallMaterial = new three.MeshBasicMaterial({
 	color: "brown",
 });
-const {
-	parameters: { width: wallWidth, height: wallheight, depth: wallDepth },
-} = wallGeo;
 
 const wall = new three.Mesh(wallGeo, wallMaterial);
-wall.position.y = wallheight / 2 + 0.001; //z-fighting
-wall.position.z = -(floorWidth / 2 - wallDepth / 2);
+const wallGroup = new three.Group();
 
-const wall2 = wall.clone();
-wall2.rotation.y = Math.PI / 2;
-wall2.position.z = 0;
-wall2.position.x = -(floorWidth / 2 - wallDepth / 2);
+const getWallConfigs = (wallGeo: three.BoxGeometry) => {
+	const { height: wallheight, depth: wallDepth } = wallGeo.parameters;
 
-const wall3 = wall.clone();
-wall3.rotation.y = Math.PI / 2;
-wall3.position.z = 0;
-wall3.position.x = floorWidth / 2 - wallDepth / 2;
+	const wallY = wallheight / 2 + 0.001;
+	const wallOffset = floorWidth / 2 - wallDepth / 2;
+
+	const wallConfigs = [
+		{
+			x: 0,
+			y: wallY,
+			z: -wallOffset,
+		},
+		{
+			x: -wallOffset,
+			y: wallY,
+			z: 0,
+			rotation: {
+				y: Math.PI / 2,
+			},
+		},
+		{
+			x: wallOffset,
+			y: wallY,
+			z: 0,
+			rotation: {
+				y: Math.PI / 2,
+			},
+		},
+	];
+	return wallConfigs;
+};
+
+(function createWalls(): void {
+	const wallConfigs = getWallConfigs(wallGeo);
+	wallConfigs.forEach((emptyWall) => {
+		const { x, y, z, rotation } = emptyWall;
+		const newWall = wall.clone();
+		newWall.position.set(x, y, z);
+		if (rotation) {
+			newWall.rotation.y = emptyWall.rotation.y ?? 0;
+		}
+		wallGroup.add(newWall);
+	});
+})();
 
 const cube = new three.Mesh(
 	new three.BoxGeometry(1, 1, 1),
 	new three.MeshBasicMaterial({ color: 0x00ff00 })
 );
 
-room.add(floor, wall, wall2, wall3);
+room.add(floor, wallGroup);
 threeCanvas.scene.add(room, cube);
