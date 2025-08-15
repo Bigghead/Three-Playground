@@ -131,6 +131,8 @@ export class ThreeCanvas {
 	textureLoader = new three.TextureLoader();
 	clock = new three.Clock();
 
+	textureMaps: Record<string, three.Texture> = {};
+
 	constructor({
 		canvas,
 		initShadow,
@@ -148,6 +150,8 @@ export class ThreeCanvas {
 			initShadow,
 		});
 
+		this.initTextureMap();
+
 		this.scene.add(
 			this.lighting.ambientLight,
 			this.lighting.directionalLight,
@@ -160,6 +164,28 @@ export class ThreeCanvas {
 		window.addEventListener("mousemove", this.handleMouseMove);
 
 		this.animationTick();
+	}
+
+	private initTextureMap(): void {
+		this.textureMaps = {
+			beigeWall: this.textureLoader.load(
+				"textures/beige_wall/beige_wall_001_diff_1k.webp"
+			),
+			laminateFloor: this.textureLoader.load(
+				"/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
+			),
+			plasterWall: this.textureLoader.load(
+				"textures/plaster_wall/painted_plaster_wall_diff_1k.webp"
+			),
+			rosewood: this.textureLoader.load(
+				"textures/rosewood/rosewood_veneer1_diff_1k.webp"
+			),
+		};
+
+		for (const map in this.textureMaps) {
+			const texture = this.textureMaps[map];
+			texture.colorSpace = three.SRGBColorSpace;
+		}
 	}
 
 	/**

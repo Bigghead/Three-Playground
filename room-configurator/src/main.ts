@@ -10,10 +10,11 @@ const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 
 const room = new three.Group();
 
-const floorMaterial = new three.MeshBasicMaterial({
-	color: "white", // need like floor texture later
+const floorMaterial = new three.MeshStandardMaterial({
 	side: three.DoubleSide,
+	map: threeCanvas.textureMaps.rosewood,
 });
+
 const floorGeo = new three.PlaneGeometry(10, 10);
 
 const floor = new three.Mesh(floorGeo, floorMaterial);
@@ -23,8 +24,8 @@ const {
 } = floorGeo;
 
 const wallGeo = new three.BoxGeometry(10, 3, 0.3);
-const wallMaterial = new three.MeshBasicMaterial({
-	color: "brown",
+const wallMaterial = new three.MeshStandardMaterial({
+	map: threeCanvas.textureMaps.beigeWall,
 });
 
 const wall = new three.Mesh(wallGeo, wallMaterial);
