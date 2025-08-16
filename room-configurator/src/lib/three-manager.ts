@@ -135,9 +135,7 @@ class ThreeModelLoader {
 			this.gltfLoader.load(
 				modelSrc,
 				(gltf) => resolve(gltf),
-				(progress) => {
-					console.log(progress);
-				},
+				(progress) => {},
 				(e) => {
 					console.error(e);
 					reject(e);
