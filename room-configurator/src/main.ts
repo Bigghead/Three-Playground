@@ -1,18 +1,22 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
+import { type GLTF } from "three/examples/jsm/Addons.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
 	console.error("Canvas element with class 'webgl' not found.");
 }
 
-const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
+const { textureMaps, scene, modelLoader } = new ThreeCanvas({
+	canvas,
+	initShadow: false,
+});
 
 const room = new three.Group();
 
 const floorMaterial = new three.MeshStandardMaterial({
 	side: three.DoubleSide,
-	map: threeCanvas.textureMaps.rosewood,
+	map: textureMaps.wood,
 });
 
 const floorGeo = new three.PlaneGeometry(10, 10);
@@ -25,7 +29,7 @@ const {
 
 const wallGeo = new three.BoxGeometry(10, 3, 0.3);
 const wallMaterial = new three.MeshStandardMaterial({
-	map: threeCanvas.textureMaps.beigeWall,
+	map: textureMaps.beigeWall,
 });
 
 const wall = new three.Mesh(wallGeo, wallMaterial);
@@ -76,10 +80,24 @@ const getWallConfigs = (wallGeo: three.BoxGeometry) => {
 	});
 })();
 
+const loadModel = async (url: string): Promise<GLTF> => {
+	try {
+		const model = await modelLoader.initModel(url);
+		return model;
+	} catch (e) {
+		console.error(e);
+		throw e;
+	}
+};
+
+// Models
 const cube = new three.Mesh(
 	new three.BoxGeometry(1, 1, 1),
 	new three.MeshBasicMaterial({ color: 0x00ff00 })
 );
 
+const bed1 = await loadModel("/models/bed/bed-agape-draco.glb");
+scene.add(bed1.scene);
+
 room.add(floor, wallGroup);
-threeCanvas.scene.add(room, cube);
+scene.add(room, cube);

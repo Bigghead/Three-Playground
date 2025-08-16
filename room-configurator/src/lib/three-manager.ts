@@ -1,5 +1,7 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { type GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 let { scrollY } = window;
 
@@ -119,6 +121,32 @@ class ThreeLighting {
 	};
 }
 
+class ThreeModelLoader {
+	gltfLoader: GLTFLoader = new GLTFLoader();
+	dracoLoader: DRACOLoader = new DRACOLoader();
+
+	constructor() {
+		this.dracoLoader.setDecoderPath("/loader/draco/");
+		this.gltfLoader.setDRACOLoader(this.dracoLoader);
+	}
+
+	async initModel(modelSrc: string): Promise<GLTF> {
+		return new Promise((resolve, reject) => {
+			this.gltfLoader.load(
+				modelSrc,
+				(gltf) => resolve(gltf),
+				(progress) => {
+					console.log(progress);
+				},
+				(e) => {
+					console.error(e);
+					reject(e);
+				}
+			);
+		});
+	}
+}
+
 export class ThreeCanvas {
 	cursor = { x: 0, y: 0 };
 	sizes: Sizes;
@@ -126,6 +154,7 @@ export class ThreeCanvas {
 	controls: OrbitControls;
 	threeRenderer: ThreeRenderer;
 	lighting: ThreeLighting;
+	modelLoader: ThreeModelLoader;
 
 	scene = new three.Scene();
 	textureLoader = new three.TextureLoader();
@@ -149,6 +178,7 @@ export class ThreeCanvas {
 			renderer: this.threeRenderer.renderer,
 			initShadow,
 		});
+		this.modelLoader = new ThreeModelLoader();
 
 		this.initTextureMap();
 
@@ -180,6 +210,7 @@ export class ThreeCanvas {
 			rosewood: this.textureLoader.load(
 				"textures/rosewood/rosewood_veneer1_diff_1k.webp"
 			),
+			wood: this.textureLoader.load("/textures/wood/wood_floor_diff_1k.webp"),
 		};
 
 		for (const map in this.textureMaps) {
