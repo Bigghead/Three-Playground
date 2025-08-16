@@ -1,5 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
+import { models, type ModelConfig } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -101,13 +102,23 @@ const normalizeModelScale = (
 	const scale = targetWidth / modelSize.x;
 
 	model.scene.scale.setScalar(scale);
+	console.log(model.scene.position, room.position);
 };
 
-const loadModel = async (url: string): Promise<GLTF> => {
+const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 	try {
+		const { url, offset } = modelConfig;
+		console.log(modelConfig);
 		const model = await modelLoader.initModel(url);
 		normalizeModelScale(model);
-		console.log(model.scene);
+
+		if (offset) {
+			if (offset.position) {
+				const { x, y, z } = offset.position;
+				model.scene.position.set(x, y, z);
+			}
+		}
+
 		return model;
 	} catch (e) {
 		console.error(e);
@@ -120,7 +131,7 @@ const loadModel = async (url: string): Promise<GLTF> => {
 // testing to see what they look like, can't load them all at once
 // for some reason, bed3 is positioned waaaaay outside the room
 
-const bed = await loadModel("/models/bed/bed-draco.glb");
+const bed = await loadModel(models.bed6);
 // const bed = await loadModel("/models/bed/bed-2-draco.glb");
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
