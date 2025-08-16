@@ -80,9 +80,34 @@ const getWallConfigs = (wallGeo: three.BoxGeometry) => {
 	});
 })();
 
+room.add(floor, wallGroup);
+
+/**
+ *
+ * forces the loaded model to have x percentage width of the room ( scaled cause these models load big )
+ */
+const normalizeModelScale = (
+	model: GLTF,
+	roomWidthPercentage: number = 15
+): void => {
+	const roomBox = new three.Box3().setFromObject(room);
+	const roomSize = roomBox.getSize(new three.Vector3());
+
+	const modelBox = new three.Box3().setFromObject(model.scene);
+	const modelSize = modelBox.getSize(new three.Vector3());
+
+	const targetWidth = roomSize.x * (roomWidthPercentage / 100);
+
+	const scale = targetWidth / modelSize.x;
+
+	model.scene.scale.setScalar(scale);
+};
+
 const loadModel = async (url: string): Promise<GLTF> => {
 	try {
 		const model = await modelLoader.initModel(url);
+		normalizeModelScale(model);
+		console.log(model.scene);
 		return model;
 	} catch (e) {
 		console.error(e);
@@ -90,14 +115,15 @@ const loadModel = async (url: string): Promise<GLTF> => {
 	}
 };
 
-// Models
-const cube = new three.Mesh(
-	new three.BoxGeometry(1, 1, 1),
-	new three.MeshBasicMaterial({ color: 0x00ff00 })
-);
+// ----- Models ----- //
 
-const bed1 = await loadModel("/models/bed/bed-agape-draco.glb");
-scene.add(bed1.scene);
+// testing to see what they look like, can't load them all at once
+// for some reason, bed3 is positioned waaaaay outside the room
 
-room.add(floor, wallGroup);
-scene.add(room, cube);
+const bed = await loadModel("/models/bed/bed-draco.glb");
+// const bed = await loadModel("/models/bed/bed-2-draco.glb");
+// const bed = await loadModel("/models/bed/bed-3-draco.glb");
+// const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
+
+scene.add(room);
+scene.add(bed.scene);
