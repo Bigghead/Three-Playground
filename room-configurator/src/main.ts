@@ -1,6 +1,10 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
-import { models, type ModelConfig } from "./lib/model-configs";
+import {
+	models,
+	type ModelConfig,
+	type ModelOffset,
+} from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -105,6 +109,27 @@ const normalizeModelScale = (
 	console.log(model.scene.position, room.position);
 };
 
+type OffsetKey = "position" | "rotation";
+
+const applyModelConfigOffset = (
+	model: GLTF,
+	modelOffset: ModelOffset
+): void => {
+	for (const key in modelOffset) {
+		// I hate TypeScript a lot sometimes
+		const offsetKey = key as OffsetKey;
+		const offsetValue = modelOffset[offsetKey];
+
+		if (offsetValue) {
+			model.scene[offsetKey].set(
+				offsetValue.x || 0,
+				offsetValue.y || 0,
+				offsetValue.z || 0
+			);
+		}
+	}
+};
+
 const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 	try {
 		const { url, offset } = modelConfig;
@@ -113,10 +138,7 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 		normalizeModelScale(model);
 
 		if (offset) {
-			if (offset.position) {
-				const { x, y, z } = offset.position;
-				model.scene.position.set(x, y, z);
-			}
+			applyModelConfigOffset(model, offset);
 		}
 
 		return model;
@@ -131,7 +153,7 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 // testing to see what they look like, can't load them all at once
 // for some reason, bed3 is positioned waaaaay outside the room
 
-const bed = await loadModel(models.bed6);
+const bed = await loadModel(models.bunkBed);
 // const bed = await loadModel("/models/bed/bed-2-draco.glb");
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
