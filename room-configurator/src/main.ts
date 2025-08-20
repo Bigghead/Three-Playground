@@ -154,19 +154,15 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 // testing to see what they look like, can't load them all at once
 // for some reason, bed3 is positioned waaaaay outside the room
 
-const bed = await loadModel(models.bunkBed);
+const bed = await loadModel(models.bed3);
 // const bed = await loadModel("/models/bed/bed-2-draco.glb");
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
 // scene.add(room);
-console.log("Model children:", bed.scene.children);
-bed.scene.traverse((child) => {
-	if (child instanceof three.Mesh) {
-		console.log("Mesh found:", child.name, child.geometry);
-	}
-});
+
 scene.add(bed.scene);
+threeRaycaster.addObject(bed.scene);
 
 window.addEventListener("mousemove", (event: MouseEvent) => {
 	threeRaycaster.onPointerMove(event);

@@ -148,6 +148,7 @@ class ThreeModelLoader {
 class ThreeRaycaster {
 	raycaster: three.Raycaster = new three.Raycaster();
 	pointer: three.Vector2 = new three.Vector2();
+	threeModel: three.Group<three.Object3DEventMap> | null = null;
 
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
@@ -157,24 +158,26 @@ class ThreeRaycaster {
 		this.scene = scene;
 	}
 
+	addObject(threeModel: three.Group<three.Object3DEventMap>) {
+		this.threeModel = threeModel;
+	}
+
 	onPointerMove(event: MouseEvent) {
 		const { clientX, clientY } = event;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		// the freaking y has to be inverted cause the browser reads it backwards
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 
-		console.log(this.pointer);
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 
 		// calculate objects intersecting the picking ray
-		const intersects = this.raycaster.intersectObjects(
-			this.scene.children,
-			true
-		);
+		const plane = new three.Plane(new three.Vector3(0, 1, 0), 0); // y=0 plane
+		const intersectPoint = new three.Vector3();
 
-		for (let i = 0; i < intersects.length; i++) {
-			console.log(intersects[i]);
-			intersects[i].object.position;
+		if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+			if (this.threeModel) {
+				this.threeModel.position.copy(intersectPoint);
+			}
 		}
 	}
 }
