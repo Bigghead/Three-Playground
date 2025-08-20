@@ -12,10 +12,11 @@ if (!canvas) {
 	console.error("Canvas element with class 'webgl' not found.");
 }
 
-const { textureMaps, scene, modelLoader } = new ThreeCanvas({
-	canvas,
-	initShadow: false,
-});
+const { textureMaps, scene, modelLoader, threeRaycaster, threeCamera } =
+	new ThreeCanvas({
+		canvas,
+		initShadow: false,
+	});
 
 const room = new three.Group();
 
@@ -158,9 +159,15 @@ const bed = await loadModel(models.bunkBed);
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
-scene.add(room);
+// scene.add(room);
+console.log("Model children:", bed.scene.children);
+bed.scene.traverse((child) => {
+	if (child instanceof three.Mesh) {
+		console.log("Mesh found:", child.name, child.geometry);
+	}
+});
 scene.add(bed.scene);
 
-window.addEventListener("mousemove", (event) => {
-	console.log(event);
+window.addEventListener("mousemove", (event: MouseEvent) => {
+	threeRaycaster.onPointerMove(event);
 });

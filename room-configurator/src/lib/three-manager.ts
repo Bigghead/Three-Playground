@@ -149,14 +149,33 @@ class ThreeRaycaster {
 	raycaster: three.Raycaster = new three.Raycaster();
 	pointer: three.Vector2 = new three.Vector2();
 
-	getMouseCoord(axisCoord: number): number {
-		return (axisCoord / window.innerWidth) * 2 - 1;
+	camera: three.PerspectiveCamera;
+	scene: three.Scene;
+
+	constructor(camera: three.PerspectiveCamera, scene: three.Scene) {
+		this.camera = camera;
+		this.scene = scene;
 	}
 
 	onPointerMove(event: MouseEvent) {
 		const { clientX, clientY } = event;
-		this.pointer.x = this.getMouseCoord(clientX);
-		this.pointer.y = this.getMouseCoord(clientY);
+		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
+		// the freaking y has to be inverted cause the browser reads it backwards
+		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+
+		console.log(this.pointer);
+		this.raycaster.setFromCamera(this.pointer, this.camera);
+
+		// calculate objects intersecting the picking ray
+		const intersects = this.raycaster.intersectObjects(
+			this.scene.children,
+			true
+		);
+
+		for (let i = 0; i < intersects.length; i++) {
+			console.log(intersects[i]);
+			intersects[i].object.position;
+		}
 	}
 }
 
@@ -175,6 +194,7 @@ export class ThreeCanvas {
 	clock = new three.Clock();
 
 	textureMaps: Record<string, three.Texture> = {};
+	renderCallbacks: Array<() => void> = [];
 
 	constructor({
 		canvas,
@@ -193,7 +213,10 @@ export class ThreeCanvas {
 			initShadow,
 		});
 		this.modelLoader = new ThreeModelLoader();
-		this.threeRaycaster = new ThreeRaycaster();
+		this.threeRaycaster = new ThreeRaycaster(
+			this.threeCamera.camera,
+			this.scene
+		);
 
 		this.initTextureMap();
 
@@ -206,7 +229,6 @@ export class ThreeCanvas {
 		// Add event listeners (important for functionality)
 		window.addEventListener("resize", this.resizeCanvas);
 		window.addEventListener("scroll", this.handleScroll);
-		window.addEventListener("mousemove", this.handleMouseMove);
 
 		this.animationTick();
 	}
@@ -250,13 +272,6 @@ export class ThreeCanvas {
 		scrollY = window.scrollY;
 	};
 
-	public handleMouseMove = (e: MouseEvent): void => {
-		const { clientX, clientY } = e;
-		const { width, height } = this.sizes;
-		this.cursor.x = clientX / width - 0.5;
-		this.cursor.y = clientY / height - 0.5;
-	};
-
 	/**
 	 * Animate
 	 */
@@ -266,6 +281,8 @@ export class ThreeCanvas {
 		// Update controls
 		this.controls.update();
 
+		this.renderCallbacks.forEach((callback) => callback());
+
 		// Render
 		this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
 
@@ -273,10 +290,13 @@ export class ThreeCanvas {
 		window.requestAnimationFrame(this.animationTick);
 	};
 
+	public addRenderCallback(callback: () => void) {
+		this.renderCallbacks.push(callback);
+	}
+
 	public dispose = (): void => {
 		window.removeEventListener("resize", this.resizeCanvas);
 		window.removeEventListener("scroll", this.handleScroll);
-		window.removeEventListener("mousemove", this.handleMouseMove);
 		this.controls.dispose();
 		this.threeRenderer.renderer.dispose();
 	};
