@@ -145,6 +145,21 @@ class ThreeModelLoader {
 	}
 }
 
+class ThreeRaycaster {
+	raycaster: three.Raycaster = new three.Raycaster();
+	pointer: three.Vector2 = new three.Vector2();
+
+	getMouseCoord(axisCoord: number): number {
+		return (axisCoord / window.innerWidth) * 2 - 1;
+	}
+
+	onPointerMove(event: MouseEvent) {
+		const { clientX, clientY } = event;
+		this.pointer.x = this.getMouseCoord(clientX);
+		this.pointer.y = this.getMouseCoord(clientY);
+	}
+}
+
 export class ThreeCanvas {
 	cursor = { x: 0, y: 0 };
 	sizes: Sizes;
@@ -153,6 +168,7 @@ export class ThreeCanvas {
 	threeRenderer: ThreeRenderer;
 	lighting: ThreeLighting;
 	modelLoader: ThreeModelLoader;
+	threeRaycaster: ThreeRaycaster;
 
 	scene = new three.Scene();
 	textureLoader = new three.TextureLoader();
@@ -177,6 +193,7 @@ export class ThreeCanvas {
 			initShadow,
 		});
 		this.modelLoader = new ThreeModelLoader();
+		this.threeRaycaster = new ThreeRaycaster();
 
 		this.initTextureMap();
 

@@ -160,3 +160,7 @@ const bed = await loadModel(models.bunkBed);
 
 scene.add(room);
 scene.add(bed.scene);
+
+window.addEventListener("mousemove", (event) => {
+	console.log(event);
+});
