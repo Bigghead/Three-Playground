@@ -148,21 +148,35 @@ class ThreeModelLoader {
 class ThreeRaycaster {
 	raycaster: three.Raycaster = new three.Raycaster();
 	pointer: three.Vector2 = new three.Vector2();
+
+	// no idea why i need 1 in the y-axis here, but it works
+	plane: three.Plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
 	threeModel: three.Group<three.Object3DEventMap> | null = null;
+	isDraggingModel: boolean = false;
 
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
+	controls: OrbitControls;
 
-	constructor(camera: three.PerspectiveCamera, scene: three.Scene) {
+	constructor({
+		camera,
+		scene,
+		controls,
+	}: {
+		camera: three.PerspectiveCamera;
+		scene: three.Scene;
+		controls: OrbitControls;
+	}) {
 		this.camera = camera;
 		this.scene = scene;
+		this.controls = controls;
 	}
 
 	addObject(threeModel: three.Group<three.Object3DEventMap>) {
 		this.threeModel = threeModel;
 	}
 
-	onPointerMove(event: MouseEvent) {
+	onMouseMove(event: MouseEvent): void {
 		const { clientX, clientY } = event;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		// the freaking y has to be inverted cause the browser reads it backwards
@@ -170,15 +184,34 @@ class ThreeRaycaster {
 
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 
-		// calculate objects intersecting the picking ray
-		const plane = new three.Plane(new three.Vector3(0, 1, 0), 0); // y=0 plane
 		const intersectPoint = new three.Vector3();
 
-		if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
-			if (this.threeModel) {
+		if (this.raycaster.ray.intersectPlane(this.plane, intersectPoint)) {
+			if (this.isDraggingModel && this.threeModel) {
+				this.controls.enabled = false;
 				this.threeModel.position.copy(intersectPoint);
 			}
+		} else {
+			this.resetDrag();
 		}
+	}
+
+	onMouseDown(event: MouseEvent): void {
+		this.raycaster.setFromCamera(this.pointer, this.camera);
+
+		const intersectPoint = new three.Vector3();
+		if (this.raycaster.ray.intersectPlane(this.plane, intersectPoint)) {
+			this.isDraggingModel = true;
+		}
+	}
+
+	onMouseUp(event: MouseEvent): void {
+		this.resetDrag();
+	}
+
+	resetDrag(): void {
+		this.controls.enabled = true;
+		this.isDraggingModel = false;
 	}
 }
 
@@ -216,10 +249,11 @@ export class ThreeCanvas {
 			initShadow,
 		});
 		this.modelLoader = new ThreeModelLoader();
-		this.threeRaycaster = new ThreeRaycaster(
-			this.threeCamera.camera,
-			this.scene
-		);
+		this.threeRaycaster = new ThreeRaycaster({
+			camera: this.threeCamera.camera,
+			scene: this.scene,
+			controls: this.controls,
+		});
 
 		this.initTextureMap();
 

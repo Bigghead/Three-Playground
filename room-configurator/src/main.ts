@@ -164,6 +164,14 @@ const bed = await loadModel(models.bed3);
 scene.add(bed.scene);
 threeRaycaster.addObject(bed.scene);
 
+window.addEventListener("mousedown", (event: MouseEvent) => {
+	threeRaycaster.onMouseDown(event);
+});
+
+window.addEventListener("mouseup", (event: MouseEvent) => {
+	threeRaycaster.onMouseUp(event);
+});
+
 window.addEventListener("mousemove", (event: MouseEvent) => {
-	threeRaycaster.onPointerMove(event);
+	threeRaycaster.onMouseMove(event);
 });
