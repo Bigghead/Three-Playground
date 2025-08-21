@@ -155,6 +155,8 @@ class ThreeRaycaster {
 	threeModel: three.Group<three.Object3DEventMap> | null = null;
 	isDraggingModel: boolean = false;
 	draggableModels: Array<three.Group<three.Object3DEventMap>> = [];
+	draggedModelBox: three.Box3 = new three.Box3();
+	modelBox: typeof this.draggedModelBox = new three.Box3();
 
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
@@ -187,12 +189,28 @@ class ThreeRaycaster {
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	}
 
+	checkModelCollision(draggedModel: typeof this.threeModel): void {
+		if (!draggedModel) return;
+		const draggedModelBox = this.draggedModelBox.setFromObject(draggedModel);
+
+		for (const model of this.draggableModels) {
+			if (model !== draggedModel) {
+				const modelBox = this.modelBox.setFromObject(model);
+				if (draggedModelBox.intersectsBox(modelBox)) {
+					console.log("intersected with another model");
+					console.log(draggedModel);
+				}
+			}
+		}
+	}
+
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
 
 		if (this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint)) {
 			if (this.isDraggingModel && this.threeModel) {
 				this.controls.enabled = false;
+				this.checkModelCollision(this.threeModel);
 				this.threeModel.position.copy(this.intersectPoint);
 			}
 		}
@@ -297,6 +315,9 @@ export class ThreeCanvas {
 		for (const map in this.textureMaps) {
 			const texture = this.textureMaps[map];
 			texture.colorSpace = three.SRGBColorSpace;
+			texture.repeat.set(4, 4);
+			texture.wrapS = three.RepeatWrapping;
+			texture.wrapT = three.RepeatWrapping;
 		}
 	}
 
