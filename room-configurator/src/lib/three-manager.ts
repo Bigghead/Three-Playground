@@ -154,6 +154,7 @@ class ThreeRaycaster {
 
 	threeModel: three.Group<three.Object3DEventMap> | null = null;
 	draggableModels: Array<three.Group<three.Object3DEventMap>> = [];
+	draggableModelOriginalColors: Map<string, three.Material> = new Map();
 	isDraggingModel: boolean = false;
 	draggedModelBox: three.Box3 = new three.Box3();
 	modelBox: typeof this.draggedModelBox = new three.Box3();
@@ -180,6 +181,7 @@ class ThreeRaycaster {
 
 	addDraggableModel(threeModel: three.Group<three.Object3DEventMap>) {
 		this.draggableModels.push(threeModel);
+		console.log(this.draggableModels);
 	}
 
 	setRaycastingPointer(event: MouseEvent): void {
@@ -191,6 +193,31 @@ class ThreeRaycaster {
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	}
 
+	changeModelColor(draggedModel: typeof this.threeModel, color: string) {
+		draggedModel?.traverse((child) => {
+			if (!(child instanceof three.Mesh)) return;
+
+			if (!this.draggableModelOriginalColors.has(child.uuid)) {
+				this.draggableModelOriginalColors.set(child.uuid, child.material);
+			}
+
+			const newMat = child.material.clone();
+			newMat.color.set(color);
+			child.material = newMat;
+		});
+	}
+
+	resetModelColor(draggedModel: typeof this.threeModel) {
+		draggedModel?.traverse((child) => {
+			const originalModelMaterial = this.draggableModelOriginalColors.get(
+				child.uuid
+			);
+			if (child instanceof three.Mesh && originalModelMaterial) {
+				child.material = originalModelMaterial;
+			}
+		});
+	}
+
 	checkModelCollision(draggedModel: typeof this.threeModel): void {
 		if (!draggedModel) return;
 		const draggedModelBox = this.draggedModelBox.setFromObject(draggedModel);
@@ -200,11 +227,15 @@ class ThreeRaycaster {
 				const modelBox = this.modelBox.setFromObject(model);
 				if (draggedModelBox.intersectsBox(modelBox)) {
 					console.log("intersecting");
+					this.changeModelColor(draggedModel, "red");
 					this.isDraggedModelColliding = true;
 					return;
 				}
 			}
 		}
+
+		this.resetModelColor(draggedModel);
+		this.resetDrag;
 		this.isDraggedModelColliding = false;
 	}
 
