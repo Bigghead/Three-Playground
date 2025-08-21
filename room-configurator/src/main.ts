@@ -159,17 +159,30 @@ const bed = await loadModel(models.bed3);
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
-// scene.add(room);
+scene.add(room);
 
 scene.add(bed.scene);
-threeRaycaster.addObject(bed.scene);
+
+threeRaycaster.addDraggableModel(bed.scene);
+
+// testing adding multiple models to move around
+let bedCount = 1;
+const interval = setInterval(async () => {
+	if (bedCount >= 6) {
+		return clearInterval(interval);
+	}
+	const bed = await loadModel(models[`bed${bedCount}`]);
+	scene.add(bed.scene);
+	threeRaycaster.addDraggableModel(bed.scene);
+	bedCount++;
+}, 2000);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
 	threeRaycaster.onMouseDown(event);
 });
 
 window.addEventListener("mouseup", (event: MouseEvent) => {
-	threeRaycaster.onMouseUp(event);
+	threeRaycaster.onMouseUp();
 });
 
 window.addEventListener("mousemove", (event: MouseEvent) => {

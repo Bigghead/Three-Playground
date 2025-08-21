@@ -151,8 +151,10 @@ class ThreeRaycaster {
 
 	// no idea why i need 1 in the y-axis here, but it works
 	plane: three.Plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
+	intersectPoint: three.Vector3 = new three.Vector3();
 	threeModel: three.Group<three.Object3DEventMap> | null = null;
 	isDraggingModel: boolean = false;
+	draggableModels: Array<three.Group<three.Object3DEventMap>> = [];
 
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
@@ -172,40 +174,45 @@ class ThreeRaycaster {
 		this.controls = controls;
 	}
 
-	addObject(threeModel: three.Group<three.Object3DEventMap>) {
-		this.threeModel = threeModel;
+	addDraggableModel(threeModel: three.Group<three.Object3DEventMap>) {
+		this.draggableModels.push(threeModel);
 	}
 
-	onMouseMove(event: MouseEvent): void {
+	setRaycastingPointer(event: MouseEvent): void {
 		const { clientX, clientY } = event;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		// the freaking y has to be inverted cause the browser reads it backwards
 		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 
 		this.raycaster.setFromCamera(this.pointer, this.camera);
+	}
 
-		const intersectPoint = new three.Vector3();
+	onMouseMove(event: MouseEvent): void {
+		this.setRaycastingPointer(event);
 
-		if (this.raycaster.ray.intersectPlane(this.plane, intersectPoint)) {
+		if (this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint)) {
 			if (this.isDraggingModel && this.threeModel) {
 				this.controls.enabled = false;
-				this.threeModel.position.copy(intersectPoint);
+				this.threeModel.position.copy(this.intersectPoint);
 			}
-		} else {
-			this.resetDrag();
 		}
 	}
 
 	onMouseDown(event: MouseEvent): void {
-		this.raycaster.setFromCamera(this.pointer, this.camera);
+		this.setRaycastingPointer(event);
 
-		const intersectPoint = new three.Vector3();
-		if (this.raycaster.ray.intersectPlane(this.plane, intersectPoint)) {
-			this.isDraggingModel = true;
+		for (const model of this.draggableModels) {
+			const intersects = this.raycaster.intersectObject(model, true);
+			if (intersects.length > 0) {
+				this.threeModel = model;
+				this.isDraggingModel = true;
+				this.controls.enabled = false;
+				break;
+			}
 		}
 	}
 
-	onMouseUp(event: MouseEvent): void {
+	onMouseUp(): void {
 		this.resetDrag();
 	}
 
@@ -336,45 +343,5 @@ export class ThreeCanvas {
 		window.removeEventListener("scroll", this.handleScroll);
 		this.controls.dispose();
 		this.threeRenderer.renderer.dispose();
-	};
-
-	/**
-	 *
-	 * Convert a 2d coordinate into usable threejs world coordinates
-	 * Useful for cursor tracking
-	 * @returns threejs vector3 coordinates
-	 */
-	public getNormalizedDeviceCoords = ({
-		x,
-		y,
-		mirrored = false,
-	}: {
-		x: number;
-		y: number;
-		mirrored?: boolean;
-	}): three.Vector3 => {
-		// First step is converting the coords to range from -1 - 1 ( [-1, 1 ] )
-		// Using a flag to see if we should flip x / y ( like for webcam )
-		const flipMirrorFlag = mirrored ? -1 : 1;
-		const coordX = flipMirrorFlag * (x * 2 - 1);
-		const coordY = flipMirrorFlag * (y * 2 - 1);
-		const normalizedCoordinates = new three.Vector3(coordX, coordY, 0);
-
-		// this is the magic trick, it turns the above vector3 to a point according to where the camera sees it
-		normalizedCoordinates.unproject(this.threeCamera.camera);
-
-		// then this gives us an invisible ray ( from the camera to the normalized Vector3 )
-		// to where we want to position the object to later
-		const direction = normalizedCoordinates
-			.sub(this.threeCamera.camera.position)
-			.normalize();
-
-		const fixedDistance = 5;
-		const worldPos = this.threeCamera.camera.position
-			.clone()
-			.add(direction.multiplyScalar(fixedDistance));
-
-		// then we move the object we want to what we are tracking ( finger )
-		return worldPos;
 	};
 }
