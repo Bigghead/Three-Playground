@@ -107,7 +107,6 @@ const normalizeModelScale = (
 	const scale = targetWidth / modelSize.x;
 
 	model.scene.scale.setScalar(scale);
-	console.log(model.scene.position, room.position);
 };
 
 type OffsetKey = "position" | "rotation";
@@ -134,7 +133,6 @@ const applyModelConfigOffset = (
 const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 	try {
 		const { url, offset } = modelConfig;
-		console.log(modelConfig);
 		const model = await modelLoader.initModel(url);
 		normalizeModelScale(model);
 

@@ -148,15 +148,17 @@ class ThreeModelLoader {
 class ThreeRaycaster {
 	raycaster: three.Raycaster = new three.Raycaster();
 	pointer: three.Vector2 = new three.Vector2();
-
 	// no idea why i need 1 in the y-axis here, but it works
 	plane: three.Plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
 	intersectPoint: three.Vector3 = new three.Vector3();
+
 	threeModel: three.Group<three.Object3DEventMap> | null = null;
-	isDraggingModel: boolean = false;
 	draggableModels: Array<three.Group<three.Object3DEventMap>> = [];
+	isDraggingModel: boolean = false;
 	draggedModelBox: three.Box3 = new three.Box3();
 	modelBox: typeof this.draggedModelBox = new three.Box3();
+	isDraggedModelColliding: boolean = false;
+	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
@@ -197,11 +199,13 @@ class ThreeRaycaster {
 			if (model !== draggedModel) {
 				const modelBox = this.modelBox.setFromObject(model);
 				if (draggedModelBox.intersectsBox(modelBox)) {
-					console.log("intersected with another model");
-					console.log(draggedModel);
+					console.log("intersecting");
+					this.isDraggedModelColliding = true;
+					return;
 				}
 			}
 		}
+		this.isDraggedModelColliding = false;
 	}
 
 	onMouseMove(event: MouseEvent): void {
@@ -225,12 +229,20 @@ class ThreeRaycaster {
 				this.threeModel = model;
 				this.isDraggingModel = true;
 				this.controls.enabled = false;
+				this._originalDragModelPosition = model.position.clone();
 				break;
 			}
 		}
 	}
 
+	resetDraggedModelPosition(threeModel: typeof this.threeModel) {
+		threeModel?.position.copy(this._originalDragModelPosition!);
+	}
+
 	onMouseUp(): void {
+		if (this.isDraggedModelColliding) {
+			this.resetDraggedModelPosition(this.threeModel);
+		}
 		this.resetDrag();
 	}
 
