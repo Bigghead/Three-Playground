@@ -46,7 +46,7 @@ room.add(floor, roomWalls);
  */
 const normalizeModelScale = (
 	model: GLTF,
-	roomWidthPercentage: number = 15
+	roomWidthPercentage: number
 ): void => {
 	const roomBox = new three.Box3().setFromObject(room);
 	const roomSize = roomBox.getSize(new three.Vector3());
@@ -82,11 +82,14 @@ const applyModelConfigOffset = (
 	}
 };
 
-const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
+const loadModel = async (
+	modelConfig: ModelConfig,
+	modelScale: number = 15
+): Promise<GLTF> => {
 	try {
 		const { url, offset } = modelConfig;
 		const model = await modelLoader.initModel(url);
-		normalizeModelScale(model);
+		normalizeModelScale(model, modelScale);
 
 		if (offset) {
 			applyModelConfigOffset(model, offset);
@@ -100,20 +103,24 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 };
 
 // ----- Models ----- //
-
-// testing to see what they look like, can't load them all at once
-// for some reason, bed3 is positioned waaaaay outside the room
-
 const bed = await loadModel(models.bed3);
-// const bed = await loadModel("/models/bed/bed-2-draco.glb");
-// const bed = await loadModel("/models/bed/bed-3-draco.glb");
-// const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
 const bathroom = new three.Group();
 bathroom.add(bathroomWalls);
+bathroom.rotation.y = Math.PI / 2;
+bathroom.position.x = -1.5;
+bathroom.position.z = -0.5;
+
+const toilet = await loadModel(models.toilet, 10);
+toilet.scene.position.set(1, 0, -2.5);
+
+const shower = await loadModel(models.shower, 12.5);
+shower.scene.rotation.y = Math.PI / 2;
+shower.scene.position.set(3.5, 0, -2.5);
+
+bathroom.add(toilet.scene, shower.scene);
 
 scene.add(room, bathroom);
-bathroom.rotation.y = Math.PI / 2;
 
 scene.add(bed.scene);
 
@@ -125,7 +132,7 @@ const interval = setInterval(async () => {
 	if (bedCount > 6) {
 		return clearInterval(interval);
 	}
-	const bed = await loadModel(models[`bed${bedCount}`]);
+	const bed = await loadModel(models[`bed${bedCount}`], 22.5);
 	scene.add(bed.scene);
 	threeRaycaster.addDraggableModel(bed.scene);
 	bedCount++;

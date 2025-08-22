@@ -63,4 +63,10 @@ export const models = {
 	bunkBed: {
 		url: "/models/bed/bunk-bed-draco.glb",
 	},
+	toilet: {
+		url: "/models/bathroom/toilet-draco.glb",
+	},
+	shower: {
+		url: "/models/bathroom/shower-draco.glb",
+	},
 };

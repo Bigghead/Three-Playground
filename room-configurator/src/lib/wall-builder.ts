@@ -26,7 +26,7 @@ export class WallBuilder {
 		geometry: three.BoxGeometry;
 		mesh: three.Mesh;
 	} {
-		const wallGeo = new three.BoxGeometry(wallWidth, 3, wallDepth);
+		const wallGeo = new three.BoxGeometry(wallWidth, 2.5, wallDepth);
 		return {
 			geometry: wallGeo,
 			mesh: new three.Mesh(wallGeo, this.wallMaterial),
@@ -64,14 +64,14 @@ export class WallBuilder {
 			],
 			bathroom: [
 				{
-					x: wallOffset,
+					x: 3,
 					y: wallY,
-					z: wallOffset,
+					z: -0.5,
 				},
 				{
 					x: 0,
 					y: wallY,
-					z: 0,
+					z: -2,
 					rotationY: Math.PI / 2,
 				},
 			],
