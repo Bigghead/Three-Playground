@@ -32,7 +32,7 @@ export const models = {
 	bed3: {
 		url: "/models/bed/bed-3-draco.glb",
 		offset: {
-			position: { y: 0.01 },
+			position: { y: -0.05 },
 			rotation: {
 				y: Math.PI / 2,
 			},

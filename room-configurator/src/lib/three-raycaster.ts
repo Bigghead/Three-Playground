@@ -21,19 +21,23 @@ export class ThreeRaycaster {
 	isactiveModelColliding: boolean = false;
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
+	canvasBoundsRect: DOMRect;
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
 	controls: OrbitControls;
 
 	constructor({
+		canvas,
 		camera,
 		scene,
 		controls,
 	}: {
+		canvas: HTMLCanvasElement;
 		camera: three.PerspectiveCamera;
 		scene: three.Scene;
 		controls: OrbitControls;
 	}) {
+		this.canvasBoundsRect = canvas.getBoundingClientRect();
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
@@ -46,9 +50,14 @@ export class ThreeRaycaster {
 
 	private setRaycastingPointer(event: MouseEvent): void {
 		const { clientX, clientY } = event;
-		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
+		const { left, top, width, height } = this.canvasBoundsRect;
+
+		// if canvas is resized like we have now, the raycaster breaks
+		// cause it's using window ( event clientX/Y ) sizes to calculate
+		// need to set the sizes using the canvas bounding rect
+		this.pointer.x = ((clientX - left) / width) * 2 - 1;
 		// the freaking y has to be inverted cause the browser reads it backwards
-		this.pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+		this.pointer.y = -((clientY - top) / height) * 2 + 1;
 
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	}

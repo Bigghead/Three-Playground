@@ -13,11 +13,11 @@ type Dimensions = {
 };
 
 class Sizes {
-	width = window.innerWidth;
+	width = window.innerWidth * 0.65;
 	height = window.innerHeight;
 
 	public resize() {
-		this.width = window.innerWidth;
+		this.width = window.innerWidth * 0.65;
 		this.height = window.innerHeight;
 	}
 }
@@ -171,6 +171,7 @@ export class ThreeCanvas {
 		canvas: HTMLCanvasElement;
 		initShadow: boolean;
 	}) {
+		console.log(canvas);
 		this.sizes = new Sizes();
 		this.threeCamera = new ThreeCamera(this.sizes);
 		this.controls = new ThreeControls(this.threeCamera.camera, canvas).controls;
@@ -182,6 +183,7 @@ export class ThreeCanvas {
 		});
 		this.modelLoader = new ThreeModelLoader();
 		this.threeRaycaster = new ThreeRaycaster({
+			canvas,
 			camera: this.threeCamera.camera,
 			scene: this.scene,
 			controls: this.controls,

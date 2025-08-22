@@ -112,11 +112,11 @@ bathroom.position.x = -1.5;
 bathroom.position.z = -0.5;
 
 const toilet = await loadModel(models.toilet, 10);
-toilet.scene.position.set(1, 0, -2.5);
+toilet.scene.position.set(1, 0.01, -2.5);
 
 const shower = await loadModel(models.shower, 12.5);
 shower.scene.rotation.y = Math.PI / 2;
-shower.scene.position.set(3.5, 0, -2.5);
+shower.scene.position.set(3.5, 0.001, -2.5);
 
 bathroom.add(toilet.scene, shower.scene);
 

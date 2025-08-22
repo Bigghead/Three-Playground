@@ -21,7 +21,7 @@ export class WallBuilder {
 
 	private createWall(
 		wallWidth: number,
-		wallDepth: number = 0.3
+		wallDepth: number = 0.1
 	): {
 		geometry: three.BoxGeometry;
 		mesh: three.Mesh;
