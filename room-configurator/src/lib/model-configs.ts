@@ -1,3 +1,9 @@
+export type ModelVector3 = {
+	x: number;
+	y: number;
+	z: number;
+};
+
 export type ModelOffset = {
 	position?: {
 		x?: number;
@@ -56,5 +62,11 @@ export const models = {
 	},
 	bunkBed: {
 		url: "/models/bed/bunk-bed-draco.glb",
+	},
+	toilet: {
+		url: "/models/bathroom/toilet-draco.glb",
+	},
+	shower: {
+		url: "/models/bathroom/shower-draco.glb",
 	},
 };

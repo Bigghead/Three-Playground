@@ -4,8 +4,10 @@ import {
 	models,
 	type ModelConfig,
 	type ModelOffset,
+	type ModelVector3,
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
+import { WallBuilder } from "./lib/wall-builder";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -33,60 +35,10 @@ const {
 	parameters: { width: floorWidth },
 } = floorGeo;
 
-const wallGeo = new three.BoxGeometry(10, 3, 0.3);
-const wallMaterial = new three.MeshStandardMaterial({
-	map: textureMaps.beigeWall,
-});
+const wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
+const { roomWalls, bathroomWalls } = wallBuilder.createWalls();
 
-const wall = new three.Mesh(wallGeo, wallMaterial);
-const wallGroup = new three.Group();
-
-const getWallConfigs = (wallGeo: three.BoxGeometry) => {
-	const { height: wallheight, depth: wallDepth } = wallGeo.parameters;
-
-	const wallY = wallheight / 2 + 0.001;
-	const wallOffset = floorWidth / 2 - wallDepth / 2;
-
-	const wallConfigs = [
-		{
-			x: 0,
-			y: wallY,
-			z: -wallOffset,
-		},
-		{
-			x: -wallOffset,
-			y: wallY,
-			z: 0,
-			rotation: {
-				y: Math.PI / 2,
-			},
-		},
-		{
-			x: wallOffset,
-			y: wallY,
-			z: 0,
-			rotation: {
-				y: Math.PI / 2,
-			},
-		},
-	];
-	return wallConfigs;
-};
-
-(function createWalls(): void {
-	const wallConfigs = getWallConfigs(wallGeo);
-	wallConfigs.forEach((emptyWall) => {
-		const { x, y, z, rotation } = emptyWall;
-		const newWall = wall.clone();
-		newWall.position.set(x, y, z);
-		if (rotation) {
-			newWall.rotation.y = emptyWall.rotation.y ?? 0;
-		}
-		wallGroup.add(newWall);
-	});
-})();
-
-room.add(floor, wallGroup);
+room.add(floor, roomWalls);
 
 /**
  *
@@ -94,7 +46,7 @@ room.add(floor, wallGroup);
  */
 const normalizeModelScale = (
 	model: GLTF,
-	roomWidthPercentage: number = 15
+	roomWidthPercentage: number
 ): void => {
 	const roomBox = new three.Box3().setFromObject(room);
 	const roomSize = roomBox.getSize(new three.Vector3());
@@ -130,11 +82,14 @@ const applyModelConfigOffset = (
 	}
 };
 
-const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
+const loadModel = async (
+	modelConfig: ModelConfig,
+	modelScale: number = 15
+): Promise<GLTF> => {
 	try {
 		const { url, offset } = modelConfig;
 		const model = await modelLoader.initModel(url);
-		normalizeModelScale(model);
+		normalizeModelScale(model, modelScale);
 
 		if (offset) {
 			applyModelConfigOffset(model, offset);
@@ -148,16 +103,24 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 };
 
 // ----- Models ----- //
-
-// testing to see what they look like, can't load them all at once
-// for some reason, bed3 is positioned waaaaay outside the room
-
 const bed = await loadModel(models.bed3);
-// const bed = await loadModel("/models/bed/bed-2-draco.glb");
-// const bed = await loadModel("/models/bed/bed-3-draco.glb");
-// const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
-scene.add(room);
+const bathroom = new three.Group();
+bathroom.add(bathroomWalls);
+bathroom.rotation.y = Math.PI / 2;
+bathroom.position.x = -1.5;
+bathroom.position.z = -0.5;
+
+const toilet = await loadModel(models.toilet, 10);
+toilet.scene.position.set(1, 0, -2.5);
+
+const shower = await loadModel(models.shower, 12.5);
+shower.scene.rotation.y = Math.PI / 2;
+shower.scene.position.set(3.5, 0, -2.5);
+
+bathroom.add(toilet.scene, shower.scene);
+
+scene.add(room, bathroom);
 
 scene.add(bed.scene);
 
@@ -169,7 +132,7 @@ const interval = setInterval(async () => {
 	if (bedCount > 6) {
 		return clearInterval(interval);
 	}
-	const bed = await loadModel(models[`bed${bedCount}`]);
+	const bed = await loadModel(models[`bed${bedCount}`], 22.5);
 	scene.add(bed.scene);
 	threeRaycaster.addDraggableModel(bed.scene);
 	bedCount++;
