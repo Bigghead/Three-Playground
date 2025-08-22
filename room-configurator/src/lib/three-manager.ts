@@ -3,7 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { type GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
-import { ThreeRaycaster } from "./raycaster-manager";
+import { ThreeRaycaster } from "./three-raycaster";
 
 let { scrollY } = window;
 
