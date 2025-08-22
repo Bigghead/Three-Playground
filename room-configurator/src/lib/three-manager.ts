@@ -145,6 +145,8 @@ class ThreeModelLoader {
 	}
 }
 
+type ModelChild = three.Group<three.Object3DEventMap>;
+
 class ThreeRaycaster {
 	raycaster: three.Raycaster = new three.Raycaster();
 	pointer: three.Vector2 = new three.Vector2();
@@ -152,13 +154,13 @@ class ThreeRaycaster {
 	plane: three.Plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
 	intersectPoint: three.Vector3 = new three.Vector3();
 
-	threeModel: three.Group<three.Object3DEventMap> | null = null;
-	draggableModels: Array<three.Group<three.Object3DEventMap>> = [];
+	threeModel: ModelChild | null = null;
+	draggableModels: Array<ModelChild> = [];
 	draggableModelOriginalColors: Map<string, three.Material> = new Map();
 	isDraggingModel: boolean = false;
-	draggedModelBox: three.Box3 = new three.Box3();
-	modelBox: typeof this.draggedModelBox = new three.Box3();
-	isDraggedModelColliding: boolean = false;
+	activeModelBox: three.Box3 = new three.Box3();
+	modelBox: typeof this.activeModelBox = new three.Box3();
+	isactiveModelColliding: boolean = false;
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
 	camera: three.PerspectiveCamera;
@@ -179,12 +181,12 @@ class ThreeRaycaster {
 		this.controls = controls;
 	}
 
-	addDraggableModel(threeModel: three.Group<three.Object3DEventMap>) {
+	addDraggableModel(threeModel: ModelChild) {
 		this.draggableModels.push(threeModel);
 		console.log(this.draggableModels);
 	}
 
-	setRaycastingPointer(event: MouseEvent): void {
+	private setRaycastingPointer(event: MouseEvent): void {
 		const { clientX, clientY } = event;
 		this.pointer.x = (clientX / window.innerWidth) * 2 - 1;
 		// the freaking y has to be inverted cause the browser reads it backwards
@@ -193,62 +195,73 @@ class ThreeRaycaster {
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	}
 
-	changeModelColor(draggedModel: typeof this.threeModel, color: string) {
-		draggedModel?.traverse((child) => {
+	private traverseModelChildren(
+		activeModel: typeof this.threeModel,
+		callbackFunc: (child: three.Mesh) => void
+	): void {
+		activeModel?.traverse((child) => {
 			if (!(child instanceof three.Mesh)) return;
+			callbackFunc(child);
+		});
+	}
+
+	changeModelColor(activeModel: typeof this.threeModel, color: string) {
+		this.traverseModelChildren(activeModel, (child) => {
+			// I effing hate typescript with three.js
+			// this material prop can be singular ORRRRRR an array
+			if (Array.isArray(child.material)) return;
 
 			if (!this.draggableModelOriginalColors.has(child.uuid)) {
 				this.draggableModelOriginalColors.set(child.uuid, child.material);
 			}
 
 			const newMat = child.material.clone();
-			newMat.color.set(color);
+			(newMat as three.MeshStandardMaterial).color.set(color);
 			child.material = newMat;
 		});
 	}
 
-	resetModelColor(draggedModel: typeof this.threeModel) {
-		draggedModel?.traverse((child) => {
+	resetModelColor(activeModel: typeof this.threeModel) {
+		this.traverseModelChildren(activeModel, (child) => {
 			const originalModelMaterial = this.draggableModelOriginalColors.get(
 				child.uuid
 			);
-			if (child instanceof three.Mesh && originalModelMaterial) {
+			if (originalModelMaterial) {
 				child.material = originalModelMaterial;
 			}
 		});
 	}
 
-	checkModelCollision(draggedModel: typeof this.threeModel): void {
-		if (!draggedModel) return;
-		const draggedModelBox = this.draggedModelBox.setFromObject(draggedModel);
+	checkModelCollision(activeModel: typeof this.threeModel): void {
+		if (!activeModel) return;
+		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
 
 		for (const model of this.draggableModels) {
-			if (model !== draggedModel) {
+			if (model !== activeModel) {
 				const modelBox = this.modelBox.setFromObject(model);
-				if (draggedModelBox.intersectsBox(modelBox)) {
+				if (activeModelBox.intersectsBox(modelBox)) {
 					console.log("intersecting");
-					this.changeModelColor(draggedModel, "red");
-					this.isDraggedModelColliding = true;
+					this.changeModelColor(activeModel, "red");
+					this.isactiveModelColliding = true;
 					return;
 				}
 			}
 		}
 
-		this.resetModelColor(draggedModel);
+		this.resetModelColor(activeModel);
 		this.resetDrag;
-		this.isDraggedModelColliding = false;
+		this.isactiveModelColliding = false;
 	}
 
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
+		if (!this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint))
+			return;
+		if (!this.isDraggingModel || !this.threeModel) return;
 
-		if (this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint)) {
-			if (this.isDraggingModel && this.threeModel) {
-				this.controls.enabled = false;
-				this.checkModelCollision(this.threeModel);
-				this.threeModel.position.copy(this.intersectPoint);
-			}
-		}
+		this.controls.enabled = false;
+		this.checkModelCollision(this.threeModel);
+		this.threeModel!.position.copy(this.intersectPoint);
 	}
 
 	onMouseDown(event: MouseEvent): void {
@@ -266,13 +279,13 @@ class ThreeRaycaster {
 		}
 	}
 
-	resetDraggedModelPosition(threeModel: typeof this.threeModel) {
+	resetactiveModelPosition(threeModel: typeof this.threeModel) {
 		threeModel?.position.copy(this._originalDragModelPosition!);
 	}
 
 	onMouseUp(): void {
-		if (this.isDraggedModelColliding) {
-			this.resetDraggedModelPosition(this.threeModel);
+		if (this.isactiveModelColliding) {
+			this.resetactiveModelPosition(this.threeModel);
 		}
 		this.resetDrag();
 	}
