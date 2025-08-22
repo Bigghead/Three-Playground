@@ -37,10 +37,10 @@ export class WallBuilder {
 		wallGeo: three.BoxGeometry,
 		wallGroupType: "room" | "bathroom" = "room"
 	) {
-		const { height: wallheight, depth: wallDepth } = wallGeo.parameters;
+		const { height, width, depth } = wallGeo.parameters;
 
-		const wallY = wallheight / 2 + 0.001;
-		const wallOffset = this.floorWidth / 2 - wallDepth / 2;
+		const wallY = height / 2 + 0.001;
+		const wallOffset = width / 2 - depth / 2; //edge of room
 
 		const wallConfigs = {
 			room: [
@@ -64,9 +64,15 @@ export class WallBuilder {
 			],
 			bathroom: [
 				{
+					x: wallOffset,
+					y: wallY,
+					z: wallOffset,
+				},
+				{
 					x: 0,
 					y: wallY,
-					z: -1,
+					z: 0,
+					rotationY: Math.PI / 2,
 				},
 			],
 		};
