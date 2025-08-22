@@ -166,7 +166,7 @@ threeRaycaster.addDraggableModel(bed.scene);
 // testing adding multiple models to move around
 let bedCount = 1;
 const interval = setInterval(async () => {
-	if (bedCount >= 6) {
+	if (bedCount > 6) {
 		return clearInterval(interval);
 	}
 	const bed = await loadModel(models[`bed${bedCount}`]);
@@ -176,10 +176,12 @@ const interval = setInterval(async () => {
 }, 2000);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
+	if (event.button !== 0) return;
 	threeRaycaster.onMouseDown(event);
 });
 
 window.addEventListener("mouseup", (event: MouseEvent) => {
+	if (event.button !== 0) return;
 	threeRaycaster.onMouseUp();
 });
 
