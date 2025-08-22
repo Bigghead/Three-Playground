@@ -12,10 +12,11 @@ if (!canvas) {
 	console.error("Canvas element with class 'webgl' not found.");
 }
 
-const { textureMaps, scene, modelLoader } = new ThreeCanvas({
-	canvas,
-	initShadow: false,
-});
+const { textureMaps, scene, modelLoader, threeRaycaster, threeCamera } =
+	new ThreeCanvas({
+		canvas,
+		initShadow: false,
+	});
 
 const room = new three.Group();
 
@@ -106,7 +107,6 @@ const normalizeModelScale = (
 	const scale = targetWidth / modelSize.x;
 
 	model.scene.scale.setScalar(scale);
-	console.log(model.scene.position, room.position);
 };
 
 type OffsetKey = "position" | "rotation";
@@ -133,7 +133,6 @@ const applyModelConfigOffset = (
 const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 	try {
 		const { url, offset } = modelConfig;
-		console.log(modelConfig);
 		const model = await modelLoader.initModel(url);
 		normalizeModelScale(model);
 
@@ -153,10 +152,39 @@ const loadModel = async (modelConfig: ModelConfig): Promise<GLTF> => {
 // testing to see what they look like, can't load them all at once
 // for some reason, bed3 is positioned waaaaay outside the room
 
-const bed = await loadModel(models.bunkBed);
+const bed = await loadModel(models.bed3);
 // const bed = await loadModel("/models/bed/bed-2-draco.glb");
 // const bed = await loadModel("/models/bed/bed-3-draco.glb");
 // const bed = await loadModel("/models/bed/bunk-bed-draco.glb");
 
 scene.add(room);
+
 scene.add(bed.scene);
+
+threeRaycaster.addDraggableModel(bed.scene);
+
+// testing adding multiple models to move around
+let bedCount = 1;
+const interval = setInterval(async () => {
+	if (bedCount > 6) {
+		return clearInterval(interval);
+	}
+	const bed = await loadModel(models[`bed${bedCount}`]);
+	scene.add(bed.scene);
+	threeRaycaster.addDraggableModel(bed.scene);
+	bedCount++;
+}, 2000);
+
+window.addEventListener("mousedown", (event: MouseEvent) => {
+	if (event.button !== 0) return;
+	threeRaycaster.onMouseDown(event);
+});
+
+window.addEventListener("mouseup", (event: MouseEvent) => {
+	if (event.button !== 0) return;
+	threeRaycaster.onMouseUp();
+});
+
+window.addEventListener("mousemove", (event: MouseEvent) => {
+	threeRaycaster.onMouseMove(event);
+});
