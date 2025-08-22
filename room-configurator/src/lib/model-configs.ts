@@ -1,3 +1,9 @@
+export type ModelVector3 = {
+	x: number;
+	y: number;
+	z: number;
+};
+
 export type ModelOffset = {
 	position?: {
 		x?: number;

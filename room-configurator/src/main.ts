@@ -4,6 +4,7 @@ import {
 	models,
 	type ModelConfig,
 	type ModelOffset,
+	type ModelVector3,
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 
@@ -33,60 +34,108 @@ const {
 	parameters: { width: floorWidth },
 } = floorGeo;
 
-const wallGeo = new three.BoxGeometry(10, 3, 0.3);
 const wallMaterial = new three.MeshStandardMaterial({
 	map: textureMaps.beigeWall,
 });
 
-const wall = new three.Mesh(wallGeo, wallMaterial);
-const wallGroup = new three.Group();
+const createWall = (
+	wallWidth: number
+): { geometry: three.BoxGeometry; mesh: three.Mesh } => {
+	const wallGeo = new three.BoxGeometry(wallWidth, 3, 0.3);
+	return {
+		geometry: wallGeo,
+		mesh: new three.Mesh(wallGeo, wallMaterial),
+	};
+};
 
-const getWallConfigs = (wallGeo: three.BoxGeometry) => {
+// walls are only rotated on y axis, unless you're a weirdo and want to flip on z
+type WallConfigType = Array<
+	ModelVector3 & {
+		rotationY?: number;
+	}
+>;
+
+const getWallConfigs = (
+	wallGeo: three.BoxGeometry,
+	wallGroupType: "room" | "bathroom" = "room"
+) => {
 	const { height: wallheight, depth: wallDepth } = wallGeo.parameters;
 
 	const wallY = wallheight / 2 + 0.001;
 	const wallOffset = floorWidth / 2 - wallDepth / 2;
 
-	const wallConfigs = [
-		{
-			x: 0,
-			y: wallY,
-			z: -wallOffset,
-		},
-		{
-			x: -wallOffset,
-			y: wallY,
-			z: 0,
-			rotation: {
-				y: Math.PI / 2,
+	const wallConfigs = {
+		room: [
+			{
+				x: 0,
+				y: wallY,
+				z: -wallOffset,
 			},
-		},
-		{
-			x: wallOffset,
-			y: wallY,
-			z: 0,
-			rotation: {
-				y: Math.PI / 2,
+			{
+				x: -wallOffset,
+				y: wallY,
+				z: 0,
+				rotationY: Math.PI / 2,
 			},
-		},
-	];
-	return wallConfigs;
+			{
+				x: wallOffset,
+				y: wallY,
+				z: 0,
+				rotationY: Math.PI / 2,
+			},
+		],
+		bathroom: [
+			{
+				x: 0,
+				y: wallY,
+				z: -1,
+			},
+		],
+	};
+	return wallConfigs[wallGroupType];
 };
 
-(function createWalls(): void {
-	const wallConfigs = getWallConfigs(wallGeo);
-	wallConfigs.forEach((emptyWall) => {
-		const { x, y, z, rotation } = emptyWall;
-		const newWall = wall.clone();
+const buildWalls = (
+	wallConfigs: WallConfigType,
+	sceneGroup: three.Group,
+	wallMesh: three.Mesh
+): three.Group => {
+	wallConfigs.forEach((config) => {
+		const { x, y, z, rotationY = 0 } = config;
+		const newWall = wallMesh.clone();
 		newWall.position.set(x, y, z);
-		if (rotation) {
-			newWall.rotation.y = emptyWall.rotation.y ?? 0;
-		}
-		wallGroup.add(newWall);
-	});
-})();
+		newWall.rotation.y = rotationY;
 
-room.add(floor, wallGroup);
+		sceneGroup.add(newWall);
+	});
+	return sceneGroup;
+};
+
+const createWalls = (): {
+	roomWalls: three.Group;
+	bathroomWalls: three.Group;
+} => {
+	const roomWallGroup = new three.Group();
+	const bathroomWallGroup = new three.Group();
+
+	const { geometry: roomWallGeo, mesh: roomWallMesh } = createWall(10);
+	const roomWallConfigs = getWallConfigs(roomWallGeo, "room");
+	const roomWalls = buildWalls(roomWallConfigs, roomWallGroup, roomWallMesh);
+
+	const { geometry: bathroomWallGeo, mesh: bathroomWallMesh } = createWall(3);
+
+	const bathroomWallConfigs = getWallConfigs(bathroomWallGeo, "bathroom");
+	const bathroomWalls = buildWalls(
+		bathroomWallConfigs,
+		bathroomWallGroup,
+		bathroomWallMesh
+	);
+
+	return { roomWalls, bathroomWalls };
+};
+const { roomWalls, bathroomWalls } = createWalls();
+
+room.add(floor, roomWalls, bathroomWalls);
 
 /**
  *
