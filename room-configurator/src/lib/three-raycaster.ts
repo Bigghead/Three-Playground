@@ -16,6 +16,7 @@ export class ThreeRaycaster {
 	isDraggingModel: boolean = false;
 
 	// for checking if an active dragged model is colliding with others
+	roomBoundingBox: three.Box3 = new three.Box3();
 	activeModelBox: three.Box3 = new three.Box3();
 	modelBox: typeof this.activeModelBox = new three.Box3();
 	isactiveModelColliding: boolean = false;
@@ -41,6 +42,14 @@ export class ThreeRaycaster {
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
+	}
+
+	setRoomBoundingBox(roomSize: three.Vector3): void {
+		const { x, y, z } = roomSize;
+		this.roomBoundingBox.set(
+			new three.Vector3(-x / 2 + 0.1, 0, -z / 2 + 0.1),
+			new three.Vector3(x / 2 - 0.1, y, z / 2 - 0.1)
+		);
 	}
 
 	addDraggableModel(activeModel: ModelChild) {
@@ -99,9 +108,25 @@ export class ThreeRaycaster {
 		});
 	}
 
-	checkModelCollision(activeModel: typeof this.activeModel): boolean {
+	checkRoomBounds(activeModelBox: three.Box3): boolean {
+		const { min, max } = this.roomBoundingBox;
+
+		console.log(activeModelBox.min, min);
+		// console.log(activeModelBox.max, max);
+
+		return (
+			activeModelBox.min.x <= min.x ||
+			activeModelBox.max.x >= max.x ||
+			activeModelBox.min.z <= min.z ||
+			activeModelBox.max.z >= max.z
+		);
+	}
+
+	checkModelCollision(
+		activeModel: typeof this.activeModel,
+		activeModelBox: three.Box3
+	): boolean {
 		if (!activeModel) return false;
-		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
 
 		for (const model of this.draggableModels) {
 			if (model !== activeModel) {
@@ -132,12 +157,21 @@ export class ThreeRaycaster {
 
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
+
 		if (!this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint))
 			return;
 		if (!this.isDraggingModel || !this.activeModel) return;
 
+		const activeModelBox = this.activeModelBox.setFromObject(this.activeModel);
+
+		const isOutsideRoomBounds = this.checkRoomBounds(activeModelBox);
+		if (isOutsideRoomBounds) return;
+
 		this.controls.enabled = false;
-		const isColliding = this.checkModelCollision(this.activeModel);
+		const isColliding = this.checkModelCollision(
+			this.activeModel,
+			activeModelBox
+		);
 		this.handleCollidingModel(this.activeModel, isColliding);
 		this.activeModel!.position.copy(this.intersectPoint);
 	}
