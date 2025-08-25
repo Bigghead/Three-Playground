@@ -112,31 +112,25 @@ bathroom.position.x = -1.5;
 bathroom.position.z = -0.5;
 
 const toilet = await loadModel(models.toilet, 10);
-toilet.scene.position.set(1, 0.01, -2.5);
+toilet.scene.rotation.y = -Math.PI / 2;
+toilet.scene.position.set(3.75, 0.01, -1.2);
 
 const shower = await loadModel(models.shower, 12.5);
 shower.scene.rotation.y = Math.PI / 2;
-shower.scene.position.set(3.5, 0.001, -2.5);
+shower.scene.position.set(3.8, 0.001, -2.725);
 
-bathroom.add(toilet.scene, shower.scene);
+const sink = await loadModel(models.sink, 10);
+
+sink.scene.rotation.y = -Math.PI / 2;
+
+sink.scene.position.set(1, 1.2, -3);
+bathroom.add(toilet.scene, shower.scene, sink.scene);
 
 scene.add(room, bathroom);
 
 scene.add(bed.scene);
 
 threeRaycaster.addDraggableModel(bed.scene);
-
-// testing adding multiple models to move around
-let bedCount = 1;
-const interval = setInterval(async () => {
-	if (bedCount > 6) {
-		return clearInterval(interval);
-	}
-	const bed = await loadModel(models[`bed${bedCount}`], 22.5);
-	scene.add(bed.scene);
-	threeRaycaster.addDraggableModel(bed.scene);
-	bedCount++;
-}, 2000);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
 	if (event.button !== 0) return;
@@ -151,3 +145,12 @@ window.addEventListener("mouseup", (event: MouseEvent) => {
 window.addEventListener("mousemove", (event: MouseEvent) => {
 	threeRaycaster.onMouseMove(event);
 });
+
+export const renderModel = async (
+	modelName: keyof typeof models
+): Promise<void> => {
+	console.log(modelName);
+	const model = await loadModel(models[modelName], 22.5);
+	scene.add(model.scene);
+	threeRaycaster.addDraggableModel(model.scene);
+};

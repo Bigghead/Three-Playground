@@ -69,4 +69,7 @@ export const models = {
 	shower: {
 		url: "/models/bathroom/shower-draco.glb",
 	},
+	sink: {
+		url: "/models/bathroom/sink-draco.glb",
+	},
 };

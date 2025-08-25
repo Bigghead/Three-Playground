@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+	const { renderModel } = await import("./canvas");
+
 	let activeMenu = "home";
 
 	/**
@@ -41,4 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 	});
+
+	// testing adding multiple models from configurator
+	let bedCount = 1;
+	const interval = setInterval(async () => {
+		if (bedCount > 6) {
+			return clearInterval(interval);
+		}
+		await renderModel(`bed${bedCount}`);
+		bedCount++;
+	}, 2000);
 });
