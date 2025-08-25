@@ -171,7 +171,6 @@ export class ThreeCanvas {
 		canvas: HTMLCanvasElement;
 		initShadow: boolean;
 	}) {
-		console.log(canvas);
 		this.sizes = new Sizes();
 		this.threeCamera = new ThreeCamera(this.sizes);
 		this.controls = new ThreeControls(this.threeCamera.camera, canvas).controls;

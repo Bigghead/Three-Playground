@@ -45,7 +45,6 @@ export class ThreeRaycaster {
 
 	addDraggableModel(activeModel: ModelChild) {
 		this.draggableModels.push(activeModel);
-		console.log(this.draggableModels);
 	}
 
 	private setRaycastingPointer(event: MouseEvent): void {
