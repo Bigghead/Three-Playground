@@ -1,17 +1,48 @@
 * {
-    margin: 0;
-    padding: 0;
-  }
-  
-  html,
-  body {
-    overflow: hidden;
-  }
-  
-  .webgl {
-    position: fixed;
-    top: 0;
-    left: 0;
-    outline: none;
-  }
-  
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	overflow: hidden;
+}
+
+.main {
+	width: 100%;
+	height: 100%;
+}
+.webgl {
+	position: fixed;
+	top: 0;
+	left: 0;
+	outline: none;
+}
+
+.configurator {
+	width: 35vw;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	right: 0;
+}
+
+.configurator-sidebar {
+	padding: 1rem;
+	width: 30%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+.configurator-sidebar > .menu {
+	padding: 1rem;
+	cursor: pointer;
+	border-radius: 8px;
+}
+
+.configurator-sidebar > .menu.active {
+	background-color: skyblue;
+	color: #fff;
+}
