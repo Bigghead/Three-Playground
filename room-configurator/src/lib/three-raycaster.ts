@@ -71,11 +71,13 @@ class DragManager {
 	}
 
 	updatePosition(position: three.Vector3) {
+		console.log("dragged");
 		if (!this._isDraggingModel || !this.activeModel) return;
 		this.activeModel?.position.copy(position);
 	}
 
 	endDrag() {
+		console.log("stop drag");
 		this._isDraggingModel = false;
 		this._controls.enabled = true;
 	}
@@ -86,15 +88,54 @@ class DragManager {
 	}
 }
 
-class CollisionManager {}
+class CollisionManager {
+	private _raycaster = new three.Raycaster();
+	private _pointer = new three.Vector2();
+	// no idea why i need 1 in the y-axis here, but it works
+	private _plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
+	private _intersectPoint = new three.Vector3();
+
+	private _canvasBoundsRect: DOMRect;
+	private _camera: three.PerspectiveCamera;
+
+	constructor(canvas: HTMLCanvasElement, camera: three.PerspectiveCamera) {
+		this._canvasBoundsRect = canvas.getBoundingClientRect();
+		this._camera = camera;
+	}
+
+	get raycaster() {
+		return this._raycaster;
+	}
+
+	get intersectPoint() {
+		return this._intersectPoint;
+	}
+
+	setRaycastingPointer(event: MouseEvent): void {
+		const { clientX, clientY } = event;
+		const { left, top, width, height } = this._canvasBoundsRect;
+
+		// if canvas is resized like we have now, the raycaster breaks
+		// cause it's using window ( event clientX/Y ) sizes to calculate
+		// need to set the sizes using the canvas bounding rect
+		this._pointer.x = ((clientX - left) / width) * 2 - 1;
+		// the freaking y has to be inverted cause the browser reads it backwards
+		this._pointer.y = -((clientY - top) / height) * 2 + 1;
+
+		this._raycaster.setFromCamera(this._pointer, this._camera);
+	}
+
+	checkIntersectPlane(): three.Vector3 | null {
+		// this checks if a ray is intersecting our plane
+		// and sets / updates intersectPoint
+		return this._raycaster.ray.intersectPlane(
+			this._plane,
+			this._intersectPoint
+		);
+	}
+}
 
 export class ThreeRaycaster {
-	private raycaster = new three.Raycaster();
-	private pointer = new three.Vector2();
-	// no idea why i need 1 in the y-axis here, but it works
-	private plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
-	private intersectPoint = new three.Vector3();
-
 	private draggableModelOriginalColors: Map<string, three.Material> = new Map();
 
 	// for checking if an active dragged model is colliding with others
@@ -104,12 +145,12 @@ export class ThreeRaycaster {
 	private isactiveModelColliding = false;
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
-	canvasBoundsRect: DOMRect;
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
 	controls: OrbitControls;
 
 	dragManager: DragManager;
+	collisionManager: CollisionManager;
 
 	constructor({
 		canvas,
@@ -122,11 +163,11 @@ export class ThreeRaycaster {
 		scene: three.Scene;
 		controls: OrbitControls;
 	}) {
-		this.canvasBoundsRect = canvas.getBoundingClientRect();
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
 		this.dragManager = new DragManager(this.controls);
+		this.collisionManager = new CollisionManager(canvas, camera);
 	}
 
 	setRoomBoundingBox(roomSize: three.Vector3): void {
@@ -139,20 +180,6 @@ export class ThreeRaycaster {
 
 	addDraggableModel(activeModel: ModelChild) {
 		this.dragManager.addDraggableModel(activeModel);
-	}
-
-	private setRaycastingPointer(event: MouseEvent): void {
-		const { clientX, clientY } = event;
-		const { left, top, width, height } = this.canvasBoundsRect;
-
-		// if canvas is resized like we have now, the raycaster breaks
-		// cause it's using window ( event clientX/Y ) sizes to calculate
-		// need to set the sizes using the canvas bounding rect
-		this.pointer.x = ((clientX - left) / width) * 2 - 1;
-		// the freaking y has to be inverted cause the browser reads it backwards
-		this.pointer.y = -((clientY - top) / height) * 2 + 1;
-
-		this.raycaster.setFromCamera(this.pointer, this.camera);
 	}
 
 	/**
@@ -230,29 +257,27 @@ export class ThreeRaycaster {
 	// 	});
 	// }
 
-	private resetModelColor(activeModel: typeof this.activeModel) {
-		this.traverseModelChildren(activeModel, (child) => {
-			const originalModelMaterial = this.draggableModelOriginalColors.get(
-				child.uuid
-			);
-			if (originalModelMaterial) {
-				child.material = originalModelMaterial;
-			}
-		});
-	}
+	// private resetModelColor(activeModel: typeof this.activeModel) {
+	// 	this.traverseModelChildren(activeModel, (child) => {
+	// 		const originalModelMaterial = this.draggableModelOriginalColors.get(
+	// 			child.uuid
+	// 		);
+	// 		if (originalModelMaterial) {
+	// 			child.material = originalModelMaterial;
+	// 		}
+	// 	});
+	// }
 
 	onMouseMove(event: MouseEvent): void {
-		this.setRaycastingPointer(event);
-
 		const activeModel = this.dragManager.activeModel;
 		const isDragging = this.dragManager.isDraggingModel;
 
-		// this sets / updates intersectPoint
-		if (!this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint))
-			return;
-		if (!activeModel || !isDragging) return;
+		this.collisionManager.setRaycastingPointer(event);
+		const isIntersecting = this.collisionManager.checkIntersectPlane();
 
-		this.dragManager.updatePosition(this.intersectPoint);
+		if (!activeModel || !isDragging || !isIntersecting) return;
+
+		this.dragManager.updatePosition(this.collisionManager.intersectPoint);
 		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
 
 		this.checkRoomBounds(activeModelBox);
@@ -262,10 +287,13 @@ export class ThreeRaycaster {
 	}
 
 	onMouseDown(event: MouseEvent): void {
-		this.setRaycastingPointer(event);
+		this.collisionManager.setRaycastingPointer(event);
 		const models = this.dragManager.getDraggableModels();
 		for (const model of models) {
-			const intersects = this.raycaster.intersectObject(model, true);
+			const intersects = this.collisionManager.raycaster.intersectObject(
+				model,
+				true
+			);
 			if (intersects.length > 0) {
 				this.dragManager.setModelActive(model);
 				this._originalDragModelPosition = model.position.clone();
