@@ -1,7 +1,54 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { NumberController } from "three/examples/jsm/libs/lil-gui.module.min.js";
 
 type ModelChild = three.Group<three.Object3DEventMap>;
+
+class ModelManager {
+	private _activeModel: ModelChild | null = null;
+	private _draggableModels: Array<ModelChild> = [];
+	private _isDraggingModel = false;
+	private _controls: OrbitControls;
+
+	constructor(controls: OrbitControls) {
+		this._controls = controls;
+	}
+
+	addDraggableModel(activeModel: ModelChild) {
+		this._draggableModels.push(activeModel);
+	}
+
+	getDraggableModels(): Array<ModelChild> {
+		return [...this._draggableModels];
+	}
+
+	set activeModel(activeModel: ModelChild) {
+		this._activeModel = activeModel;
+	}
+
+	get activeModel(): ModelChild | null {
+		return this._activeModel;
+	}
+
+	startDrag(activeModel: ModelChild) {
+		this.activeModel = activeModel;
+		this._isDraggingModel = true;
+		this._controls.enabled = false;
+	}
+
+	updatePosition(position: three.Vector3) {
+		console.log("dragging");
+
+		if (!this._isDraggingModel || !this.activeModel) return;
+
+		this.activeModel?.position.copy(position);
+	}
+
+	endDrag() {
+		this._isDraggingModel = false;
+		this._controls.enabled = true;
+	}
+}
 
 export class ThreeRaycaster {
 	private raycaster = new three.Raycaster();
@@ -11,7 +58,7 @@ export class ThreeRaycaster {
 	private intersectPoint = new three.Vector3();
 
 	private activeModel: ModelChild | null = null;
-	private draggableModels: Array<ModelChild> = [];
+
 	private draggableModelOriginalColors: Map<string, three.Material> = new Map();
 	private isDraggingModel = false;
 
@@ -20,13 +67,14 @@ export class ThreeRaycaster {
 	private activeModelBox = new three.Box3();
 	private modelBox: typeof this.activeModelBox = new three.Box3();
 	private isactiveModelColliding = false;
-	private tempVector = new three.Vector3();
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
 	canvasBoundsRect: DOMRect;
 	camera: three.PerspectiveCamera;
 	scene: three.Scene;
 	controls: OrbitControls;
+
+	modelManager: ModelManager;
 
 	constructor({
 		canvas,
@@ -43,6 +91,7 @@ export class ThreeRaycaster {
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
+		this.modelManager = new ModelManager(this.controls);
 	}
 
 	setRoomBoundingBox(roomSize: three.Vector3): void {
@@ -54,7 +103,7 @@ export class ThreeRaycaster {
 	}
 
 	addDraggableModel(activeModel: ModelChild) {
-		this.draggableModels.push(activeModel);
+		this.modelManager.addDraggableModel(activeModel);
 	}
 
 	private setRaycastingPointer(event: MouseEvent): void {
@@ -95,6 +144,12 @@ export class ThreeRaycaster {
 			position.x += min.x - activeModelBox.min.x;
 		if (activeModelBox.max.x > max.x)
 			position.x -= activeModelBox.max.x - max.x;
+
+		// Z
+		if (activeModelBox.min.z < min.z)
+			position.z += min.z - activeModelBox.min.z;
+		if (activeModelBox.max.z > max.z)
+			position.z -= activeModelBox.max.z - max.z;
 	}
 
 	private checkModelCollision(
@@ -102,8 +157,8 @@ export class ThreeRaycaster {
 		activeModelBox: three.Box3
 	): boolean {
 		if (!activeModel) return false;
-
-		for (const model of this.draggableModels) {
+		const models = this.modelManager.getDraggableModels();
+		for (const model of models) {
 			if (model !== activeModel) {
 				const modelBox = this.modelBox.setFromObject(model);
 				if (activeModelBox.intersectsBox(modelBox)) {
@@ -125,7 +180,7 @@ export class ThreeRaycaster {
 			this.isactiveModelColliding = true;
 		} else {
 			this.resetModelColor(activeModel);
-			this.resetDrag;
+			this.modelManager.endDrag();
 			this.isactiveModelColliding = false;
 		}
 	}
@@ -164,31 +219,29 @@ export class ThreeRaycaster {
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
 
+		const activeModel = this.modelManager.activeModel;
+
+		// this sets / updates intersectPoint
 		if (!this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint))
 			return;
-		if (!this.isDraggingModel || !this.activeModel) return;
+		if (!activeModel) return;
 
-		const activeModelBox = this.activeModelBox.setFromObject(this.activeModel);
-		this.activeModel!.position.copy(this.intersectPoint);
+		this.modelManager.updatePosition(this.intersectPoint);
+		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
 
 		this.checkRoomBounds(activeModelBox);
 
-		this.controls.enabled = false;
-		const isColliding = this.checkModelCollision(
-			this.activeModel,
-			activeModelBox
-		);
-		this.handleCollidingModel(this.activeModel, isColliding);
+		const isColliding = this.checkModelCollision(activeModel, activeModelBox);
+		this.handleCollidingModel(activeModel, isColliding);
 	}
 
 	onMouseDown(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
-
-		for (const model of this.draggableModels) {
+		const models = this.modelManager.getDraggableModels();
+		for (const model of models) {
 			const intersects = this.raycaster.intersectObject(model, true);
 			if (intersects.length > 0) {
-				this.activeModel = model;
-				this.isDraggingModel = true;
+				this.modelManager.startDrag(model);
 				this.controls.enabled = false;
 				this._originalDragModelPosition = model.position.clone();
 				break;
@@ -202,14 +255,9 @@ export class ThreeRaycaster {
 	}
 
 	onMouseUp(): void {
-		if (this.isactiveModelColliding) {
-			this.resetactiveModelPosition(this.activeModel);
-		}
-		this.resetDrag();
-	}
-
-	private resetDrag(): void {
-		this.controls.enabled = true;
-		this.isDraggingModel = false;
+		// if (this.isactiveModelColliding) {
+		// 	this.resetactiveModelPosition(this.activeModel);
+		// }
+		this.modelManager.endDrag();
 	}
 }

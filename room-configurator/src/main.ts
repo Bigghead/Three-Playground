@@ -44,13 +44,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 		});
 	});
 
-	// testing adding multiple models from configurator
-	let bedCount = 1;
-	const interval = setInterval(async () => {
-		if (bedCount > 6) {
-			return clearInterval(interval);
-		}
-		await renderModel(`bed${bedCount}`);
-		bedCount++;
-	}, 2000);
+	// // testing adding multiple models from configurator
+	// let bedCount = 1;
+	// const interval = setInterval(async () => {
+	// 	if (bedCount > 6) {
+	// 		return clearInterval(interval);
+	// 	}
+	// 	await renderModel(`bed${bedCount}`);
+	// 	bedCount++;
+	// }, 2000);
 });
