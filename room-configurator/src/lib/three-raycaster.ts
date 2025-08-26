@@ -4,22 +4,23 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 type ModelChild = three.Group<three.Object3DEventMap>;
 
 export class ThreeRaycaster {
-	raycaster: three.Raycaster = new three.Raycaster();
-	pointer: three.Vector2 = new three.Vector2();
+	private raycaster = new three.Raycaster();
+	private pointer = new three.Vector2();
 	// no idea why i need 1 in the y-axis here, but it works
-	plane: three.Plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
-	intersectPoint: three.Vector3 = new three.Vector3();
+	private plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
+	private intersectPoint = new three.Vector3();
 
-	activeModel: ModelChild | null = null;
-	draggableModels: Array<ModelChild> = [];
-	draggableModelOriginalColors: Map<string, three.Material> = new Map();
-	isDraggingModel: boolean = false;
+	private activeModel: ModelChild | null = null;
+	private draggableModels: Array<ModelChild> = [];
+	private draggableModelOriginalColors: Map<string, three.Material> = new Map();
+	private isDraggingModel = false;
 
 	// for checking if an active dragged model is colliding with others
-	roomBoundingBox: three.Box3 = new three.Box3();
-	activeModelBox: three.Box3 = new three.Box3();
-	modelBox: typeof this.activeModelBox = new three.Box3();
-	isactiveModelColliding: boolean = false;
+	private roomBoundingBox = new three.Box3();
+	private activeModelBox = new three.Box3();
+	private modelBox: typeof this.activeModelBox = new three.Box3();
+	private isactiveModelColliding = false;
+	private tempVector = new three.Vector3();
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
 	canvasBoundsRect: DOMRect;
@@ -80,49 +81,23 @@ export class ThreeRaycaster {
 		});
 	}
 
-	changeModelColor(activeModel: typeof this.activeModel, color: string) {
-		this.traverseModelChildren(activeModel, (child) => {
-			// I effing hate typescript with three.js
-			// this material prop can be singular ORRRRRR an array
-			// need to check for either for the error to go away
-			if (Array.isArray(child.material)) return;
-
-			if (!this.draggableModelOriginalColors.has(child.uuid)) {
-				this.draggableModelOriginalColors.set(child.uuid, child.material);
-			}
-
-			const newMat = child.material.clone();
-			(newMat as three.MeshStandardMaterial).color.set(color);
-			child.material = newMat;
-		});
-	}
-
-	resetModelColor(activeModel: typeof this.activeModel) {
-		this.traverseModelChildren(activeModel, (child) => {
-			const originalModelMaterial = this.draggableModelOriginalColors.get(
-				child.uuid
-			);
-			if (originalModelMaterial) {
-				child.material = originalModelMaterial;
-			}
-		});
-	}
-
-	checkRoomBounds(activeModelBox: three.Box3): boolean {
+	/**
+	 * Use room min/max coordinates to check if dragged object is hitting edges
+	 * Clamp / stop the drag by backing off dragged model slightly
+	 */
+	private checkRoomBounds(activeModelBox: three.Box3) {
+		if (!this.activeModel) return;
 		const { min, max } = this.roomBoundingBox;
+		const { position } = this.activeModel;
 
-		console.log(activeModelBox.min, min);
-		// console.log(activeModelBox.max, max);
-
-		return (
-			activeModelBox.min.x <= min.x ||
-			activeModelBox.max.x >= max.x ||
-			activeModelBox.min.z <= min.z ||
-			activeModelBox.max.z >= max.z
-		);
+		// X axis
+		if (activeModelBox.min.x < min.x)
+			position.x += min.x - activeModelBox.min.x;
+		if (activeModelBox.max.x > max.x)
+			position.x -= activeModelBox.max.x - max.x;
 	}
 
-	checkModelCollision(
+	private checkModelCollision(
 		activeModel: typeof this.activeModel,
 		activeModelBox: three.Box3
 	): boolean {
@@ -141,7 +116,7 @@ export class ThreeRaycaster {
 		return false;
 	}
 
-	handleCollidingModel(
+	private handleCollidingModel(
 		activeModel: typeof this.activeModel,
 		isColliding: boolean = false
 	): void {
@@ -155,6 +130,37 @@ export class ThreeRaycaster {
 		}
 	}
 
+	private changeModelColor(
+		activeModel: typeof this.activeModel,
+		color: string
+	) {
+		this.traverseModelChildren(activeModel, (child) => {
+			// I effing hate typescript with three.js
+			// this material prop can be singular ORRRRRR an array
+			// need to check for either for the error to go away
+			if (Array.isArray(child.material)) return;
+
+			if (!this.draggableModelOriginalColors.has(child.uuid)) {
+				this.draggableModelOriginalColors.set(child.uuid, child.material);
+			}
+
+			const newMat = child.material.clone();
+			(newMat as three.MeshStandardMaterial).color.set(color);
+			child.material = newMat;
+		});
+	}
+
+	private resetModelColor(activeModel: typeof this.activeModel) {
+		this.traverseModelChildren(activeModel, (child) => {
+			const originalModelMaterial = this.draggableModelOriginalColors.get(
+				child.uuid
+			);
+			if (originalModelMaterial) {
+				child.material = originalModelMaterial;
+			}
+		});
+	}
+
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
 
@@ -163,9 +169,9 @@ export class ThreeRaycaster {
 		if (!this.isDraggingModel || !this.activeModel) return;
 
 		const activeModelBox = this.activeModelBox.setFromObject(this.activeModel);
+		this.activeModel!.position.copy(this.intersectPoint);
 
-		const isOutsideRoomBounds = this.checkRoomBounds(activeModelBox);
-		if (isOutsideRoomBounds) return;
+		this.checkRoomBounds(activeModelBox);
 
 		this.controls.enabled = false;
 		const isColliding = this.checkModelCollision(
@@ -173,7 +179,6 @@ export class ThreeRaycaster {
 			activeModelBox
 		);
 		this.handleCollidingModel(this.activeModel, isColliding);
-		this.activeModel!.position.copy(this.intersectPoint);
 	}
 
 	onMouseDown(event: MouseEvent): void {
@@ -191,7 +196,7 @@ export class ThreeRaycaster {
 		}
 	}
 
-	resetactiveModelPosition(activeModel: typeof this.activeModel) {
+	private resetactiveModelPosition(activeModel: typeof this.activeModel) {
 		activeModel?.position.copy(this._originalDragModelPosition!);
 		this.handleCollidingModel(this.activeModel, false);
 	}
@@ -203,7 +208,7 @@ export class ThreeRaycaster {
 		this.resetDrag();
 	}
 
-	resetDrag(): void {
+	private resetDrag(): void {
 		this.controls.enabled = true;
 		this.isDraggingModel = false;
 	}
