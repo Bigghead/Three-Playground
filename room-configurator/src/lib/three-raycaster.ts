@@ -1,10 +1,9 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { NumberController } from "three/examples/jsm/libs/lil-gui.module.min.js";
 
 type ModelChild = three.Group<three.Object3DEventMap>;
 
-class ModelManager {
+class DragManager {
 	private _activeModel: ModelChild | null = null;
 	private _draggableModels: Array<ModelChild> = [];
 	private _isDraggingModel = false;
@@ -12,14 +11,6 @@ class ModelManager {
 
 	constructor(controls: OrbitControls) {
 		this._controls = controls;
-	}
-
-	addDraggableModel(activeModel: ModelChild) {
-		this._draggableModels.push(activeModel);
-	}
-
-	getDraggableModels(): Array<ModelChild> {
-		return [...this._draggableModels];
 	}
 
 	set activeModel(activeModel: ModelChild) {
@@ -30,17 +21,57 @@ class ModelManager {
 		return this._activeModel;
 	}
 
-	startDrag(activeModel: ModelChild) {
-		this.activeModel = activeModel;
+	get isDraggingModel(): boolean {
+		return this._isDraggingModel;
+	}
+
+	addDraggableModel(activeModel: ModelChild) {
+		this._draggableModels.push(activeModel);
+	}
+
+	getDraggableModels(): Array<ModelChild> {
+		return [...this._draggableModels];
+	}
+
+	private traverseModelChildren(
+		activeModel: typeof this._activeModel,
+		callbackFunc: (child: three.Mesh) => void
+	): void {
+		activeModel?.traverse((child) => {
+			if (!(child instanceof three.Mesh)) return;
+			callbackFunc(child);
+		});
+	}
+
+	storeOriginalModelColors(activeModel: typeof this._activeModel) {
+		const modelOriginalColors: Map<string, three.Material> = new Map();
+
+		this.traverseModelChildren(activeModel, (child) => {
+			// I effing hate typescript with three.js
+			// this material prop can be singular ORRRRRR an array
+			// need to check for either for the error to go away
+			if (Array.isArray(child.material)) return;
+
+			if (!modelOriginalColors.has(child.uuid)) {
+				modelOriginalColors.set(child.uuid, child.material);
+			}
+		});
+		return modelOriginalColors;
+	}
+
+	setModelActive(activeModel: ModelChild) {
+		console.log("model clicked");
+		this._activeModel = activeModel;
 		this._isDraggingModel = true;
 		this._controls.enabled = false;
+		this._activeModel.userData = {
+			originalPosition: activeModel.position.clone(),
+			originalColorMaterial: this.storeOriginalModelColors(activeModel),
+		};
 	}
 
 	updatePosition(position: three.Vector3) {
-		console.log("dragging");
-
 		if (!this._isDraggingModel || !this.activeModel) return;
-
 		this.activeModel?.position.copy(position);
 	}
 
@@ -48,7 +79,14 @@ class ModelManager {
 		this._isDraggingModel = false;
 		this._controls.enabled = true;
 	}
+
+	resetModelPosition(): void {
+		if (!this._activeModel) return;
+		this._activeModel.position.copy(this._activeModel.userData.position);
+	}
 }
+
+class CollisionManager {}
 
 export class ThreeRaycaster {
 	private raycaster = new three.Raycaster();
@@ -57,10 +95,7 @@ export class ThreeRaycaster {
 	private plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
 	private intersectPoint = new three.Vector3();
 
-	private activeModel: ModelChild | null = null;
-
 	private draggableModelOriginalColors: Map<string, three.Material> = new Map();
-	private isDraggingModel = false;
 
 	// for checking if an active dragged model is colliding with others
 	private roomBoundingBox = new three.Box3();
@@ -74,7 +109,7 @@ export class ThreeRaycaster {
 	scene: three.Scene;
 	controls: OrbitControls;
 
-	modelManager: ModelManager;
+	dragManager: DragManager;
 
 	constructor({
 		canvas,
@@ -91,7 +126,7 @@ export class ThreeRaycaster {
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
-		this.modelManager = new ModelManager(this.controls);
+		this.dragManager = new DragManager(this.controls);
 	}
 
 	setRoomBoundingBox(roomSize: three.Vector3): void {
@@ -103,7 +138,7 @@ export class ThreeRaycaster {
 	}
 
 	addDraggableModel(activeModel: ModelChild) {
-		this.modelManager.addDraggableModel(activeModel);
+		this.dragManager.addDraggableModel(activeModel);
 	}
 
 	private setRaycastingPointer(event: MouseEvent): void {
@@ -118,16 +153,6 @@ export class ThreeRaycaster {
 		this.pointer.y = -((clientY - top) / height) * 2 + 1;
 
 		this.raycaster.setFromCamera(this.pointer, this.camera);
-	}
-
-	private traverseModelChildren(
-		activeModel: typeof this.activeModel,
-		callbackFunc: (child: three.Mesh) => void
-	): void {
-		activeModel?.traverse((child) => {
-			if (!(child instanceof three.Mesh)) return;
-			callbackFunc(child);
-		});
 	}
 
 	/**
@@ -157,7 +182,7 @@ export class ThreeRaycaster {
 		activeModelBox: three.Box3
 	): boolean {
 		if (!activeModel) return false;
-		const models = this.modelManager.getDraggableModels();
+		const models = this.dragManager.getDraggableModels();
 		for (const model of models) {
 			if (model !== activeModel) {
 				const modelBox = this.modelBox.setFromObject(model);
@@ -179,31 +204,31 @@ export class ThreeRaycaster {
 			this.changeModelColor(activeModel, "red");
 			this.isactiveModelColliding = true;
 		} else {
-			this.resetModelColor(activeModel);
-			this.modelManager.endDrag();
+			// this.resetModelColor(activeModel);
+			// this.dragManager.endDrag();
 			this.isactiveModelColliding = false;
 		}
 	}
 
-	private changeModelColor(
-		activeModel: typeof this.activeModel,
-		color: string
-	) {
-		this.traverseModelChildren(activeModel, (child) => {
-			// I effing hate typescript with three.js
-			// this material prop can be singular ORRRRRR an array
-			// need to check for either for the error to go away
-			if (Array.isArray(child.material)) return;
+	// private changeModelColor(
+	// 	activeModel: typeof this.activeModel,
+	// 	color: string
+	// ) {
+	// 	this.traverseModelChildren(activeModel, (child) => {
+	// 		// I effing hate typescript with three.js
+	// 		// this material prop can be singular ORRRRRR an array
+	// 		// need to check for either for the error to go away
+	// 		if (Array.isArray(child.material)) return;
 
-			if (!this.draggableModelOriginalColors.has(child.uuid)) {
-				this.draggableModelOriginalColors.set(child.uuid, child.material);
-			}
+	// 		if (!this.draggableModelOriginalColors.has(child.uuid)) {
+	// 			this.draggableModelOriginalColors.set(child.uuid, child.material);
+	// 		}
 
-			const newMat = child.material.clone();
-			(newMat as three.MeshStandardMaterial).color.set(color);
-			child.material = newMat;
-		});
-	}
+	// 		const newMat = child.material.clone();
+	// 		(newMat as three.MeshStandardMaterial).color.set(color);
+	// 		child.material = newMat;
+	// 	});
+	// }
 
 	private resetModelColor(activeModel: typeof this.activeModel) {
 		this.traverseModelChildren(activeModel, (child) => {
@@ -219,14 +244,15 @@ export class ThreeRaycaster {
 	onMouseMove(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
 
-		const activeModel = this.modelManager.activeModel;
+		const activeModel = this.dragManager.activeModel;
+		const isDragging = this.dragManager.isDraggingModel;
 
 		// this sets / updates intersectPoint
 		if (!this.raycaster.ray.intersectPlane(this.plane, this.intersectPoint))
 			return;
-		if (!activeModel) return;
+		if (!activeModel || !isDragging) return;
 
-		this.modelManager.updatePosition(this.intersectPoint);
+		this.dragManager.updatePosition(this.intersectPoint);
 		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
 
 		this.checkRoomBounds(activeModelBox);
@@ -237,12 +263,11 @@ export class ThreeRaycaster {
 
 	onMouseDown(event: MouseEvent): void {
 		this.setRaycastingPointer(event);
-		const models = this.modelManager.getDraggableModels();
+		const models = this.dragManager.getDraggableModels();
 		for (const model of models) {
 			const intersects = this.raycaster.intersectObject(model, true);
 			if (intersects.length > 0) {
-				this.modelManager.startDrag(model);
-				this.controls.enabled = false;
+				this.dragManager.setModelActive(model);
 				this._originalDragModelPosition = model.position.clone();
 				break;
 			}
@@ -256,8 +281,8 @@ export class ThreeRaycaster {
 
 	onMouseUp(): void {
 		// if (this.isactiveModelColliding) {
-		// 	this.resetactiveModelPosition(this.activeModel);
+		// 	this.dragManager.resetModelPosition();
 		// }
-		this.modelManager.endDrag();
+		this.dragManager.endDrag();
 	}
 }
