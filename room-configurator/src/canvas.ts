@@ -39,6 +39,9 @@ const wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
 const { roomWalls, bathroomWalls } = wallBuilder.createWalls();
 
 room.add(floor, roomWalls);
+const roomBox = new three.Box3().setFromObject(room);
+const roomSize = roomBox.getSize(new three.Vector3());
+threeRaycaster.setRoomBoundingBox(roomSize);
 
 /**
  *
@@ -48,9 +51,6 @@ const normalizeModelScale = (
 	model: GLTF,
 	roomWidthPercentage: number
 ): void => {
-	const roomBox = new three.Box3().setFromObject(room);
-	const roomSize = roomBox.getSize(new three.Vector3());
-
 	const modelBox = new three.Box3().setFromObject(model.scene);
 	const modelSize = modelBox.getSize(new three.Vector3());
 
