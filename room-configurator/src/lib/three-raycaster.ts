@@ -29,8 +29,7 @@ class DragManager {
 		this._activeModel = activeModel;
 	}
 
-	get activeModel(): ModelChild {
-		if (!this._activeModel) throw new Error("No active model");
+	get activeModel(): ModelChild | null {
 		return this._activeModel;
 	}
 
@@ -219,6 +218,9 @@ class CollisionManager {
 		}
 	}
 
+	/**
+	 * Creates a min / max room outer edges to check model bounds against later
+	 */
 	setRoomBoundingBox(roomSize: three.Vector3) {
 		const { x, y, z } = roomSize;
 		this._roomBoundingBox.set(
@@ -297,8 +299,8 @@ export class ThreeRaycaster {
 		this.collisionManager.resetModel(activeModel);
 	}
 
+	// need to break this up
 	onMouseMove(event: MouseEvent): void {
-		// need to break this all up
 		this.collisionManager.setRaycastingPointer(event);
 
 		const activeModel = this.dragManager.activeModel;
@@ -333,7 +335,7 @@ export class ThreeRaycaster {
 				true
 			);
 			if (intersects.length > 0) {
-				this.collisionManager.isactiveModelColliding = true;
+				document.body.style.cursor = "pointer";
 				this.dragManager.setModelActive(model);
 				break;
 			}
@@ -341,7 +343,9 @@ export class ThreeRaycaster {
 	}
 
 	onMouseUp(): void {
+		document.body.style.cursor = "default";
 		const activeModel = this.dragManager.activeModel;
+		if (!activeModel) return;
 
 		const isColliding = this.collisionManager.isactiveModelColliding;
 		this.collisionManager.handleCollidingModel(activeModel, isColliding);
