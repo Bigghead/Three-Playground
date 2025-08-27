@@ -257,6 +257,7 @@ export class ThreeCanvas {
 		this.renderCallbacks.forEach((callback) => callback());
 
 		// Render
+		// this.threeRaycaster.animate();
 		this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
 
 		// Call tick again on the next frame
