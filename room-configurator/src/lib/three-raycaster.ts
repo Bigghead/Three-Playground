@@ -95,6 +95,12 @@ class CollisionManager {
 	private _plane = new three.Plane(new three.Vector3(0, 1, 0), 0);
 	private _intersectPoint = new three.Vector3();
 
+	// for checking if an active dragged model is colliding with others
+	private _roomBoundingBox = new three.Box3();
+	private _activeModelBox = new three.Box3();
+	private _modelBox = new three.Box3();
+	private _isactiveModelColliding = false;
+
 	private _canvasBoundsRect: DOMRect;
 	private _camera: three.PerspectiveCamera;
 
@@ -109,6 +115,10 @@ class CollisionManager {
 
 	get intersectPoint() {
 		return this._intersectPoint;
+	}
+
+	get activeModelBox() {
+		return this._activeModelBox;
 	}
 
 	setRaycastingPointer(event: MouseEvent): void {
@@ -133,16 +143,60 @@ class CollisionManager {
 			this._intersectPoint
 		);
 	}
+
+	checkModelCollision(
+		activeModel: ModelChild,
+		activeModelBox: three.Box3,
+		models: Array<ModelChild>
+	): boolean {
+		if (!activeModel || !models.length) return false;
+
+		for (const model of models) {
+			if (model !== activeModel) {
+				const modelBox = this._modelBox.setFromObject(model);
+				if (activeModelBox.intersectsBox(modelBox)) {
+					console.log("intersecting");
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	setRoomBoundingBox(roomSize: three.Vector3) {
+		const { x, y, z } = roomSize;
+		this._roomBoundingBox.set(
+			new three.Vector3(-x / 2 + 0.1, 0, -z / 2 + 0.1),
+			new three.Vector3(x / 2 - 0.1, y, z / 2 - 0.1)
+		);
+	}
+
+	/**
+	 * Use room min/max coordinates to check if dragged object is hitting edges
+	 * Clamp / stop the drag by backing off dragged model slightly
+	 */
+	checkRoomBounds(activeModel: ModelChild) {
+		if (!activeModel) return;
+		const activeModelBox = this.activeModelBox;
+		const { min, max } = this._roomBoundingBox;
+		const { position } = activeModel;
+
+		// X axis
+		if (activeModelBox.min.x < min.x)
+			position.x += min.x - activeModelBox.min.x;
+		if (activeModelBox.max.x > max.x)
+			position.x -= activeModelBox.max.x - max.x;
+
+		// Z
+		if (activeModelBox.min.z < min.z)
+			position.z += min.z - activeModelBox.min.z;
+		if (activeModelBox.max.z > max.z)
+			position.z -= activeModelBox.max.z - max.z;
+	}
 }
 
 export class ThreeRaycaster {
-	private draggableModelOriginalColors: Map<string, three.Material> = new Map();
-
-	// for checking if an active dragged model is colliding with others
-	private roomBoundingBox = new three.Box3();
-	private activeModelBox = new three.Box3();
-	private modelBox: typeof this.activeModelBox = new three.Box3();
-	private isactiveModelColliding = false;
 	private _originalDragModelPosition: three.Vector3 = new three.Vector3();
 
 	camera: three.PerspectiveCamera;
@@ -171,56 +225,11 @@ export class ThreeRaycaster {
 	}
 
 	setRoomBoundingBox(roomSize: three.Vector3): void {
-		const { x, y, z } = roomSize;
-		this.roomBoundingBox.set(
-			new three.Vector3(-x / 2 + 0.1, 0, -z / 2 + 0.1),
-			new three.Vector3(x / 2 - 0.1, y, z / 2 - 0.1)
-		);
+		this.collisionManager.setRoomBoundingBox(roomSize);
 	}
 
 	addDraggableModel(activeModel: ModelChild) {
 		this.dragManager.addDraggableModel(activeModel);
-	}
-
-	/**
-	 * Use room min/max coordinates to check if dragged object is hitting edges
-	 * Clamp / stop the drag by backing off dragged model slightly
-	 */
-	private checkRoomBounds(activeModelBox: three.Box3) {
-		if (!this.activeModel) return;
-		const { min, max } = this.roomBoundingBox;
-		const { position } = this.activeModel;
-
-		// X axis
-		if (activeModelBox.min.x < min.x)
-			position.x += min.x - activeModelBox.min.x;
-		if (activeModelBox.max.x > max.x)
-			position.x -= activeModelBox.max.x - max.x;
-
-		// Z
-		if (activeModelBox.min.z < min.z)
-			position.z += min.z - activeModelBox.min.z;
-		if (activeModelBox.max.z > max.z)
-			position.z -= activeModelBox.max.z - max.z;
-	}
-
-	private checkModelCollision(
-		activeModel: typeof this.activeModel,
-		activeModelBox: three.Box3
-	): boolean {
-		if (!activeModel) return false;
-		const models = this.dragManager.getDraggableModels();
-		for (const model of models) {
-			if (model !== activeModel) {
-				const modelBox = this.modelBox.setFromObject(model);
-				if (activeModelBox.intersectsBox(modelBox)) {
-					console.log("intersecting");
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	private handleCollidingModel(
@@ -269,20 +278,27 @@ export class ThreeRaycaster {
 	// }
 
 	onMouseMove(event: MouseEvent): void {
+		this.collisionManager.setRaycastingPointer(event);
+
 		const activeModel = this.dragManager.activeModel;
 		const isDragging = this.dragManager.isDraggingModel;
-
-		this.collisionManager.setRaycastingPointer(event);
 		const isIntersecting = this.collisionManager.checkIntersectPlane();
+
+		const models = this.dragManager.getDraggableModels();
 
 		if (!activeModel || !isDragging || !isIntersecting) return;
 
 		this.dragManager.updatePosition(this.collisionManager.intersectPoint);
-		const activeModelBox = this.activeModelBox.setFromObject(activeModel);
+		const activeModelBox =
+			this.collisionManager.activeModelBox.setFromObject(activeModel);
 
-		this.checkRoomBounds(activeModelBox);
+		this.collisionManager.checkRoomBounds(activeModel);
 
-		const isColliding = this.checkModelCollision(activeModel, activeModelBox);
+		const isColliding = this.collisionManager.checkModelCollision(
+			activeModel,
+			activeModelBox,
+			models
+		);
 		this.handleCollidingModel(activeModel, isColliding);
 	}
 
