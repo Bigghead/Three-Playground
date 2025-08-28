@@ -17,6 +17,7 @@ const traverseModelChildren = (
 ): void => {
 	activeModel?.traverse((child) => {
 		if (!(child instanceof three.Mesh)) return;
+		if (Array.isArray(child.material)) return;
 		callbackFunc(child);
 	});
 };
@@ -46,13 +47,11 @@ class ModelManager {
 			scene,
 			camera
 		);
-
 		this._outlinePass.edgeStrength = 2.5;
 		this._outlinePass.edgeGlow = 0.0;
 		this._outlinePass.edgeThickness = 1.0;
 		this._outlinePass.visibleEdgeColor.set("#ffffff");
 		this._outlinePass.hiddenEdgeColor.set("#ffffff");
-
 		this._composer.addPass(this._outlinePass);
 
 		const gammaCorrection = new ShaderPass(GammaCorrectionShader);
@@ -69,17 +68,13 @@ class ModelManager {
 
 	changeModelColor(activeModel: ModelChild, color: string): void {
 		traverseModelChildren(activeModel, (child) => {
-			// I effing hate typescript with three.js
-			// this material prop can be singular ORRRRRR an array
-			// need to check for either for the error to go away
-			if (Array.isArray(child.material)) return;
 			if (!activeModel.userData.originalColorMaterial.has(child.uuid)) {
 				activeModel.userData.originalColorMaterial.set(
 					child.uuid,
 					child.material
 				);
 			}
-			const newMat = child.material.clone();
+			const newMat = (child.material as three.Material).clone();
 			(newMat as three.MeshStandardMaterial).color.set(color);
 			child.material = newMat;
 		});
@@ -134,13 +129,8 @@ class DragManager {
 		const modelOriginalColors: Map<string, three.Material> = new Map();
 
 		traverseModelChildren(activeModel!, (child) => {
-			// I effing hate typescript with three.js
-			// this material prop can be singular ORRRRRR an array
-			// need to check for either for the error to go away
-			if (Array.isArray(child.material)) return;
-
 			if (!modelOriginalColors.has(child.uuid)) {
-				modelOriginalColors.set(child.uuid, child.material);
+				modelOriginalColors.set(child.uuid, child.material as three.Material);
 			}
 		});
 		return modelOriginalColors;
@@ -234,7 +224,7 @@ class CollisionManager {
 		// cause it's using window ( event clientX/Y ) sizes to calculate
 		// need to set the sizes using the canvas bounding rect
 		this._pointer.x = ((clientX - left) / width) * 2 - 1;
-		// the freaking y has to be inverted cause the browser reads it backwards
+		// inverted y cause the browser reads it backwards
 		this._pointer.y = -((clientY - top) / height) * 2 + 1;
 
 		this._raycaster.setFromCamera(this._pointer, this._camera);
@@ -374,15 +364,14 @@ export class ThreeRaycaster {
 
 	// need to break this up
 	onMouseMove(event: MouseEvent): void {
-		this.collisionManager.setRaycastingPointer(event);
+		const { activeModel, isDraggingModel } = this.dragManager;
+		if (!activeModel || !isDraggingModel) return;
 
-		const activeModel = this.dragManager.activeModel;
-		const isDragging = this.dragManager.isDraggingModel;
+		this.collisionManager.setRaycastingPointer(event);
 		const isIntersecting = this.collisionManager.checkIntersectPlane();
+		if (!isIntersecting) return;
 
 		const models = this.dragManager.getDraggableModels();
-
-		if (!activeModel || !isDragging || !isIntersecting) return;
 
 		this.dragManager.updatePosition(this.collisionManager.intersectPoint);
 		const activeModelBox =

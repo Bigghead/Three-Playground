@@ -13,11 +13,20 @@ type Dimensions = {
 };
 
 class Sizes {
-	width = window.innerWidth * 0.65;
+	fullscreenSizeMax = 0.65;
+	width: number = 0;
 	height = window.innerHeight;
 
-	public resize() {
-		this.width = window.innerWidth * 0.65;
+	constructor() {
+		this.width = this.getWidth();
+	}
+
+	private getWidth(): number {
+		return window.innerWidth * this.fullscreenSizeMax;
+	}
+
+	public resize(canvas: HTMLCanvasElement | null) {
+		this.width = canvas?.clientWidth || this.getWidth();
 		this.height = window.innerHeight;
 	}
 }
@@ -198,7 +207,7 @@ export class ThreeCanvas {
 		);
 
 		// Add event listeners (important for functionality)
-		window.addEventListener("resize", this.resizeCanvas);
+		window.addEventListener("resize", this.resizeCanvas(canvas));
 		window.addEventListener("scroll", this.handleScroll);
 
 		this.animationTick();
@@ -233,14 +242,16 @@ export class ThreeCanvas {
 	/**
 	 * Event Actions
 	 */
-	public resizeCanvas = (): void => {
-		// Update sizes
-		this.sizes.resize();
-		// Update camera
-		this.threeCamera.resize();
-		// Update renderer
-		this.threeRenderer.resize();
-	};
+	public resizeCanvas =
+		(canvas: HTMLCanvasElement | null): (() => void) =>
+		() => {
+			// Update sizes
+			this.sizes.resize(canvas);
+			// Update camera
+			this.threeCamera.resize();
+			// Update renderer
+			this.threeRenderer.resize();
+		};
 
 	public handleScroll = (): void => {
 		scrollY = window.scrollY;
@@ -270,7 +281,7 @@ export class ThreeCanvas {
 	}
 
 	public dispose = (): void => {
-		window.removeEventListener("resize", this.resizeCanvas);
+		window.removeEventListener("resize", this.resizeCanvas(null));
 		window.removeEventListener("scroll", this.handleScroll);
 		this.controls.dispose();
 		this.threeRenderer.renderer.dispose();
