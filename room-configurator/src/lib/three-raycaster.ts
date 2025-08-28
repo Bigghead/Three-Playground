@@ -2,7 +2,9 @@ import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
 
 const ROOM_WALL_OFFSET = 0.1;
 
@@ -19,8 +21,8 @@ const traverseModelChildren = (
 };
 
 class ModelManager {
-	private composer: EffectComposer;
-	private outlinePass: OutlinePass;
+	private _composer: EffectComposer;
+	private _outlinePass: OutlinePass;
 
 	constructor({
 		canvas,
@@ -33,28 +35,35 @@ class ModelManager {
 		scene: three.Scene;
 		renderer: three.WebGLRenderer;
 	}) {
-		this.composer = new EffectComposer(renderer);
+		this._composer = new EffectComposer(renderer);
 
 		const renderPass = new RenderPass(scene, camera);
-		this.composer.addPass(renderPass);
+		this._composer.addPass(renderPass);
 
-		this.outlinePass = new OutlinePass(
+		this._outlinePass = new OutlinePass(
 			new three.Vector2(canvas.width, canvas.height),
 			scene,
 			camera
 		);
 
-		this.outlinePass.edgeStrength = 2.5;
-		this.outlinePass.edgeGlow = 0.0;
-		this.outlinePass.edgeThickness = 1.0;
-		this.outlinePass.visibleEdgeColor.set("#ffffff");
-		this.outlinePass.hiddenEdgeColor.set("#ffffff");
+		this._outlinePass.edgeStrength = 2.5;
+		this._outlinePass.edgeGlow = 0.0;
+		this._outlinePass.edgeThickness = 1.0;
+		this._outlinePass.visibleEdgeColor.set("#ffffff");
+		this._outlinePass.hiddenEdgeColor.set("#ffffff");
 
-		this.composer.addPass(this.outlinePass);
+		this._composer.addPass(this._outlinePass);
+
+		const gammaCorrection = new ShaderPass(GammaCorrectionShader);
+		this._composer.addPass(gammaCorrection);
 	}
 
-	highlight(model: three.Group): void {
-		this.outlinePass.selectedObjects = [model];
+	highlight(activeModel: ModelChild): void {
+		this._outlinePass.selectedObjects = [activeModel];
+	}
+
+	removeHighlight(): void {
+		this._outlinePass.selectedObjects = [];
 	}
 
 	changeModelColor(activeModel: ModelChild, color: string): void {
@@ -86,7 +95,7 @@ class ModelManager {
 	}
 
 	render(): void {
-		this.composer.render();
+		this._composer.render();
 	}
 }
 
@@ -402,6 +411,8 @@ export class ThreeRaycaster {
 				this.dragManager.setModelActive(model);
 				this.modelManager.highlight(model);
 				break;
+			} else {
+				this.modelManager.removeHighlight();
 			}
 		}
 	}

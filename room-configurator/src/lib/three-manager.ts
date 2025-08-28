@@ -73,7 +73,7 @@ class ThreeControls {
 }
 
 class ThreeLighting {
-	ambientLight = new three.AmbientLight(0xffffff, 2.1);
+	ambientLight = new three.AmbientLight("#FFDBBB", 2.1);
 	directionalLight = new three.DirectionalLight("#ffffff", 2);
 	scene: three.Scene;
 	renderer: three.WebGLRenderer;
