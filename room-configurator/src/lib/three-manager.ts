@@ -73,7 +73,7 @@ class ThreeControls {
 }
 
 class ThreeLighting {
-	ambientLight = new three.AmbientLight(0xffffff, 2.1);
+	ambientLight = new three.AmbientLight("#FFDBBB", 2.1);
 	directionalLight = new three.DirectionalLight("#ffffff", 2);
 	scene: three.Scene;
 	renderer: three.WebGLRenderer;
@@ -186,6 +186,7 @@ export class ThreeCanvas {
 			camera: this.threeCamera.camera,
 			scene: this.scene,
 			controls: this.controls,
+			renderer: this.threeRenderer.renderer,
 		});
 
 		this.initTextureMap();
@@ -257,7 +258,8 @@ export class ThreeCanvas {
 		this.renderCallbacks.forEach((callback) => callback());
 
 		// Render
-		this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
+		this.threeRaycaster.animate();
+		// this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
 
 		// Call tick again on the next frame
 		window.requestAnimationFrame(this.animationTick);

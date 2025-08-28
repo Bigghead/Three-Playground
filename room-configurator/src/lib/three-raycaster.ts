@@ -1,6 +1,12 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
 
+// room wall has a depth of 0.1
 const ROOM_WALL_OFFSET = 0.1;
 
 type ModelChild = three.Group<three.Object3DEventMap>;
@@ -14,6 +20,85 @@ const traverseModelChildren = (
 		callbackFunc(child);
 	});
 };
+
+class ModelManager {
+	private _composer: EffectComposer;
+	private _outlinePass: OutlinePass;
+
+	constructor({
+		canvas,
+		scene,
+		camera,
+		renderer,
+	}: {
+		canvas: HTMLCanvasElement;
+		camera: three.PerspectiveCamera;
+		scene: three.Scene;
+		renderer: three.WebGLRenderer;
+	}) {
+		this._composer = new EffectComposer(renderer);
+
+		const renderPass = new RenderPass(scene, camera);
+		this._composer.addPass(renderPass);
+
+		this._outlinePass = new OutlinePass(
+			new three.Vector2(canvas.width, canvas.height),
+			scene,
+			camera
+		);
+
+		this._outlinePass.edgeStrength = 2.5;
+		this._outlinePass.edgeGlow = 0.0;
+		this._outlinePass.edgeThickness = 1.0;
+		this._outlinePass.visibleEdgeColor.set("#ffffff");
+		this._outlinePass.hiddenEdgeColor.set("#ffffff");
+
+		this._composer.addPass(this._outlinePass);
+
+		const gammaCorrection = new ShaderPass(GammaCorrectionShader);
+		this._composer.addPass(gammaCorrection);
+	}
+
+	highlight(activeModel: ModelChild): void {
+		this._outlinePass.selectedObjects = [activeModel];
+	}
+
+	removeHighlight(): void {
+		this._outlinePass.selectedObjects = [];
+	}
+
+	changeModelColor(activeModel: ModelChild, color: string): void {
+		traverseModelChildren(activeModel, (child) => {
+			// I effing hate typescript with three.js
+			// this material prop can be singular ORRRRRR an array
+			// need to check for either for the error to go away
+			if (Array.isArray(child.material)) return;
+			if (!activeModel.userData.originalColorMaterial.has(child.uuid)) {
+				activeModel.userData.originalColorMaterial.set(
+					child.uuid,
+					child.material
+				);
+			}
+			const newMat = child.material.clone();
+			(newMat as three.MeshStandardMaterial).color.set(color);
+			child.material = newMat;
+		});
+	}
+
+	resetModelColor(activeModel: ModelChild): void {
+		traverseModelChildren(activeModel, (child) => {
+			const originalModelMaterial =
+				activeModel.userData.originalColorMaterial.get(child.uuid);
+			if (originalModelMaterial) {
+				child.material = originalModelMaterial;
+			}
+		});
+	}
+
+	render(): void {
+		this._composer.render();
+	}
+}
 
 class DragManager {
 	private _activeModel: ModelChild | null = null;
@@ -45,7 +130,7 @@ class DragManager {
 		return [...this._draggableModels];
 	}
 
-	storeOriginalModelColors(activeModel: typeof this._activeModel) {
+	storeOriginalModelColors(activeModel: ModelChild) {
 		const modelOriginalColors: Map<string, three.Material> = new Map();
 
 		traverseModelChildren(activeModel!, (child) => {
@@ -89,36 +174,6 @@ class DragManager {
 	}
 }
 
-class ModelManager {
-	changeModelColor(activeModel: ModelChild, color: string) {
-		traverseModelChildren(activeModel, (child) => {
-			// I effing hate typescript with three.js
-			// this material prop can be singular ORRRRRR an array
-			// need to check for either for the error to go away
-			if (Array.isArray(child.material)) return;
-			if (!activeModel.userData.originalColorMaterial.has(child.uuid)) {
-				activeModel.userData.originalColorMaterial.set(
-					child.uuid,
-					child.material
-				);
-			}
-			const newMat = child.material.clone();
-			(newMat as three.MeshStandardMaterial).color.set(color);
-			child.material = newMat;
-		});
-	}
-
-	resetModelColor(activeModel: ModelChild) {
-		traverseModelChildren(activeModel, (child) => {
-			const originalModelMaterial =
-				activeModel.userData.originalColorMaterial.get(child.uuid);
-			if (originalModelMaterial) {
-				child.material = originalModelMaterial;
-			}
-		});
-	}
-}
-
 class CollisionManager {
 	private _raycaster = new three.Raycaster();
 	private _pointer = new three.Vector2();
@@ -137,10 +192,18 @@ class CollisionManager {
 
 	modelManager: ModelManager;
 
-	constructor(canvas: HTMLCanvasElement, camera: three.PerspectiveCamera) {
+	constructor({
+		canvas,
+		camera,
+		modelManager,
+	}: {
+		canvas: HTMLCanvasElement;
+		camera: three.PerspectiveCamera;
+		modelManager: ModelManager;
+	}) {
 		this._canvasBoundsRect = canvas.getBoundingClientRect();
 		this._camera = camera;
-		this.modelManager = new ModelManager();
+		this.modelManager = modelManager;
 	}
 
 	get raycaster() {
@@ -254,10 +317,6 @@ class CollisionManager {
 		if (activeModelBox.max.z > max.z)
 			position.z -= activeModelBox.max.z - max.z;
 	}
-
-	resetModel(activeModel: ModelChild): void {
-		this.modelManager.resetModelColor(activeModel);
-	}
 }
 
 export class ThreeRaycaster {
@@ -267,23 +326,37 @@ export class ThreeRaycaster {
 
 	dragManager: DragManager;
 	collisionManager: CollisionManager;
+	modelManager: ModelManager;
 
 	constructor({
 		canvas,
 		camera,
 		scene,
 		controls,
+		renderer,
 	}: {
 		canvas: HTMLCanvasElement;
 		camera: three.PerspectiveCamera;
 		scene: three.Scene;
 		controls: OrbitControls;
+		renderer: three.WebGLRenderer;
 	}) {
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
 		this.dragManager = new DragManager(this.controls);
-		this.collisionManager = new CollisionManager(canvas, camera);
+		this.modelManager = new ModelManager({
+			canvas,
+			scene: this.scene,
+			camera: this.camera,
+			renderer,
+		});
+
+		this.collisionManager = new CollisionManager({
+			canvas,
+			camera,
+			modelManager: this.modelManager,
+		});
 	}
 
 	setRoomBoundingBox(roomSize: three.Vector3): void {
@@ -296,7 +369,7 @@ export class ThreeRaycaster {
 
 	resetActiveModel(activeModel: ModelChild): void {
 		this.dragManager.resetModelPosition();
-		this.collisionManager.resetModel(activeModel);
+		this.modelManager.resetModelColor(activeModel);
 	}
 
 	// need to break this up
@@ -335,9 +408,12 @@ export class ThreeRaycaster {
 				true
 			);
 			if (intersects.length > 0) {
-				document.body.style.cursor = "pointer";
+				document.body.style.cursor = "grabbing";
 				this.dragManager.setModelActive(model);
+				this.modelManager.highlight(model);
 				break;
+			} else {
+				this.modelManager.removeHighlight();
 			}
 		}
 	}
@@ -348,12 +424,15 @@ export class ThreeRaycaster {
 		if (!activeModel) return;
 
 		const isColliding = this.collisionManager.isactiveModelColliding;
-		this.collisionManager.handleCollidingModel(activeModel, isColliding);
 
 		if (isColliding) {
 			this.resetActiveModel(activeModel);
 		}
 
 		this.dragManager.endDrag();
+	}
+
+	animate() {
+		this.modelManager.render();
 	}
 }
