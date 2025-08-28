@@ -1,5 +1,8 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
 
 const ROOM_WALL_OFFSET = 0.1;
 
@@ -16,18 +19,42 @@ const traverseModelChildren = (
 };
 
 class ModelManager {
-	constructor() {}
+	private composer: EffectComposer;
+	private outlinePass: OutlinePass;
 
-	// this kinda works, but expensive and hard to remove ( even more expensive )
-	highlight(model: three.Group<three.Object3DEventMap>): void {
-		traverseModelChildren(model, (child) => {
-			const edges = new three.EdgesGeometry(child.geometry);
-			const line = new three.LineSegments(
-				edges,
-				new three.LineBasicMaterial({ color: "white" })
-			);
-			child.add(line);
-		});
+	constructor({
+		canvas,
+		scene,
+		camera,
+		renderer,
+	}: {
+		canvas: HTMLCanvasElement;
+		camera: three.PerspectiveCamera;
+		scene: three.Scene;
+		renderer: three.WebGLRenderer;
+	}) {
+		this.composer = new EffectComposer(renderer);
+
+		const renderPass = new RenderPass(scene, camera);
+		this.composer.addPass(renderPass);
+
+		this.outlinePass = new OutlinePass(
+			new three.Vector2(canvas.width, canvas.height),
+			scene,
+			camera
+		);
+
+		this.outlinePass.edgeStrength = 2.5;
+		this.outlinePass.edgeGlow = 0.0;
+		this.outlinePass.edgeThickness = 1.0;
+		this.outlinePass.visibleEdgeColor.set("#ffffff");
+		this.outlinePass.hiddenEdgeColor.set("#ffffff");
+
+		this.composer.addPass(this.outlinePass);
+	}
+
+	highlight(model: three.Group): void {
+		this.outlinePass.selectedObjects = [model];
 	}
 
 	changeModelColor(activeModel: ModelChild, color: string): void {
@@ -57,9 +84,11 @@ class ModelManager {
 			}
 		});
 	}
-}
 
-const modelManager = new ModelManager();
+	render(): void {
+		this.composer.render();
+	}
+}
 
 class DragManager {
 	private _activeModel: ModelChild | null = null;
@@ -151,15 +180,20 @@ class CollisionManager {
 	private _canvasBoundsRect: DOMRect;
 	private _camera: three.PerspectiveCamera;
 
+	modelManager: ModelManager;
+
 	constructor({
 		canvas,
 		camera,
+		modelManager,
 	}: {
 		canvas: HTMLCanvasElement;
 		camera: three.PerspectiveCamera;
+		modelManager: ModelManager;
 	}) {
 		this._canvasBoundsRect = canvas.getBoundingClientRect();
 		this._camera = camera;
+		this.modelManager = modelManager;
 	}
 
 	get raycaster() {
@@ -229,10 +263,10 @@ class CollisionManager {
 		isColliding: boolean = false
 	): void {
 		if (isColliding) {
-			modelManager.changeModelColor(activeModel, "red");
+			this.modelManager.changeModelColor(activeModel, "red");
 			this._isActiveModelColliding = true;
 		} else {
-			modelManager.resetModelColor(activeModel);
+			this.modelManager.resetModelColor(activeModel);
 			this._isActiveModelColliding = false;
 		}
 	}
@@ -282,26 +316,36 @@ export class ThreeRaycaster {
 
 	dragManager: DragManager;
 	collisionManager: CollisionManager;
+	modelManager: ModelManager;
 
 	constructor({
 		canvas,
 		camera,
 		scene,
 		controls,
+		renderer,
 	}: {
 		canvas: HTMLCanvasElement;
 		camera: three.PerspectiveCamera;
 		scene: three.Scene;
 		controls: OrbitControls;
+		renderer: three.WebGLRenderer;
 	}) {
 		this.camera = camera;
 		this.scene = scene;
 		this.controls = controls;
 		this.dragManager = new DragManager(this.controls);
+		this.modelManager = new ModelManager({
+			canvas,
+			scene: this.scene,
+			camera: this.camera,
+			renderer,
+		});
 
 		this.collisionManager = new CollisionManager({
 			canvas,
 			camera,
+			modelManager: this.modelManager,
 		});
 	}
 
@@ -315,7 +359,7 @@ export class ThreeRaycaster {
 
 	resetActiveModel(activeModel: ModelChild): void {
 		this.dragManager.resetModelPosition();
-		modelManager.resetModelColor(activeModel);
+		this.modelManager.resetModelColor(activeModel);
 	}
 
 	// need to break this up
@@ -356,7 +400,7 @@ export class ThreeRaycaster {
 			if (intersects.length > 0) {
 				document.body.style.cursor = "grabbing";
 				this.dragManager.setModelActive(model);
-				modelManager.highlight(model);
+				this.modelManager.highlight(model);
 				break;
 			}
 		}
@@ -375,5 +419,9 @@ export class ThreeRaycaster {
 		}
 
 		this.dragManager.endDrag();
+	}
+
+	animate() {
+		this.modelManager.render();
 	}
 }
