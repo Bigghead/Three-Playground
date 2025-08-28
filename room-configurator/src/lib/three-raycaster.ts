@@ -6,6 +6,7 @@ import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
 
+// room wall has a depth of 0.1
 const ROOM_WALL_OFFSET = 0.1;
 
 type ModelChild = three.Group<three.Object3DEventMap>;
@@ -129,7 +130,7 @@ class DragManager {
 		return [...this._draggableModels];
 	}
 
-	storeOriginalModelColors(activeModel: typeof this._activeModel) {
+	storeOriginalModelColors(activeModel: ModelChild) {
 		const modelOriginalColors: Map<string, three.Material> = new Map();
 
 		traverseModelChildren(activeModel!, (child) => {
@@ -423,7 +424,6 @@ export class ThreeRaycaster {
 		if (!activeModel) return;
 
 		const isColliding = this.collisionManager.isactiveModelColliding;
-		this.collisionManager.handleCollidingModel(activeModel, isColliding);
 
 		if (isColliding) {
 			this.resetActiveModel(activeModel);
