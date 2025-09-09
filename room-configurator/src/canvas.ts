@@ -70,8 +70,8 @@ const applyModelConfigOffset = (
 	for (const key in modelOffset) {
 		// I hate TypeScript a lot sometimes
 		const offsetKey = key as OffsetKey;
+		console.log(offsetKey, modelOffset[offsetKey]);
 		const offsetValue = modelOffset[offsetKey];
-
 		if (offsetValue) {
 			model.scene[offsetKey].set(
 				offsetValue.x || 0,
@@ -103,7 +103,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed3);
+const bed = await loadModel(models.bed1);
 
 const bathroom = new three.Group();
 bathroom.add(bathroomWalls);

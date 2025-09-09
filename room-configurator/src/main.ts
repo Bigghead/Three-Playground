@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	// testing adding multiple models from configurator
 	let bedCount = 1;
 	const interval = setInterval(async () => {
-		if (bedCount > 6) {
+		if (bedCount > 4) {
 			return clearInterval(interval);
 		}
 		await renderModel(`bed${bedCount}`);
