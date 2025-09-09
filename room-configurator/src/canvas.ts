@@ -85,8 +85,9 @@ const applyModelConfigOffset = (
 const loadModel = async (
 	modelConfig: ModelConfig,
 	modelScale: number = 15
-): Promise<GLTF> => {
+): Promise<three.Group> => {
 	try {
+		const wrapper = new three.Group();
 		const { url, offset } = modelConfig;
 		const model = await modelLoader.initModel(url);
 		normalizeModelScale(model, modelScale);
@@ -95,7 +96,8 @@ const loadModel = async (
 			applyModelConfigOffset(model, offset);
 		}
 
-		return model;
+		wrapper.add(model.scene);
+		return wrapper;
 	} catch (e) {
 		console.error(e);
 		throw e;
@@ -112,25 +114,25 @@ bathroom.position.x = -1.5;
 bathroom.position.z = -0.5;
 
 const toilet = await loadModel(models.bathroom.toilet, 10);
-toilet.scene.rotation.y = -Math.PI / 2;
-toilet.scene.position.set(3.75, 0.01, -1.2);
+toilet.rotation.y = -Math.PI / 2;
+toilet.position.set(3.75, 0.01, -1.2);
 
 const shower = await loadModel(models.bathroom.shower, 12.5);
-shower.scene.rotation.y = Math.PI / 2;
-shower.scene.position.set(3.8, 0.001, -2.725);
+shower.rotation.y = Math.PI / 2;
+shower.position.set(3.8, 0.001, -2.725);
 
 const sink = await loadModel(models.bathroom.sink, 10);
 
-sink.scene.rotation.y = -Math.PI / 2;
+sink.rotation.y = -Math.PI / 2;
 
-sink.scene.position.set(1, 1.2, -3);
-bathroom.add(toilet.scene, shower.scene, sink.scene);
+sink.position.set(1, 1.2, -3);
+bathroom.add(toilet, shower, sink);
 
 scene.add(room, bathroom);
 
-scene.add(bed.scene);
+scene.add(bed);
 
-threeRaycaster.addDraggableModel(bed.scene);
+threeRaycaster.addDraggableModel(bed);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
 	if (event.button !== 0) return;
@@ -152,6 +154,6 @@ export const renderModel = async (
 ): Promise<void> => {
 	console.log(modelName);
 	const model = await loadModel(models[modelType][modelName], 22.5);
-	scene.add(model.scene);
-	threeRaycaster.addDraggableModel(model.scene);
+	scene.add(model);
+	threeRaycaster.addDraggableModel(model);
 };
