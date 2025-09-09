@@ -9,14 +9,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 	/**
 	 * Elements
 	 */
-	const configurator = document.querySelector(".configurator");
-	const configuratorContent = document.querySelector(".configurator-content");
-	const configSidebar = document.querySelector(".configurator-sidebar");
+	const configurator = document.querySelector(
+		".configurator"
+	) as HTMLDivElement;
+	const configuratorContent = document.querySelector(
+		".configurator-content"
+	) as HTMLDivElement;
+	const configSidebar = document.querySelector(
+		".configurator-sidebar"
+	) as HTMLDivElement;
 	const configSidebarMenu = document.querySelectorAll(
 		".configurator-sidebar > .menu"
 	) as NodeListOf<HTMLDivElement>;
 
+	const handleModelImageClick =
+		(modelType: ModelType, modelKey: ModelName) => async () => {
+			try {
+				await renderModel(modelType, modelKey);
+			} catch (e) {
+				console.error(e);
+			}
+		};
+
+	const clearModelImages = (): void => {
+		configuratorContent.innerHTML = "";
+	};
+
 	const renderModelImages = (modelType: ModelType): void => {
+		clearModelImages();
 		const chosenModels = models[modelType];
 
 		for (const key in chosenModels) {
@@ -25,8 +45,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 			const div = document.createElement("div");
 			div.classList.add("image-container");
-			div.style.backgroundImage = `url(${imageUrl})`;
-			configuratorContent?.append(div);
+
+			const img = document.createElement("img");
+			img.src = imageUrl;
+			img.alt = `${modelType} - ${modelKey}`;
+
+			div.appendChild(img);
+			div.addEventListener("click", handleModelImageClick(modelType, modelKey));
+
+			configuratorContent.append(div);
 		}
 	};
 
@@ -37,7 +64,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const activeMenu = document.querySelector(
 			".configurator-sidebar > .menu.active"
 		);
-		console.log(activeMenu?.classList);
 		activeMenu?.classList.remove("active");
 	};
 
@@ -57,18 +83,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 			if (content) {
 				removeCurrentlyActiveMenu();
 				activeMenu = content;
+				renderModelImages(content as ModelType);
 				target.classList.add("active");
 			}
 		});
 	});
-
-	// testing adding multiple models from configurator
-	let bedCount = 1;
-	const interval = setInterval(async () => {
-		if (bedCount > 3) {
-			return clearInterval(interval);
-		}
-		await renderModel("bed", `bed${bedCount}` as ModelName);
-		bedCount++;
-	}, 2000);
 });
