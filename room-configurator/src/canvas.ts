@@ -8,6 +8,7 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
+import type { ModelName, ModelType } from "./lib/types";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -70,7 +71,6 @@ const applyModelConfigOffset = (
 	for (const key in modelOffset) {
 		// I hate TypeScript a lot sometimes
 		const offsetKey = key as OffsetKey;
-		console.log(offsetKey, modelOffset[offsetKey]);
 		const offsetValue = modelOffset[offsetKey];
 		if (offsetValue) {
 			model.scene[offsetKey].set(
@@ -103,7 +103,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed1);
+const bed = await loadModel(models.bed.bed1);
 
 const bathroom = new three.Group();
 bathroom.add(bathroomWalls);
@@ -111,15 +111,15 @@ bathroom.rotation.y = Math.PI / 2;
 bathroom.position.x = -1.5;
 bathroom.position.z = -0.5;
 
-const toilet = await loadModel(models.toilet, 10);
+const toilet = await loadModel(models.bathroom.toilet, 10);
 toilet.scene.rotation.y = -Math.PI / 2;
 toilet.scene.position.set(3.75, 0.01, -1.2);
 
-const shower = await loadModel(models.shower, 12.5);
+const shower = await loadModel(models.bathroom.shower, 12.5);
 shower.scene.rotation.y = Math.PI / 2;
 shower.scene.position.set(3.8, 0.001, -2.725);
 
-const sink = await loadModel(models.sink, 10);
+const sink = await loadModel(models.bathroom.sink, 10);
 
 sink.scene.rotation.y = -Math.PI / 2;
 
@@ -147,10 +147,11 @@ window.addEventListener("mousemove", (event: MouseEvent) => {
 });
 
 export const renderModel = async (
-	modelName: keyof typeof models
+	modelType: ModelType,
+	modelName: ModelName
 ): Promise<void> => {
 	console.log(modelName);
-	const model = await loadModel(models[modelName], 22.5);
+	const model = await loadModel(models[modelType][modelName], 22.5);
 	scene.add(model.scene);
 	threeRaycaster.addDraggableModel(model.scene);
 };
