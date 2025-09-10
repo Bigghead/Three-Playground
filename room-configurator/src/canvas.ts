@@ -1,6 +1,7 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
 import {
+	modelRoomScales,
 	models,
 	type ModelConfig,
 	type ModelOffset,
@@ -153,7 +154,10 @@ export const renderModel = async (
 	modelName: ModelName
 ): Promise<void> => {
 	console.log(modelName);
-	const model = await loadModel(models[modelType][modelName], 22.5);
+	const model = await loadModel(
+		models[modelType][modelName],
+		modelRoomScales[modelType as keyof typeof modelRoomScales]
+	);
 	scene.add(model);
 	threeRaycaster.addDraggableModel(model);
 };

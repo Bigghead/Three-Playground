@@ -26,6 +26,11 @@ export const modelScaling = {
 	bed: 22.5,
 };
 
+export const modelRoomScales = {
+	bed: 33,
+	sofa: 45,
+};
+
 export const models = {
 	bed: {
 		bed1: {
@@ -40,42 +45,43 @@ export const models = {
 		bed2: {
 			url: "/models/bed/bed-2-draco.glb",
 			offset: {
+				position: { y: -0.15 },
 				rotation: {
 					y: Math.PI / 2,
 				},
 			},
 			imageUrl: "images/bed/bed-2.webp",
 		},
+
 		bed3: {
 			url: "/models/bed/bed-3-draco.glb",
 			offset: {
-				position: { x: 0.75, y: 0.55 },
-				rotation: {
-					y: Math.PI,
-				},
-			},
-			imageUrl: "images/bed/bed-3.webp",
-		},
-		bed4: {
-			url: "/models/bed/bed-4-draco.glb",
-			offset: {
-				position: { y: -0.125 },
+				position: { y: -0.25 },
 				rotation: {
 					y: -Math.PI / 2,
 				},
 			},
-			imageUrl: "images/bed/bed-4.webp",
+			imageUrl: "images/bed/bed-3.webp",
 		},
-		bed5: {
-			url: "/models/bed/bed-5-draco.glb",
+	},
+	sofa: {
+		sofa1: {
+			url: "/models/sofa/sofa-1-draco.glb",
+			imageUrl: "images/sofa/sofa-1.png",
 			offset: {
-				position: { x: 0.8, y: 0.3 },
-
-				rotation: {
-					y: Math.PI,
-				},
+				position: { y: 0.7 },
 			},
-			imageUrl: "images/bed/bed-5.webp",
+		},
+		sofa2: {
+			url: "/models/sofa/sofa-2-draco.glb",
+			imageUrl: "images/sofa/sofa-2.png",
+			offset: {
+				position: { y: -0.55 },
+			},
+		},
+		sofa3: {
+			url: "/models/sofa/sofa-3-draco.glb",
+			imageUrl: "images/sofa/sofa-3.png",
 		},
 	},
 
