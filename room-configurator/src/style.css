@@ -21,6 +21,8 @@ body {
 }
 
 .configurator {
+	display: flex;
+	flex-direction: row;
 	width: 35vw;
 	height: 100%;
 	position: fixed;
@@ -46,4 +48,39 @@ body {
 .configurator-sidebar > .menu.active {
 	background-color: skyblue;
 	color: #fff;
+}
+
+.configurator-content {
+	padding: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	width: 70%;
+	height: 100%;
+	overflow-y: auto;
+}
+.configurator-content .image-container {
+	transform-origin: center center;
+	flex: 0 0 auto;
+	overflow: hidden;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+	border: 2px solid transparent;
+}
+
+.configurator-content .image-container:hover {
+	transform: scale(1.05);
+	border: 2px solid skyblue;
+}
+
+.configurator-content .image-container.active {
+	border: 2px solid deepskyblue;
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.configurator-content .image-container img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }

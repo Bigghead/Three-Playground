@@ -22,54 +22,78 @@ export type ModelConfig = {
 	offset?: ModelOffset;
 };
 
+export const modelScaling = {
+	bed: 22.5,
+};
+
+export const modelRoomScales = {
+	bed: 33,
+	sofa: 45,
+};
+
 export const models = {
-	bed1: {
-		url: "/models/bed/bed-1-draco.glb",
-	},
-	bed2: {
-		url: "/models/bed/bed-2-draco.glb",
-	},
-	bed3: {
-		url: "/models/bed/bed-3-draco.glb",
-		offset: {
-			position: { y: -0.05 },
-			rotation: {
-				y: Math.PI / 2,
+	bed: {
+		bed1: {
+			url: "/models/bed/bed-1-draco.glb",
+			offset: {
+				rotation: {
+					y: Math.PI / 2,
+				},
 			},
+			imageUrl: "images/bed/bed-1.webp",
+		},
+		bed2: {
+			url: "/models/bed/bed-2-draco.glb",
+			offset: {
+				position: { y: -0.15 },
+				rotation: {
+					y: Math.PI / 2,
+				},
+			},
+			imageUrl: "images/bed/bed-2.webp",
+		},
+
+		bed3: {
+			url: "/models/bed/bed-3-draco.glb",
+			offset: {
+				position: { y: -0.25 },
+				rotation: {
+					y: -Math.PI / 2,
+				},
+			},
+			imageUrl: "images/bed/bed-3.webp",
 		},
 	},
-	bed4: {
-		url: "/models/bed/bed-4-draco.glb",
-		offset: {
-			rotation: {
-				y: Math.PI / 2,
+	sofa: {
+		sofa1: {
+			url: "/models/sofa/sofa-1-draco.glb",
+			imageUrl: "images/sofa/sofa-1.png",
+			offset: {
+				position: { y: 0.7 },
 			},
 		},
-	},
-	bed5: {
-		url: "/models/bed/bed-5-draco.glb",
-	},
-	bed6: {
-		url: "/models/bed/bed-6-draco.glb",
-		offset: {
-			position: {
-				y: -0.11,
-			},
-			rotation: {
-				y: -Math.PI / 2,
+		sofa2: {
+			url: "/models/sofa/sofa-2-draco.glb",
+			imageUrl: "images/sofa/sofa-2.png",
+			offset: {
+				position: { y: -0.55 },
 			},
 		},
+		sofa3: {
+			url: "/models/sofa/sofa-3-draco.glb",
+			imageUrl: "images/sofa/sofa-3.png",
+		},
 	},
-	bunkBed: {
-		url: "/models/bed/bunk-bed-draco.glb",
-	},
-	toilet: {
-		url: "/models/bathroom/toilet-draco.glb",
-	},
-	shower: {
-		url: "/models/bathroom/shower-draco.glb",
-	},
-	sink: {
-		url: "/models/bathroom/sink-draco.glb",
+
+	bathroom: {
+		toilet: {
+			url: "/models/bathroom/toilet-draco.glb",
+		},
+		shower: {
+			url: "/models/bathroom/shower-draco.glb",
+		},
+		sink: {
+			url: "/models/bathroom/sink-draco.glb",
+		},
 	},
 };

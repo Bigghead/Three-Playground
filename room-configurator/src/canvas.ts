@@ -1,6 +1,7 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
 import {
+	modelRoomScales,
 	models,
 	type ModelConfig,
 	type ModelOffset,
@@ -8,6 +9,7 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
+import type { ModelName, ModelType } from "./lib/types";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -71,7 +73,6 @@ const applyModelConfigOffset = (
 		// I hate TypeScript a lot sometimes
 		const offsetKey = key as OffsetKey;
 		const offsetValue = modelOffset[offsetKey];
-
 		if (offsetValue) {
 			model.scene[offsetKey].set(
 				offsetValue.x || 0,
@@ -85,8 +86,9 @@ const applyModelConfigOffset = (
 const loadModel = async (
 	modelConfig: ModelConfig,
 	modelScale: number = 15
-): Promise<GLTF> => {
+): Promise<three.Group> => {
 	try {
+		const wrapper = new three.Group();
 		const { url, offset } = modelConfig;
 		const model = await modelLoader.initModel(url);
 		normalizeModelScale(model, modelScale);
@@ -95,7 +97,8 @@ const loadModel = async (
 			applyModelConfigOffset(model, offset);
 		}
 
-		return model;
+		wrapper.add(model.scene);
+		return wrapper;
 	} catch (e) {
 		console.error(e);
 		throw e;
@@ -103,7 +106,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed3);
+const bed = await loadModel(models.bed.bed1);
 
 const bathroom = new three.Group();
 bathroom.add(bathroomWalls);
@@ -111,26 +114,26 @@ bathroom.rotation.y = Math.PI / 2;
 bathroom.position.x = -1.5;
 bathroom.position.z = -0.5;
 
-const toilet = await loadModel(models.toilet, 10);
-toilet.scene.rotation.y = -Math.PI / 2;
-toilet.scene.position.set(3.75, 0.01, -1.2);
+const toilet = await loadModel(models.bathroom.toilet, 10);
+toilet.rotation.y = -Math.PI / 2;
+toilet.position.set(3.75, 0.01, -1.2);
 
-const shower = await loadModel(models.shower, 12.5);
-shower.scene.rotation.y = Math.PI / 2;
-shower.scene.position.set(3.8, 0.001, -2.725);
+const shower = await loadModel(models.bathroom.shower, 12.5);
+shower.rotation.y = Math.PI / 2;
+shower.position.set(3.8, 0.001, -2.725);
 
-const sink = await loadModel(models.sink, 10);
+const sink = await loadModel(models.bathroom.sink, 10);
 
-sink.scene.rotation.y = -Math.PI / 2;
+sink.rotation.y = -Math.PI / 2;
 
-sink.scene.position.set(1, 1.2, -3);
-bathroom.add(toilet.scene, shower.scene, sink.scene);
+sink.position.set(1, 1.2, -3);
+bathroom.add(toilet, shower, sink);
 
 scene.add(room, bathroom);
 
-scene.add(bed.scene);
+scene.add(bed);
 
-threeRaycaster.addDraggableModel(bed.scene);
+threeRaycaster.addDraggableModel(bed);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
 	if (event.button !== 0) return;
@@ -147,10 +150,14 @@ window.addEventListener("mousemove", (event: MouseEvent) => {
 });
 
 export const renderModel = async (
-	modelName: keyof typeof models
+	modelType: ModelType,
+	modelName: ModelName
 ): Promise<void> => {
 	console.log(modelName);
-	const model = await loadModel(models[modelName], 22.5);
-	scene.add(model.scene);
-	threeRaycaster.addDraggableModel(model.scene);
+	const model = await loadModel(
+		models[modelType][modelName],
+		modelRoomScales[modelType as keyof typeof modelRoomScales]
+	);
+	scene.add(model);
+	threeRaycaster.addDraggableModel(model);
 };
