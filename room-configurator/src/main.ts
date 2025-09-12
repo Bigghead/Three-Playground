@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 		".configurator-sidebar > .menu"
 	) as NodeListOf<HTMLDivElement>;
 
+	const slider = document.querySelector(
+		".config-modal .config-modal-slider"
+	) as HTMLInputElement;
+
 	const handleModelImageClick =
 		(modelType: ModelType, modelKey: ModelName) => async () => {
 			try {
@@ -87,5 +91,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 				target.classList.add("active");
 			}
 		});
+	});
+
+	slider.addEventListener("input", (e) => {
+		const target = e.target as HTMLInputElement;
+		console.log(target.value);
 	});
 });

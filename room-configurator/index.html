@@ -25,7 +25,31 @@
 					<div class="configurator-content"></div>
 				</div>
 			</div>
+			<div class="config-modal">
+				<div class="config-modal-title">
+					Selected: <span class="item-name"></span>
+				</div>
+				<div class="config-modal-description">
+					<div>Rotation: <span class="item-rotation">0</span>°</div>
+					<div class="config-modal-slider">
+						<input
+							type="range"
+							id="rotation"
+							name="rotation"
+							value="0"
+							min="0"
+							max="360"
+							step="5"
+						/>
+					</div>
+				</div>
+				<div class="config-modal-action">
+					<button>Reset</button>
+					<button>Delete</button>
+				</div>
+			</div>
 		</div>
+
 		<script type="module" src="/src/canvas.ts"></script>
 		<script type="module" src="/src/main.ts"></script>
 	</body>
