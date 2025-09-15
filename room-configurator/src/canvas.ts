@@ -137,3 +137,7 @@ export const renderModel = async (
 	scene.add(model);
 	threeRaycaster.addDraggableModel(model);
 };
+
+export const rotateModel = (value: string): void => {
+	threeRaycaster.rotateModel(value);
+};

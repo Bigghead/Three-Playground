@@ -2,7 +2,7 @@ import { models } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { renderModel } = await import("./canvas");
+	const { renderModel, rotateModel } = await import("./canvas");
 
 	let activeMenu = "home";
 
@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 	const slider = document.querySelector(
 		".config-modal .config-modal-slider"
 	) as HTMLInputElement;
+	const rotationText = document.querySelector(
+		".config-modal .item-rotation"
+	) as HTMLSpanElement;
 
 	const handleModelImageClick =
 		(modelType: ModelType, modelKey: ModelName) => async () => {
@@ -93,8 +96,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 		});
 	});
 
+	//Todo - reset / store sliders for other model rotations
 	slider.addEventListener("input", (e) => {
 		const target = e.target as HTMLInputElement;
-		console.log(target.value);
+		rotationText.innerText = target.value;
+		rotateModel(target.value);
 	});
 });
