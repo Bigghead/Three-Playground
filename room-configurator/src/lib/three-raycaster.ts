@@ -5,6 +5,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
+import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "./constants";
 
 // room wall has a depth of 0.1
 const ROOM_WALL_OFFSET = 0.1;
@@ -318,6 +319,9 @@ export class ThreeRaycaster {
 	collisionManager: CollisionManager;
 	modelManager: ModelManager;
 
+	modelClickEvent = new Event(ACTIVE_MODEL_CLICKED);
+	modelInactiveEvent = new Event(INACTIVE_MODEL_EVENT);
+
 	constructor({
 		canvas,
 		camera,
@@ -405,11 +409,13 @@ export class ThreeRaycaster {
 				true
 			);
 			if (intersects.length > 0) {
+				event.target.dispatchEvent(this.modelClickEvent);
 				document.body.style.cursor = "grabbing";
 				this.dragManager.setModelActive(model);
 				this.modelManager.highlight(model);
 				break;
 			} else {
+				event.target.dispatchEvent(this.modelInactiveEvent);
 				this.modelManager.removeHighlight();
 			}
 		}

@@ -1,3 +1,4 @@
+import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "./lib/constants";
 import { models } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
@@ -9,6 +10,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 	/**
 	 * Elements
 	 */
+	const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
+
 	const configurator = document.querySelector(
 		".configurator"
 	) as HTMLDivElement;
@@ -22,6 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		".configurator-sidebar > .menu"
 	) as NodeListOf<HTMLDivElement>;
 
+	const configModal = document.querySelector(".config-modal") as HTMLDivElement;
 	const slider = document.querySelector(
 		".config-modal .config-modal-slider"
 	) as HTMLInputElement;
@@ -94,6 +98,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 				target.classList.add("active");
 			}
 		});
+	});
+
+	canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
+		configModal.style.visibility = "visible";
+	});
+	canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
+		configModal.style.visibility = "hidden";
 	});
 
 	//Todo - reset / store sliders for other model rotations

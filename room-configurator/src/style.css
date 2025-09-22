@@ -94,6 +94,7 @@ body {
 	padding: 1.5rem;
 	border-radius: 1rem;
 	background-color: azure;
+	visibility: hidden;
 }
 
 .config-modal-title,
