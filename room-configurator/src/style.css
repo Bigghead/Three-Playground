@@ -84,3 +84,40 @@ body {
 	height: 100%;
 	object-fit: cover;
 }
+
+.config-modal {
+	position: absolute;
+	top: 5rem;
+	left: 5rem;
+	min-width: 250px;
+	min-height: 200px;
+	padding: 1.5rem;
+	border-radius: 1rem;
+	background-color: azure;
+}
+
+.config-modal-title,
+.config-modal-description {
+	color: #000;
+	margin: 0.5rem auto;
+}
+
+.config-modal-slider {
+	margin: 0.5rem auto;
+}
+.config-modal-slider > #rotation {
+	width: 100%;
+}
+
+.config-modal-action {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+}
+.config-modal-action > button {
+	padding: 0.5rem;
+	border: 2px solid gray;
+	border-radius: 0.2rem;
+}

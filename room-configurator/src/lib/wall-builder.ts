@@ -33,10 +33,7 @@ export class WallBuilder {
 		};
 	}
 
-	private getWallConfigs(
-		wallGeo: three.BoxGeometry,
-		wallGroupType: "room" | "bathroom" = "room"
-	) {
+	private getWallConfigs(wallGeo: three.BoxGeometry, wallGroupType = "room") {
 		const { height, width, depth } = wallGeo.parameters;
 
 		const wallY = height / 2 + 0.001;
@@ -62,21 +59,8 @@ export class WallBuilder {
 					rotationY: Math.PI / 2,
 				},
 			],
-			bathroom: [
-				{
-					x: 3,
-					y: wallY,
-					z: -0.5,
-				},
-				{
-					x: 0,
-					y: wallY,
-					z: -2,
-					rotationY: Math.PI / 2,
-				},
-			],
 		};
-		return wallConfigs[wallGroupType];
+		return wallConfigs[wallGroupType as keyof typeof wallConfigs];
 	}
 
 	private buildWalls(
@@ -97,10 +81,8 @@ export class WallBuilder {
 
 	createWalls(): {
 		roomWalls: three.Group;
-		bathroomWalls: three.Group;
 	} {
 		const roomWallGroup = new three.Group();
-		const bathroomWallGroup = new three.Group();
 
 		const { geometry: roomWallGeo, mesh: roomWallMesh } = this.createWall(10);
 		const roomWallConfigs = this.getWallConfigs(roomWallGeo, "room");
@@ -110,19 +92,6 @@ export class WallBuilder {
 			roomWallMesh
 		);
 
-		const { geometry: bathroomWallGeo, mesh: bathroomWallMesh } =
-			this.createWall(3);
-
-		const bathroomWallConfigs = this.getWallConfigs(
-			bathroomWallGeo,
-			"bathroom"
-		);
-		const bathroomWalls = this.buildWalls(
-			bathroomWallConfigs,
-			bathroomWallGroup,
-			bathroomWallMesh
-		);
-
-		return { roomWalls, bathroomWalls };
+		return { roomWalls };
 	}
 }

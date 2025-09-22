@@ -362,6 +362,13 @@ export class ThreeRaycaster {
 		this.modelManager.resetModelColor(activeModel);
 	}
 
+	rotateModel(degree: string): void {
+		if (this.dragManager.activeModel) {
+			const rad = three.MathUtils.degToRad(parseInt(degree));
+			this.dragManager.activeModel.rotation.y = rad;
+		}
+	}
+
 	// need to break this up
 	onMouseMove(event: MouseEvent): void {
 		const { activeModel, isDraggingModel } = this.dragManager;
@@ -388,6 +395,7 @@ export class ThreeRaycaster {
 	}
 
 	onMouseDown(event: MouseEvent): void {
+		if (!(event.target instanceof HTMLCanvasElement)) return;
 		this.collisionManager.setRaycastingPointer(event);
 		const models = this.dragManager.getDraggableModels();
 

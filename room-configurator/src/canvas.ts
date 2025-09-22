@@ -1,7 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
 import {
-	modelRoomScales,
 	models,
 	type ModelConfig,
 	type ModelOffset,
@@ -38,9 +37,9 @@ const {
 } = floorGeo;
 
 const wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
-const { roomWalls, bathroomWalls } = wallBuilder.createWalls();
-
+const { roomWalls } = wallBuilder.createWalls();
 room.add(floor, roomWalls);
+
 const roomBox = new three.Box3().setFromObject(room);
 const roomSize = roomBox.getSize(new three.Vector3());
 threeRaycaster.setRoomBoundingBox(roomSize);
@@ -108,30 +107,7 @@ const loadModel = async (
 // ----- Models ----- //
 const bed = await loadModel(models.bed.bed1);
 
-const bathroom = new three.Group();
-bathroom.add(bathroomWalls);
-bathroom.rotation.y = Math.PI / 2;
-bathroom.position.x = -1.5;
-bathroom.position.z = -0.5;
-
-const toilet = await loadModel(models.bathroom.toilet, 10);
-toilet.rotation.y = -Math.PI / 2;
-toilet.position.set(3.75, 0.01, -1.2);
-
-const shower = await loadModel(models.bathroom.shower, 12.5);
-shower.rotation.y = Math.PI / 2;
-shower.position.set(3.8, 0.001, -2.725);
-
-const sink = await loadModel(models.bathroom.sink, 10);
-
-sink.rotation.y = -Math.PI / 2;
-
-sink.position.set(1, 1.2, -3);
-bathroom.add(toilet, shower, sink);
-
-scene.add(room, bathroom);
-
-scene.add(bed);
+scene.add(room, bed);
 
 threeRaycaster.addDraggableModel(bed);
 
@@ -156,8 +132,12 @@ export const renderModel = async (
 	console.log(modelName);
 	const model = await loadModel(
 		models[modelType][modelName],
-		modelRoomScales[modelType as keyof typeof modelRoomScales]
+		models[modelType][modelName]["roomSizeScale"]
 	);
 	scene.add(model);
 	threeRaycaster.addDraggableModel(model);
+};
+
+export const rotateModel = (value: string): void => {
+	threeRaycaster.rotateModel(value);
 };
