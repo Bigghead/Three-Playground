@@ -8,7 +8,9 @@ import { models } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { renderModel, rotateModel, createWall } = await import("./canvas");
+	const { renderModel, createWall, rotateModel, editWidthModel } = await import(
+		"./canvas"
+	);
 
 	let activeMenu = "home";
 
@@ -91,7 +93,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const custom = e as CustomEvent;
 		console.log(custom.detail);
 		if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
+			const originalWallWidth = 3;
 			DomEl.modelWidthSliderContainer.style.display = "block";
+			const { x } = custom.detail?.scale;
+			const widthValue = (originalWallWidth * x).toString();
+			DomEl.modelWidthText.innerText = widthValue;
+			DomEl.modelWidthSlider.value = widthValue;
 		}
 
 		const { y } = custom.detail?.rotation;
@@ -114,5 +121,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const target = e.target as HTMLInputElement;
 		DomEl.modelRotationText.innerText = target.value;
 		rotateModel(target.value);
+	});
+
+	DomEl.modelWidthSlider.addEventListener("input", (e) => {
+		const target = e.target as HTMLInputElement;
+		DomEl.modelWidthText.innerText = target.value;
+		editWidthModel(target.value);
 	});
 });

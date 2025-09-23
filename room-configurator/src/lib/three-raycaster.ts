@@ -99,6 +99,7 @@ class ModelManager {
 				detail: {
 					id: model.uuid,
 					rotation: model.rotation,
+					scale: model.scale,
 					type: model.userData?.type || null,
 				},
 			})
@@ -390,6 +391,16 @@ export class ThreeRaycaster {
 		if (this.dragManager.activeModel) {
 			const rad = three.MathUtils.degToRad(parseInt(degree));
 			this.dragManager.activeModel.rotation.y = rad;
+		}
+	}
+
+	editWidthModel(width: string): void {
+		if (this.dragManager.activeModel) {
+			const activeModel = this.dragManager.activeModel;
+			const originalWidth = 3;
+			const newWidth = parseFloat(width) / originalWidth;
+
+			activeModel.scale.set(newWidth, 1, 1);
 		}
 	}
 

@@ -150,3 +150,7 @@ export const createWall = (): void => {
 export const rotateModel = (value: string): void => {
 	threeRaycaster.rotateModel(value);
 };
+
+export const editWidthModel = (value: string): void => {
+	threeRaycaster.editWidthModel(value);
+};
