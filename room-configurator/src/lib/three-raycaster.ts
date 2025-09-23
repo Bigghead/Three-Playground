@@ -99,6 +99,7 @@ class ModelManager {
 				detail: {
 					id: model.uuid,
 					rotation: model.rotation,
+					type: model.userData?.type || null,
 				},
 			})
 		);
@@ -163,6 +164,7 @@ class DragManager {
 		this._isDraggingModel = true;
 		this._controls.enabled = false;
 		this._activeModel.userData = {
+			...this._activeModel.userData,
 			originalPosition: activeModel.position.clone(),
 			originalColorMaterial: this.storeOriginalModelColors(activeModel),
 		};

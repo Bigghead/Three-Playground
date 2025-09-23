@@ -129,13 +129,21 @@ export const renderModel = async (
 	modelType: ModelType,
 	modelName: ModelName
 ): Promise<void> => {
-	console.log(modelName);
 	const model = await loadModel(
 		models[modelType][modelName],
 		models[modelType][modelName]["roomSizeScale"]
 	);
 	scene.add(model);
 	threeRaycaster.addDraggableModel(model);
+};
+
+export const createWall = (): void => {
+	const { mesh: wallMesh } = wallBuilder.createWall(3);
+	const wall = new three.Group();
+	wall.userData.type = "divider";
+	wall.add(wallMesh);
+	room.add(wall);
+	threeRaycaster.addDraggableModel(wall);
 };
 
 export const rotateModel = (value: string): void => {
