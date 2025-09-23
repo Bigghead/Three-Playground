@@ -21,6 +21,7 @@
 						<div class="menu" data-content="light">Light</div>
 						<div class="menu" data-content="bathroom">Bathroom</div>
 						<div class="menu" data-content="others">Others</div>
+						<div class="menu" data-content="wall">Wall</div>
 					</div>
 					<div class="configurator-content"></div>
 				</div>
@@ -31,16 +32,30 @@
 				</div>
 				<div class="config-modal-description">
 					<div>Rotation: <span class="item-rotation">0</span>°</div>
-					<div class="config-modal-slider">
+					<div class="config-modal-slider rotation">
 						<input
 							type="range"
-							id="rotation"
-							name="rotation"
+							id="model-rotation"
+							name="model rotation"
 							value="0"
 							min="0"
 							max="360"
 							step="5"
 						/>
+					</div>
+					<div class="config-modal-slider--container__hidden">
+						<div>Width: <span class="item-width">0</span>°</div>
+						<div class="config-modal-slider width">
+							<input
+								type="range"
+								id="model-width"
+								name="model width"
+								value="0"
+								min="0"
+								max="360"
+								step="5"
+							/>
+						</div>
 					</div>
 				</div>
 				<div class="config-modal-action">

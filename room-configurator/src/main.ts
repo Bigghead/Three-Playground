@@ -1,41 +1,28 @@
-import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "./lib/constants";
+import {
+	DomEl,
+	ACTIVE_MODEL_CLICKED,
+	INACTIVE_MODEL_EVENT,
+	WALL_DIVIDER,
+} from "./lib/constants";
 import { models } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { renderModel, rotateModel } = await import("./canvas");
+	const { renderModel, rotateModel, createWall } = await import("./canvas");
 
 	let activeMenu = "home";
 
 	/**
 	 * Elements
 	 */
-	const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
-
-	const configurator = document.querySelector(
-		".configurator"
-	) as HTMLDivElement;
-	const configuratorContent = document.querySelector(
-		".configurator-content"
-	) as HTMLDivElement;
-	const configSidebar = document.querySelector(
-		".configurator-sidebar"
-	) as HTMLDivElement;
-	const configSidebarMenu = document.querySelectorAll(
-		".configurator-sidebar > .menu"
-	) as NodeListOf<HTMLDivElement>;
-
-	const configModal = document.querySelector(".config-modal") as HTMLDivElement;
-	const slider = document.querySelector(
-		".config-modal input#rotation"
-	) as HTMLInputElement;
-	const rotationText = document.querySelector(
-		".config-modal .item-rotation"
-	) as HTMLSpanElement;
 
 	const handleModelImageClick =
 		(modelType: ModelType, modelKey: ModelName) => async () => {
 			try {
+				if (modelType === "wall") {
+					return createWall();
+				}
+
 				await renderModel(modelType, modelKey);
 			} catch (e) {
 				console.error(e);
@@ -43,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		};
 
 	const clearModelImages = (): void => {
-		configuratorContent.innerHTML = "";
+		DomEl.configuratorContent.innerHTML = "";
 	};
 
 	const renderModelImages = (modelType: ModelType): void => {
@@ -64,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			div.appendChild(img);
 			div.addEventListener("click", handleModelImageClick(modelType, modelKey));
 
-			configuratorContent.append(div);
+			DomEl.configuratorContent.append(div);
 		}
 	};
 
@@ -82,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	 * Listeners
 	 */
 
-	configSidebarMenu.forEach((menu): void => {
+	DomEl.configSidebarMenu.forEach((menu): void => {
 		menu.addEventListener("click", (e) => {
 			e.stopPropagation();
 
@@ -100,8 +87,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 		});
 	});
 
-	canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
+	DomEl.canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
 		const custom = e as CustomEvent;
+		console.log(custom.detail);
+		if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
+			DomEl.modelWidthSliderContainer.style.display = "block";
+		}
+
 		const { y } = custom.detail?.rotation;
 
 		// need to turn rotation radians back to degrees
@@ -109,18 +101,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const normalizedY = Math.round(degrees / 5) * 5;
 		const degreeValue = normalizedY.toString();
 
-		rotationText.innerText = degreeValue;
-		slider.value = degreeValue;
-		configModal.style.visibility = "visible";
+		DomEl.modelRotationText.innerText = degreeValue;
+		DomEl.modelRotationSlider.value = degreeValue;
+		DomEl.configModal.style.visibility = "visible";
 	});
 
-	canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
-		configModal.style.visibility = "hidden";
+	DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
+		DomEl.configModal.style.visibility = "hidden";
 	});
 
-	slider.addEventListener("input", (e) => {
+	DomEl.modelRotationSlider.addEventListener("input", (e) => {
 		const target = e.target as HTMLInputElement;
-		rotationText.innerText = target.value;
+		DomEl.modelRotationText.innerText = target.value;
 		rotateModel(target.value);
 	});
 });

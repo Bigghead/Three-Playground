@@ -106,8 +106,13 @@ body {
 .config-modal-slider {
 	margin: 0.5rem auto;
 }
-.config-modal-slider > #rotation {
+
+.config-modal-slider > #model-rotation,
+.config-modal-slider > #model-width {
 	width: 100%;
+}
+.config-modal-slider--container__hidden {
+	display: none;
 }
 
 .config-modal-action {

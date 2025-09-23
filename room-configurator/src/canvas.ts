@@ -9,6 +9,7 @@ import {
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
 import type { ModelName, ModelType } from "./lib/types";
+import { WALL_DIVIDER } from "./lib/constants";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -140,7 +141,7 @@ export const renderModel = async (
 export const createWall = (): void => {
 	const { mesh: wallMesh } = wallBuilder.createWall(3);
 	const wall = new three.Group();
-	wall.userData.type = "divider";
+	wall.userData.type = WALL_DIVIDER;
 	wall.add(wallMesh);
 	room.add(wall);
 	threeRaycaster.addDraggableModel(wall);
