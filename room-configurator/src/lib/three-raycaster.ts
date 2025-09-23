@@ -24,6 +24,8 @@ const traverseModelChildren = (
 };
 
 class ModelManager {
+	modelInactiveEvent = new Event(INACTIVE_MODEL_EVENT);
+
 	private _composer: EffectComposer;
 	private _outlinePass: OutlinePass;
 
@@ -89,6 +91,25 @@ class ModelManager {
 				child.material = originalModelMaterial;
 			}
 		});
+	}
+
+	handleActiveModel(eventTarget: EventTarget, model: ModelChild): void {
+		eventTarget.dispatchEvent(
+			new CustomEvent(ACTIVE_MODEL_CLICKED, {
+				detail: {
+					id: model.uuid,
+					rotation: model.rotation,
+				},
+			})
+		);
+
+		document.body.style.cursor = "grabbing";
+		this.highlight(model);
+	}
+
+	handleInactiveModel(eventTarget: EventTarget): void {
+		eventTarget.dispatchEvent(this.modelInactiveEvent);
+		this.removeHighlight();
 	}
 
 	render(): void {
@@ -319,9 +340,6 @@ export class ThreeRaycaster {
 	collisionManager: CollisionManager;
 	modelManager: ModelManager;
 
-	modelClickEvent = new Event(ACTIVE_MODEL_CLICKED);
-	modelInactiveEvent = new Event(INACTIVE_MODEL_EVENT);
-
 	constructor({
 		canvas,
 		camera,
@@ -408,15 +426,13 @@ export class ThreeRaycaster {
 				model,
 				true
 			);
+
 			if (intersects.length > 0) {
-				event.target.dispatchEvent(this.modelClickEvent);
-				document.body.style.cursor = "grabbing";
 				this.dragManager.setModelActive(model);
-				this.modelManager.highlight(model);
+				this.modelManager.handleActiveModel(event.target, model);
 				break;
 			} else {
-				event.target.dispatchEvent(this.modelInactiveEvent);
-				this.modelManager.removeHighlight();
+				this.modelManager.handleInactiveModel(event.target);
 			}
 		}
 	}

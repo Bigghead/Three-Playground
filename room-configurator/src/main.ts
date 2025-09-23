@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	const configModal = document.querySelector(".config-modal") as HTMLDivElement;
 	const slider = document.querySelector(
-		".config-modal .config-modal-slider"
+		".config-modal input#rotation"
 	) as HTMLInputElement;
 	const rotationText = document.querySelector(
 		".config-modal .item-rotation"
@@ -101,13 +101,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 
 	canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
+		const custom = e as CustomEvent;
+		const { y } = custom.detail?.rotation;
+
+		// need to turn rotation radians back to degrees
+		const degrees = (y * 180) / Math.PI;
+		const normalizedY = Math.round(degrees / 5) * 5;
+		const degreeValue = normalizedY.toString();
+
+		rotationText.innerText = degreeValue;
+		slider.value = degreeValue;
 		configModal.style.visibility = "visible";
 	});
+
 	canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
 		configModal.style.visibility = "hidden";
 	});
 
-	//Todo - reset / store sliders for other model rotations
 	slider.addEventListener("input", (e) => {
 		const target = e.target as HTMLInputElement;
 		rotationText.innerText = target.value;
