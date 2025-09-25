@@ -4,7 +4,6 @@ import {
 	models,
 	type ModelConfig,
 	type ModelOffset,
-	type ModelVector3,
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";

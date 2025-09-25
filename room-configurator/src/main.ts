@@ -4,7 +4,7 @@ import {
 	INACTIVE_MODEL_EVENT,
 	WALL_DIVIDER,
 } from "./lib/constants";
-import { models } from "./lib/model-configs";
+import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -67,6 +67,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 		activeMenu?.classList.remove("active");
 	};
 
+	const handleWidthSlider = (scale: ModelVector3): void => {
+		const { x } = scale;
+		const originalWallWidth = 3;
+		DomEl.modelWidthSliderContainer.style.display = "block";
+		const widthValue = (originalWallWidth * x).toString();
+		DomEl.modelWidthText.innerText = widthValue;
+		DomEl.modelWidthSlider.value = widthValue;
+	};
+
+	const handleRotationSlider = (rotation: ModelVector3): void => {
+		const { y } = rotation;
+
+		// need to turn rotation radians back to degrees
+		const degrees = (y * 180) / Math.PI;
+		const normalizedY = Math.round(degrees / 5) * 5;
+		const degreeValue = normalizedY.toString();
+
+		DomEl.modelRotationText.innerText = degreeValue;
+		DomEl.modelRotationSlider.value = degreeValue;
+		DomEl.configModal.style.visibility = "visible";
+	};
+
 	/**
 	 * Listeners
 	 */
@@ -91,26 +113,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	DomEl.canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
 		const custom = e as CustomEvent;
-		console.log(custom.detail);
+		DomEl.modelWidthSliderContainer.style.display = "none";
+
 		if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
-			const originalWallWidth = 3;
-			DomEl.modelWidthSliderContainer.style.display = "block";
-			const { x } = custom.detail?.scale;
-			const widthValue = (originalWallWidth * x).toString();
-			DomEl.modelWidthText.innerText = widthValue;
-			DomEl.modelWidthSlider.value = widthValue;
+			handleWidthSlider(custom.detail.scale);
 		}
 
-		const { y } = custom.detail?.rotation;
-
-		// need to turn rotation radians back to degrees
-		const degrees = (y * 180) / Math.PI;
-		const normalizedY = Math.round(degrees / 5) * 5;
-		const degreeValue = normalizedY.toString();
-
-		DomEl.modelRotationText.innerText = degreeValue;
-		DomEl.modelRotationSlider.value = degreeValue;
-		DomEl.configModal.style.visibility = "visible";
+		handleRotationSlider(custom.detail.rotation);
 	});
 
 	DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
