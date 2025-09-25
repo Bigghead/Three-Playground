@@ -388,23 +388,26 @@ export class ThreeRaycaster {
 	}
 
 	rotateModel(degree: string): void {
-		if (this.dragManager.activeModel) {
-			const rad = three.MathUtils.degToRad(parseInt(degree));
-			this.dragManager.activeModel.rotation.y = rad;
-		}
+		if (!this.dragManager.activeModel) return;
+		const rad = three.MathUtils.degToRad(parseInt(degree));
+		this.dragManager.activeModel.rotation.y = rad;
 	}
 
 	editWidthModel(width: string): void {
-		if (this.dragManager.activeModel) {
-			const activeModel = this.dragManager.activeModel;
-			const originalWidth = 3;
-			const newWidth = parseFloat(width) / originalWidth;
+		if (!this.dragManager.activeModel) return;
+		const activeModel = this.dragManager.activeModel;
+		const originalWidth = 3;
+		const newWidth = parseFloat(width) / originalWidth;
 
-			activeModel.scale.set(newWidth, 1, 1);
-		}
+		activeModel.scale.set(newWidth, 1, 1);
 	}
 
-	// need to break this up
+	resetModelChanges(): void {
+		if (!this.dragManager.activeModel) return;
+		this.dragManager.activeModel.rotation.y = 0;
+		this.dragManager.activeModel.scale.set(1, 1, 1);
+	}
+
 	onMouseMove(event: MouseEvent): void {
 		const { activeModel, isDraggingModel } = this.dragManager;
 		if (!activeModel || !isDraggingModel) return;

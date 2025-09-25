@@ -153,3 +153,7 @@ export const rotateModel = (value: string): void => {
 export const editWidthModel = (value: string): void => {
 	threeRaycaster.editWidthModel(value);
 };
+
+export const resetModelChanges = () => {
+	threeRaycaster.resetModelChanges();
+};

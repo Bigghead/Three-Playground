@@ -52,4 +52,15 @@ export const DomEl = {
 			".config-modal .item-width"
 		) as HTMLSpanElement;
 	},
+
+	get resetButton() {
+		return document.querySelector(
+			".config-modal-action #reset-btn"
+		) as HTMLButtonElement;
+	},
+	get deleteButton() {
+		return document.querySelector(
+			".config-modal-action #delete-btn"
+		) as HTMLButtonElement;
+	},
 };

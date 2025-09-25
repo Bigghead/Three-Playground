@@ -8,11 +8,17 @@ import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { renderModel, createWall, rotateModel, editWidthModel } = await import(
-		"./canvas"
-	);
+	const {
+		renderModel,
+		createWall,
+		rotateModel,
+		editWidthModel,
+		resetModelChanges,
+		removeActiveModel,
+	} = await import("./canvas");
 
 	let activeMenu = "home";
+	const originalWallWidth = 3;
 
 	/**
 	 * Elements
@@ -69,7 +75,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	const handleWidthSlider = (scale: ModelVector3): void => {
 		const { x } = scale;
-		const originalWallWidth = 3;
 		DomEl.modelWidthSliderContainer.style.display = "block";
 		const widthValue = (originalWallWidth * x).toString();
 		DomEl.modelWidthText.innerText = widthValue;
@@ -88,6 +93,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 		DomEl.modelRotationSlider.value = degreeValue;
 		DomEl.configModal.style.visibility = "visible";
 	};
+
+	const resetSliders = (): void => {
+		DomEl.modelWidthText.innerText = originalWallWidth.toString();
+		DomEl.modelWidthSlider.value = originalWallWidth.toString();
+		DomEl.modelRotationText.innerText = "0";
+		DomEl.modelRotationSlider.value = "0";
+	};
+
+	const handleResetModel = (): void => {
+		resetModelChanges();
+		resetSliders();
+	};
+
+	const resetModel = () => {};
 
 	/**
 	 * Listeners
@@ -136,5 +155,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 		const target = e.target as HTMLInputElement;
 		DomEl.modelWidthText.innerText = target.value;
 		editWidthModel(target.value);
+	});
+
+	DomEl.resetButton.addEventListener("click", () => {
+		handleResetModel();
 	});
 });
