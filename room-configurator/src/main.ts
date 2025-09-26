@@ -73,7 +73,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 		activeMenu?.classList.remove("active");
 	};
 
-	const handleWidthSlider = (scale: ModelVector3): void => {
+	const hideConfigModal = (): void => {
+		DomEl.configModal.style.visibility = "hidden";
+	};
+
+	const initWidthSlider = (scale: ModelVector3): void => {
 		const { x } = scale;
 		DomEl.modelWidthSliderContainer.style.display = "block";
 		const widthValue = (originalWallWidth * x).toString();
@@ -81,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		DomEl.modelWidthSlider.value = widthValue;
 	};
 
-	const handleRotationSlider = (rotation: ModelVector3): void => {
+	const initRotationSlider = (rotation: ModelVector3): void => {
 		const { y } = rotation;
 
 		// need to turn rotation radians back to degrees
@@ -99,14 +103,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 		DomEl.modelWidthSlider.value = originalWallWidth.toString();
 		DomEl.modelRotationText.innerText = "0";
 		DomEl.modelRotationSlider.value = "0";
+		hideConfigModal();
 	};
-
-	const handleResetModel = (): void => {
-		resetModelChanges();
-		resetSliders();
-	};
-
-	const resetModel = () => {};
 
 	/**
 	 * Listeners
@@ -135,14 +133,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 		DomEl.modelWidthSliderContainer.style.display = "none";
 
 		if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
-			handleWidthSlider(custom.detail.scale);
+			initWidthSlider(custom.detail.scale);
 		}
 
-		handleRotationSlider(custom.detail.rotation);
+		initRotationSlider(custom.detail.rotation);
 	});
 
-	DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, (e) => {
-		DomEl.configModal.style.visibility = "hidden";
+	DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, () => {
+		hideConfigModal();
 	});
 
 	DomEl.modelRotationSlider.addEventListener("input", (e) => {
@@ -158,6 +156,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 
 	DomEl.resetButton.addEventListener("click", () => {
-		handleResetModel();
+		resetModelChanges();
+		resetSliders();
+	});
+
+	DomEl.deleteButton.addEventListener("click", () => {
+		removeActiveModel();
+		resetSliders();
 	});
 });

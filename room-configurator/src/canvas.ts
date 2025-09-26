@@ -157,3 +157,7 @@ export const editWidthModel = (value: string): void => {
 export const resetModelChanges = () => {
 	threeRaycaster.resetModelChanges();
 };
+
+export const removeActiveModel = () => {
+	threeRaycaster.removeActiveModel();
+};
