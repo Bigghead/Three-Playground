@@ -5,6 +5,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
+import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "./constants";
 
 // room wall has a depth of 0.1
 const ROOM_WALL_OFFSET = 0.1;
@@ -23,6 +24,8 @@ const traverseModelChildren = (
 };
 
 class ModelManager {
+	modelInactiveEvent = new Event(INACTIVE_MODEL_EVENT);
+
 	private _composer: EffectComposer;
 	private _outlinePass: OutlinePass;
 
@@ -90,6 +93,27 @@ class ModelManager {
 		});
 	}
 
+	handleActiveModel(eventTarget: EventTarget, model: ModelChild): void {
+		eventTarget.dispatchEvent(
+			new CustomEvent(ACTIVE_MODEL_CLICKED, {
+				detail: {
+					id: model.uuid,
+					rotation: model.rotation,
+					scale: model.scale,
+					type: model.userData?.type || null,
+				},
+			})
+		);
+
+		document.body.style.cursor = "grabbing";
+		this.highlight(model);
+	}
+
+	handleInactiveModel(eventTarget: EventTarget): void {
+		eventTarget.dispatchEvent(this.modelInactiveEvent);
+		this.removeHighlight();
+	}
+
 	render(): void {
 		this._composer.render();
 	}
@@ -117,12 +141,23 @@ class DragManager {
 		return this._isDraggingModel;
 	}
 
-	addDraggableModel(activeModel: ModelChild) {
+	get draggableModels(): Array<ModelChild> {
+		return [...this._draggableModels];
+	}
+
+	set draggableModels(models: ModelChild[]) {
+		this._draggableModels = models;
+	}
+
+	addDraggableModel(activeModel: ModelChild): void {
 		this._draggableModels.push(activeModel);
 	}
 
-	getDraggableModels(): Array<ModelChild> {
-		return [...this._draggableModels];
+	removeDraggableModel(activeModel: ModelChild): void {
+		const { uuid } = activeModel;
+		this._draggableModels = this.draggableModels.filter(
+			(model) => model.uuid !== uuid
+		);
 	}
 
 	storeOriginalModelColors(activeModel: ModelChild) {
@@ -141,6 +176,7 @@ class DragManager {
 		this._isDraggingModel = true;
 		this._controls.enabled = false;
 		this._activeModel.userData = {
+			...this._activeModel.userData,
 			originalPosition: activeModel.position.clone(),
 			originalColorMaterial: this.storeOriginalModelColors(activeModel),
 		};
@@ -363,13 +399,44 @@ export class ThreeRaycaster {
 	}
 
 	rotateModel(degree: string): void {
-		if (this.dragManager.activeModel) {
-			const rad = three.MathUtils.degToRad(parseInt(degree));
-			this.dragManager.activeModel.rotation.y = rad;
+		if (!this.dragManager.activeModel) return;
+		const rad = three.MathUtils.degToRad(parseInt(degree));
+		this.dragManager.activeModel.rotation.y = rad;
+	}
+
+	editWidthModel(width: string): void {
+		if (!this.dragManager.activeModel) return;
+		const originalWidth = 3;
+		const newWidth = parseFloat(width) / originalWidth;
+
+		this.dragManager.activeModel.scale.set(newWidth, 1, 1);
+	}
+
+	resetModelChanges(): void {
+		if (!this.dragManager.activeModel) return;
+		this.dragManager.activeModel.rotation.y = 0;
+		this.dragManager.activeModel.scale.set(1, 1, 1);
+	}
+
+	removeActiveModel(): void {
+		if (!this.dragManager.activeModel) return;
+		const activeModel = this.dragManager.activeModel;
+
+		traverseModelChildren(activeModel, (child) => {
+			child.geometry.dispose();
+			if (Array.isArray(child.material)) {
+				child.material.forEach((material) => material.dispose());
+			} else {
+				child.material.dispose();
+			}
+		});
+
+		this.dragManager.removeDraggableModel(activeModel);
+		if (activeModel.parent) {
+			activeModel.parent.remove(activeModel);
 		}
 	}
 
-	// need to break this up
 	onMouseMove(event: MouseEvent): void {
 		const { activeModel, isDraggingModel } = this.dragManager;
 		if (!activeModel || !isDraggingModel) return;
@@ -378,7 +445,7 @@ export class ThreeRaycaster {
 		const isIntersecting = this.collisionManager.checkIntersectPlane();
 		if (!isIntersecting) return;
 
-		const models = this.dragManager.getDraggableModels();
+		const models = this.dragManager.draggableModels;
 
 		this.dragManager.updatePosition(this.collisionManager.intersectPoint);
 		const activeModelBox =
@@ -397,20 +464,20 @@ export class ThreeRaycaster {
 	onMouseDown(event: MouseEvent): void {
 		if (!(event.target instanceof HTMLCanvasElement)) return;
 		this.collisionManager.setRaycastingPointer(event);
-		const models = this.dragManager.getDraggableModels();
+		const models = this.dragManager.draggableModels;
 
 		for (const model of models) {
 			const intersects = this.collisionManager.raycaster.intersectObject(
 				model,
 				true
 			);
+
 			if (intersects.length > 0) {
-				document.body.style.cursor = "grabbing";
 				this.dragManager.setModelActive(model);
-				this.modelManager.highlight(model);
+				this.modelManager.handleActiveModel(event.target, model);
 				break;
 			} else {
-				this.modelManager.removeHighlight();
+				this.modelManager.handleInactiveModel(event.target);
 			}
 		}
 	}

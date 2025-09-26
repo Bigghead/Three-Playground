@@ -1,37 +1,36 @@
-import { models } from "./lib/model-configs";
+import {
+	DomEl,
+	ACTIVE_MODEL_CLICKED,
+	INACTIVE_MODEL_EVENT,
+	WALL_DIVIDER,
+} from "./lib/constants";
+import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
-	const { renderModel, rotateModel } = await import("./canvas");
+	const {
+		renderModel,
+		createWall,
+		rotateModel,
+		editWidthModel,
+		resetModelChanges,
+		removeActiveModel,
+	} = await import("./canvas");
 
 	let activeMenu = "home";
+	const originalWallWidth = 3;
 
 	/**
 	 * Elements
 	 */
-	const configurator = document.querySelector(
-		".configurator"
-	) as HTMLDivElement;
-	const configuratorContent = document.querySelector(
-		".configurator-content"
-	) as HTMLDivElement;
-	const configSidebar = document.querySelector(
-		".configurator-sidebar"
-	) as HTMLDivElement;
-	const configSidebarMenu = document.querySelectorAll(
-		".configurator-sidebar > .menu"
-	) as NodeListOf<HTMLDivElement>;
-
-	const slider = document.querySelector(
-		".config-modal .config-modal-slider"
-	) as HTMLInputElement;
-	const rotationText = document.querySelector(
-		".config-modal .item-rotation"
-	) as HTMLSpanElement;
 
 	const handleModelImageClick =
 		(modelType: ModelType, modelKey: ModelName) => async () => {
 			try {
+				if (modelType === "wall") {
+					return createWall();
+				}
+
 				await renderModel(modelType, modelKey);
 			} catch (e) {
 				console.error(e);
@@ -39,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		};
 
 	const clearModelImages = (): void => {
-		configuratorContent.innerHTML = "";
+		DomEl.configuratorContent.innerHTML = "";
 	};
 
 	const renderModelImages = (modelType: ModelType): void => {
@@ -60,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			div.appendChild(img);
 			div.addEventListener("click", handleModelImageClick(modelType, modelKey));
 
-			configuratorContent.append(div);
+			DomEl.configuratorContent.append(div);
 		}
 	};
 
@@ -74,11 +73,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 		activeMenu?.classList.remove("active");
 	};
 
+	const hideConfigModal = (): void => {
+		DomEl.configModal.style.visibility = "hidden";
+	};
+
+	const initWidthSlider = (scale: ModelVector3): void => {
+		const { x } = scale;
+		DomEl.modelWidthSliderContainer.style.display = "block";
+		const widthValue = (originalWallWidth * x).toString();
+		DomEl.modelWidthText.innerText = widthValue;
+		DomEl.modelWidthSlider.value = widthValue;
+	};
+
+	const initRotationSlider = (rotation: ModelVector3): void => {
+		const { y } = rotation;
+
+		// need to turn rotation radians back to degrees
+		const degrees = (y * 180) / Math.PI;
+		const normalizedY = Math.round(degrees / 5) * 5;
+		const degreeValue = normalizedY.toString();
+
+		DomEl.modelRotationText.innerText = degreeValue;
+		DomEl.modelRotationSlider.value = degreeValue;
+		DomEl.configModal.style.visibility = "visible";
+	};
+
+	const resetSliders = (): void => {
+		DomEl.modelWidthText.innerText = originalWallWidth.toString();
+		DomEl.modelWidthSlider.value = originalWallWidth.toString();
+		DomEl.modelRotationText.innerText = "0";
+		DomEl.modelRotationSlider.value = "0";
+		hideConfigModal();
+	};
+
 	/**
 	 * Listeners
 	 */
 
-	configSidebarMenu.forEach((menu): void => {
+	DomEl.configSidebarMenu.forEach((menu): void => {
 		menu.addEventListener("click", (e) => {
 			e.stopPropagation();
 
@@ -96,10 +128,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 		});
 	});
 
-	//Todo - reset / store sliders for other model rotations
-	slider.addEventListener("input", (e) => {
+	DomEl.canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
+		const custom = e as CustomEvent;
+		DomEl.modelWidthSliderContainer.style.display = "none";
+
+		if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
+			initWidthSlider(custom.detail.scale);
+		}
+
+		initRotationSlider(custom.detail.rotation);
+	});
+
+	DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, () => {
+		hideConfigModal();
+	});
+
+	DomEl.modelRotationSlider.addEventListener("input", (e) => {
 		const target = e.target as HTMLInputElement;
-		rotationText.innerText = target.value;
+		DomEl.modelRotationText.innerText = target.value;
 		rotateModel(target.value);
+	});
+
+	DomEl.modelWidthSlider.addEventListener("input", (e) => {
+		const target = e.target as HTMLInputElement;
+		DomEl.modelWidthText.innerText = target.value;
+		editWidthModel(target.value);
+	});
+
+	DomEl.resetButton.addEventListener("click", () => {
+		resetModelChanges();
+		resetSliders();
+	});
+
+	DomEl.deleteButton.addEventListener("click", () => {
+		removeActiveModel();
+		resetSliders();
 	});
 });

@@ -121,4 +121,7 @@ export const models = {
 			},
 		},
 	},
+	wall: {
+		divider: {},
+	},
 };

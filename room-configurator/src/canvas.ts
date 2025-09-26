@@ -4,11 +4,11 @@ import {
 	models,
 	type ModelConfig,
 	type ModelOffset,
-	type ModelVector3,
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
 import type { ModelName, ModelType } from "./lib/types";
+import { WALL_DIVIDER } from "./lib/constants";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -129,7 +129,6 @@ export const renderModel = async (
 	modelType: ModelType,
 	modelName: ModelName
 ): Promise<void> => {
-	console.log(modelName);
 	const model = await loadModel(
 		models[modelType][modelName],
 		models[modelType][modelName]["roomSizeScale"]
@@ -138,6 +137,27 @@ export const renderModel = async (
 	threeRaycaster.addDraggableModel(model);
 };
 
+export const createWall = (): void => {
+	const { mesh: wallMesh } = wallBuilder.createWall(3);
+	const wall = new three.Group();
+	wall.userData.type = WALL_DIVIDER;
+	wall.add(wallMesh);
+	room.add(wall);
+	threeRaycaster.addDraggableModel(wall);
+};
+
 export const rotateModel = (value: string): void => {
 	threeRaycaster.rotateModel(value);
+};
+
+export const editWidthModel = (value: string): void => {
+	threeRaycaster.editWidthModel(value);
+};
+
+export const resetModelChanges = () => {
+	threeRaycaster.resetModelChanges();
+};
+
+export const removeActiveModel = () => {
+	threeRaycaster.removeActiveModel();
 };

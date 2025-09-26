@@ -19,7 +19,7 @@ export class WallBuilder {
 		});
 	}
 
-	private createWall(
+	createWall(
 		wallWidth: number,
 		wallDepth: number = 0.1
 	): {
@@ -27,9 +27,13 @@ export class WallBuilder {
 		mesh: three.Mesh;
 	} {
 		const wallGeo = new three.BoxGeometry(wallWidth, 2.5, wallDepth);
+		const wallY = wallGeo.parameters.height / 2 + 0.001;
+		const wallMesh = new three.Mesh(wallGeo, this.wallMaterial);
+		wallMesh.position.y = wallY;
+
 		return {
 			geometry: wallGeo,
-			mesh: new three.Mesh(wallGeo, this.wallMaterial),
+			mesh: wallMesh,
 		};
 	}
 
@@ -43,18 +47,15 @@ export class WallBuilder {
 			room: [
 				{
 					x: 0,
-					y: wallY,
 					z: -wallOffset,
 				},
 				{
 					x: -wallOffset,
-					y: wallY,
 					z: 0,
 					rotationY: Math.PI / 2,
 				},
 				{
 					x: wallOffset,
-					y: wallY,
 					z: 0,
 					rotationY: Math.PI / 2,
 				},
@@ -71,7 +72,7 @@ export class WallBuilder {
 		wallConfigs.forEach((config) => {
 			const { x, y, z, rotationY = 0 } = config;
 			const newWall = wallMesh.clone();
-			newWall.position.set(x, y, z);
+			newWall.position.set(x, wallMesh.position.y, z);
 			newWall.rotation.y = rotationY;
 
 			sceneGroup.add(newWall);
