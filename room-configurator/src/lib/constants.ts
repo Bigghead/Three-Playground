@@ -2,6 +2,10 @@ export const ACTIVE_MODEL_CLICKED = "active model clicked";
 export const INACTIVE_MODEL_EVENT = "inactive model event";
 
 export const WALL_DIVIDER = "wall divider";
+export const ROOM_CONFIG_ACTION_ADD = "room config action add";
+export const ROOM_CONFIG_ACTION_SUBTRACT = "room config action subtract";
+export const ROOM_WIDTH = "room width";
+export const ROOM_DEPTH = "room depth";
 
 export const DomEl = {
     get canvas() {

@@ -86,7 +86,6 @@ body {
 }
 
 .room-configurator {
-    display: none !important;
     width: 18rem;
     position: absolute;
     bottom: 3rem;

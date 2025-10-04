@@ -1,12 +1,4 @@
 import * as three from "three";
-import type { ModelVector3 } from "./model-configs";
-
-// walls are only rotated on y axis, unless you're a weirdo and want to flip on z
-type WallConfigType = Array<
-    ModelVector3 & {
-        rotationY?: number;
-    }
->;
 
 const defaultWallHeight = 2.5;
 const defaultWallDepth = 0.1;
@@ -45,12 +37,12 @@ export class WallBuilder {
         backWall.position.set(
             0,
             backWall.position.y,
-            -(floorWidth / 2 - defaultWallDepth / 2)
+            -(floorDepth / 2 - defaultWallDepth / 2)
         );
 
         const leftWall = this.createWall(floorDepth, defaultWallHeight);
         leftWall.position.set(
-            floorDepth / 2 - defaultWallDepth / 2,
+            floorWidth / 2 - defaultWallDepth / 2,
             leftWall.position.y,
             0
         );
@@ -58,7 +50,7 @@ export class WallBuilder {
 
         const rightWall = this.createWall(floorDepth, defaultWallHeight);
         rightWall.position.set(
-            -(floorDepth / 2 - defaultWallDepth / 2),
+            -(floorWidth / 2 - defaultWallDepth / 2),
             rightWall.position.y,
             0
         );

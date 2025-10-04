@@ -3,6 +3,10 @@ import {
     ACTIVE_MODEL_CLICKED,
     INACTIVE_MODEL_EVENT,
     WALL_DIVIDER,
+    ROOM_DEPTH,
+    ROOM_WIDTH,
+    ROOM_CONFIG_ACTION_ADD,
+    ROOM_CONFIG_ACTION_SUBTRACT,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
@@ -15,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         editWidthModel,
         resetModelChanges,
         removeActiveModel,
-        editRoomWidth,
+        editRoomDimensions,
     } = await import("./canvas");
 
     let activeMenu = "home";
@@ -176,13 +180,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!target.matches("button") || !contentChild) return;
 
         const btnAction = target.classList.contains("add-btn")
-            ? "Add"
-            : "Subtract";
+            ? ROOM_CONFIG_ACTION_ADD
+            : ROOM_CONFIG_ACTION_SUBTRACT;
 
         const valueEl = contentChild.querySelector(".value") as HTMLElement;
         const value = parseInt(valueEl.textContent);
 
-        const newValue = btnAction === "Add" ? value + 1 : value - 1;
+        const newValue =
+            btnAction === ROOM_CONFIG_ACTION_ADD ? value + 1 : value - 1;
 
         valueEl.textContent = newValue.toString();
 
@@ -190,11 +195,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         switch (dimensionToChange) {
             case "width":
-                editRoomWidth(newValue);
+                editRoomDimensions(newValue, ROOM_WIDTH);
                 break;
             case "height":
                 break;
             case "depth":
+                editRoomDimensions(newValue, ROOM_DEPTH);
                 break;
 
             default:

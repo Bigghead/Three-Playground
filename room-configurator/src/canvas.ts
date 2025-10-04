@@ -8,7 +8,7 @@ import {
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
 import type { ModelName, ModelType } from "./lib/types";
-import { WALL_DIVIDER } from "./lib/constants";
+import { ROOM_DEPTH, ROOM_WIDTH, WALL_DIVIDER } from "./lib/constants";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -80,16 +80,24 @@ const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
     threeRaycaster.setRoomBoundingBox(roomSize);
 };
 
-const initRoom = (
-    width: number = defaultFloorDimension,
-    depth: number = defaultFloorDimension,
-    parentGroup: three.Group = room
-): void => {
+const initRoom = ({
+    width = defaultFloorDimension,
+    depth = defaultFloorDimension,
+    parentGroup = room,
+}: {
+    width?: number;
+    depth?: number;
+    parentGroup?: three.Group;
+}): void => {
     createRoom({ width, depth, parentGroup });
     calculateRoomBoundingBox();
 };
 
-initRoom();
+initRoom({
+    width: defaultFloorDimension,
+    depth: defaultFloorDimension,
+    parentGroup: room,
+});
 
 /**
  *
@@ -184,6 +192,7 @@ export const renderModel = async (
     threeRaycaster.addDraggableModel(model);
 };
 
+// todo later, this is broken from new wallbuilder changes
 export const createWall = (): void => {
     const { mesh: wallMesh } = (wallBuilder as WallBuilder).createWall(3);
     const wall = new three.Group();
@@ -209,6 +218,18 @@ export const removeActiveModel = () => {
     threeRaycaster.removeActiveModel();
 };
 
-export const editRoomWidth = (newWidth: number): void => {
-    initRoom(newWidth);
+export const editRoomDimensions = (
+    newDimensionValue: number,
+    dimensionToChange: typeof ROOM_WIDTH | typeof ROOM_DEPTH
+): void => {
+    initRoom({
+        width:
+            dimensionToChange === ROOM_WIDTH
+                ? newDimensionValue
+                : Math.round(roomSize.x),
+        depth:
+            dimensionToChange === ROOM_WIDTH
+                ? Math.round(roomSize.z)
+                : newDimensionValue,
+    });
 };
