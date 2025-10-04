@@ -1,129 +1,197 @@
+/* Todo: interaction states on all buttons */
+
 * {
-	margin: 0;
-	padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 html,
 body {
-	overflow: hidden;
+    overflow: hidden;
 }
 
 .main {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 .webgl {
-	position: fixed;
-	top: 0;
-	left: 0;
-	outline: none;
-	height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+    height: 100vh;
 }
 
 .configurator {
-	display: flex;
-	flex-direction: row;
-	width: 35vw;
-	height: 100%;
-	position: fixed;
-	top: 0;
-	right: 0;
+    display: flex;
+    flex-direction: row;
+    width: 35vw;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    right: 0;
 }
 
 .configurator-sidebar {
-	padding: 1rem;
-	width: 30%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 1rem;
+    padding: 1rem;
+    width: 30%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 .configurator-sidebar > .menu {
-	padding: 1rem;
-	cursor: pointer;
-	border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    border-radius: 8px;
 }
 
 .configurator-sidebar > .menu.active {
-	background-color: skyblue;
-	color: #fff;
+    background-color: skyblue;
+    color: #fff;
 }
 
 .configurator-content {
-	padding: 1rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	width: 70%;
-	height: 100%;
-	overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 70%;
+    height: 100%;
+    overflow-y: auto;
 }
 .configurator-content .image-container {
-	transform-origin: center center;
-	flex: 0 0 auto;
-	overflow: hidden;
-	border-radius: 8px;
-	cursor: pointer;
-	transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
-	border: 2px solid transparent;
+    transform-origin: center center;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+    border: 2px solid transparent;
 }
 
 .configurator-content .image-container:hover {
-	transform: scale(1.05);
-	border: 2px solid skyblue;
+    transform: scale(1.05);
+    border: 2px solid skyblue;
 }
 
 .configurator-content .image-container.active {
-	border: 2px solid deepskyblue;
-	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    border: 2px solid deepskyblue;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .configurator-content .image-container img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.room-configurator {
+    width: 18rem;
+    position: absolute;
+    bottom: 3rem;
+    left: calc(65vw / 2);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.room-size-modal,
+.room-configurator__actions {
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.room-size-modal {
+    display: none;
+}
+
+.room-configurator__actions button {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+.room-size-modal .title {
+    padding: 0.5rem;
+}
+
+.room-size-modal .content-child,
+.room-size-modal .content-child .content-child__action {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.room-size-modal .content-child {
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 0.3rem;
+    padding: 0.5rem;
+}
+
+.room-size-modal .content-child .content-child__action {
+    gap: 0.5rem;
+}
+.room-size-modal .content-child .content-child__action button {
+    width: 2rem;
+    height: 2rem;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.room-configurator__actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
 .config-modal {
-	position: absolute;
-	top: 5rem;
-	left: 5rem;
-	min-width: 250px;
-	min-height: 200px;
-	padding: 1.5rem;
-	border-radius: 1rem;
-	background-color: azure;
-	visibility: hidden;
+    position: absolute;
+    top: 5rem;
+    left: 5rem;
+    min-width: 250px;
+    min-height: 200px;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background-color: azure;
+    visibility: hidden;
 }
 
 .config-modal-title,
 .config-modal-description {
-	color: #000;
-	margin: 0.5rem auto;
+    color: #000;
+    margin: 0.5rem auto;
 }
 
 .config-modal-slider {
-	margin: 0.5rem auto;
+    margin: 0.5rem auto;
 }
 
 .config-modal-slider > #model-rotation,
 .config-modal-slider > #model-width {
-	width: 100%;
+    width: 100%;
 }
 .config-modal-slider--container__hidden {
-	display: none;
+    display: none;
 }
 
 .config-modal-action {
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: center;
-	gap: 1rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
 }
 .config-modal-action > button {
-	padding: 0.5rem;
-	border: 2px solid gray;
-	border-radius: 0.2rem;
+    padding: 0.5rem;
+    border: 2px solid gray;
+    border-radius: 0.2rem;
 }

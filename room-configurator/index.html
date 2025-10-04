@@ -1,71 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Three JS Room Configurator</title>
-		<link rel="stylesheet" href="/src/style.css" />
-	</head>
-	<body>
-		<div class="main">
-			<div class="container">
-				<canvas class="webgl"></canvas>
-				<div class="configurator">
-					<div class="configurator-sidebar">
-						<div class="menu active" data-content="home">Home</div>
-						<div class="menu" data-content="bed">Bed</div>
-						<div class="menu" data-content="sofa">Sofa</div>
-						<div class="menu" data-content="table">Table</div>
-						<div class="menu" data-content="electronic">Electronic</div>
-						<div class="menu" data-content="light">Light</div>
-						<div class="menu" data-content="bathroom">Bathroom</div>
-						<div class="menu" data-content="others">Others</div>
-						<div class="menu" data-content="wall">Wall</div>
-					</div>
-					<div class="configurator-content"></div>
-				</div>
-			</div>
-			<div class="config-modal">
-				<div class="config-modal-title">
-					Selected: <span class="item-name"></span>
-				</div>
-				<div class="config-modal-description">
-					<div>Rotation: <span class="item-rotation">0</span>°</div>
-					<div class="config-modal-slider rotation">
-						<input
-							type="range"
-							id="model-rotation"
-							name="model rotation"
-							value="0"
-							min="0"
-							max="360"
-							step="5"
-						/>
-					</div>
-					<div class="config-modal-slider--container__hidden">
-						<div>Width: <span class="item-width">0</span>m</div>
-						<div class="config-modal-slider width">
-							<input
-								type="range"
-								id="model-width"
-								name="model width"
-								value="3"
-								min="1"
-								max="9.9"
-								step="0.1"
-							/>
-						</div>
-					</div>
-				</div>
-				<div class="config-modal-action">
-					<button id="reset-btn">Reset</button>
-					<button id="delete-btn">Delete</button>
-				</div>
-			</div>
-		</div>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Three JS Room Configurator</title>
+        <link rel="stylesheet" href="/src/style.css" />
+    </head>
+    <body>
+        <div class="main">
+            <div class="container">
+                <canvas class="webgl"></canvas>
+                <div class="configurator">
+                    <div class="configurator-sidebar">
+                        <div class="menu active" data-content="home">Home</div>
+                        <div class="menu" data-content="bed">Bed</div>
+                        <div class="menu" data-content="sofa">Sofa</div>
+                        <div class="menu" data-content="table">Table</div>
+                        <div class="menu" data-content="electronic">
+                            Electronic
+                        </div>
+                        <div class="menu" data-content="light">Light</div>
+                        <div class="menu" data-content="bathroom">Bathroom</div>
+                        <div class="menu" data-content="others">Others</div>
+                        <div class="menu" data-content="wall">Wall</div>
+                    </div>
+                    <div class="configurator-content"></div>
+                </div>
+                <div class="room-configurator">
+                    <div class="room-size-modal">
+                        <div class="title">Dimensions</div>
+                        <div class="content">
+                            <div class="content-child" data-dimension="width">
+                                <label for="width">Width</label>
+                                <div class="content-child__action">
+                                    <button class="subtract-btn">-</button>
+                                    <div><span class="value">10</span>m</div>
+                                    <button class="add-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="content-child" data-dimension="height">
+                                <label for="width">Height</label>
+                                <div class="content-child__action">
+                                    <button class="subtract-btn">-</button>
+                                    <div><span class="value">10</span>m</div>
+                                    <button class="add-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="content-child" data-dimension="depth">
+                                <label for="width">Depth</label>
+                                <div class="content-child__action">
+                                    <button class="subtract-btn">-</button>
+                                    <div><span class="value">10</span>m</div>
+                                    <button class="add-btn">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="room-configurator__actions">
+                        <button data-configurator-action="room-size">
+                            Room Size
+                        </button>
+                        <button data-configurator-action="floor-texture">
+                            Floor Texture
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="config-modal">
+                <div class="config-modal-title">
+                    Selected: <span class="item-name"></span>
+                </div>
+                <div class="config-modal-description">
+                    <div>Rotation: <span class="item-rotation">0</span>°</div>
+                    <div class="config-modal-slider rotation">
+                        <input
+                            type="range"
+                            id="model-rotation"
+                            name="model rotation"
+                            value="0"
+                            min="0"
+                            max="360"
+                            step="5"
+                        />
+                    </div>
+                    <div class="config-modal-slider--container__hidden">
+                        <div>Width: <span class="item-width">0</span>m</div>
+                        <div class="config-modal-slider width">
+                            <input
+                                type="range"
+                                id="model-width"
+                                name="model width"
+                                value="3"
+                                min="1"
+                                max="9.9"
+                                step="0.1"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="config-modal-action">
+                    <button id="reset-btn">Reset</button>
+                    <button id="delete-btn">Delete</button>
+                </div>
+            </div>
+        </div>
 
-		<script type="module" src="/src/canvas.ts"></script>
-		<script type="module" src="/src/main.ts"></script>
-	</body>
+        <script type="module" src="/src/canvas.ts"></script>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>
