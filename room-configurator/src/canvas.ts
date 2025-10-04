@@ -192,9 +192,8 @@ export const renderModel = async (
     threeRaycaster.addDraggableModel(model);
 };
 
-// todo later, this is broken from new wallbuilder changes
 export const createWall = (): void => {
-    const { mesh: wallMesh } = (wallBuilder as WallBuilder).createWall(3);
+    const wallMesh = (wallBuilder as WallBuilder).createWall(3);
     const wall = new three.Group();
     wall.userData.type = WALL_DIVIDER;
     wall.add(wallMesh);

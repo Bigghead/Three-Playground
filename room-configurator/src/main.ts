@@ -173,6 +173,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetSliders();
     });
 
+    DomEl.roomConfigActionRoom.addEventListener("click", () => {
+        DomEl.roomSizeModal.style.display = "block";
+    });
+
     DomEl.roomConfigRowElement.addEventListener("click", (e) => {
         const target = e.target as HTMLElement;
         const contentChild = target.closest(".content-child") as HTMLElement;
@@ -205,6 +209,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             default:
                 break;
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        // hide room config modal
+        const isInsideRoomConfigurator = DomEl.roomConfigurator.contains(
+            e.target as Node
+        );
+        const isInsideRoomSizeModal = DomEl.roomSizeModal.contains(
+            e.target as Node
+        );
+
+        if (!isInsideRoomConfigurator && !isInsideRoomSizeModal) {
+            DomEl.roomSizeModal.style.display = "none";
         }
     });
 });

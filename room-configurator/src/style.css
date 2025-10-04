@@ -105,6 +105,16 @@ body {
     border-radius: 1rem;
 }
 
+.room-size-modal {
+    display: none;
+}
+
+.room-configurator__actions button {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
 .room-size-modal .title {
     padding: 0.5rem;
 }
@@ -131,6 +141,7 @@ body {
     width: 2rem;
     height: 2rem;
     padding: 0.5rem;
+    cursor: pointer;
 }
 
 .room-configurator__actions {

@@ -72,6 +72,20 @@ export const DomEl = {
         ) as HTMLButtonElement;
     },
 
+    get roomConfigurator() {
+        return document.querySelector(".room-configurator") as HTMLDivElement;
+    },
+
+    get roomConfigActionRoom() {
+        return document.querySelector(
+            '.room-configurator__actions button[data-configurator-action="room-size"]'
+        ) as HTMLButtonElement;
+    },
+
+    get roomSizeModal() {
+        return document.querySelector(".room-size-modal") as HTMLDivElement;
+    },
+
     get roomConfigRowElement() {
         return document.querySelector(
             ".room-configurator .content"
