@@ -8,10 +8,12 @@ export const ROOM_WIDTH = "room width";
 export const ROOM_DEPTH = "room depth";
 
 export const DomEl = {
+    // ===== canvas ===== //
     get canvas() {
         return document.querySelector("canvas.webgl") as HTMLCanvasElement;
     },
 
+    // ===== sidebar configurator ===== //
     get configurator() {
         return document.querySelector(".configurator") as HTMLDivElement;
     },
@@ -31,6 +33,7 @@ export const DomEl = {
         ) as NodeListOf<HTMLDivElement>;
     },
 
+    // ===== action modals ===== //
     get configModal() {
         return document.querySelector(".config-modal") as HTMLDivElement;
     },
@@ -72,6 +75,7 @@ export const DomEl = {
         ) as HTMLButtonElement;
     },
 
+    // ===== room configurator ===== //
     get roomConfigurator() {
         return document.querySelector(".room-configurator") as HTMLDivElement;
     },

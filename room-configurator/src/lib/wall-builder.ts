@@ -25,7 +25,6 @@ export class WallBuilder {
         const wallY = wallGeo.parameters.height / 2 + 0.001;
         const wallMesh = new three.Mesh(wallGeo, this.wallMaterial);
         wallMesh.position.y = wallY;
-        console.log(wallGeo.parameters);
         return wallMesh;
     }
 
