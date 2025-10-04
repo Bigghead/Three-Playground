@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         editWidthModel,
         resetModelChanges,
         removeActiveModel,
+        editRoomWidth,
     } = await import("./canvas");
 
     let activeMenu = "home";
@@ -182,7 +183,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         console.log(btnAction);
 
+        const valueEl = contentChild.querySelector(".value") as HTMLElement;
+        const value = parseInt(valueEl.textContent);
+        console.log(value);
+
+        const newValue = btnAction === "Add" ? value + 1 : value - 1;
+
+        valueEl.textContent = newValue.toString();
+
         const dimensionToChange = contentChild.dataset.dimension;
         console.log(dimensionToChange);
+
+        switch (dimensionToChange) {
+            case "width":
+                editRoomWidth(newValue);
+                break;
+            case "height":
+                break;
+            case "depth":
+                break;
+
+            default:
+                break;
+        }
     });
 });

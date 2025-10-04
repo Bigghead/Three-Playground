@@ -1,9 +1,9 @@
 import * as three from "three";
 import { ThreeCanvas } from "./lib/three-manager";
 import {
-	models,
-	type ModelConfig,
-	type ModelOffset,
+    models,
+    type ModelConfig,
+    type ModelOffset,
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
@@ -12,96 +12,131 @@ import { WALL_DIVIDER } from "./lib/constants";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
-	console.error("Canvas element with class 'webgl' not found.");
+    console.error("Canvas element with class 'webgl' not found.");
 }
 
 const { textureMaps, scene, modelLoader, threeRaycaster, threeCamera } =
-	new ThreeCanvas({
-		canvas,
-		initShadow: false,
-	});
+    new ThreeCanvas({
+        canvas,
+        initShadow: false,
+    });
 
+const defaultFloorDimension = 10;
 const room = new three.Group();
+let wallBuilder: WallBuilder | null = null;
+let roomSize: three.Vector3 = new three.Vector3(0, 0, 0);
 
-const floorMaterial = new three.MeshStandardMaterial({
-	side: three.DoubleSide,
-	map: textureMaps.wood,
-});
+const removeGroupChildren = (group: three.Group): void => {
+    while (group.children.length > 0) {
+        const child = group.children[0];
+        group.remove(child);
+    }
+};
 
-const floorGeo = new three.PlaneGeometry(10, 10);
+const createRoom = ({
+    width,
+    depth,
+    parentGroup,
+}: {
+    width: number;
+    depth: number;
+    parentGroup: three.Group;
+}): void => {
+    removeGroupChildren(parentGroup);
 
-const floor = new three.Mesh(floorGeo, floorMaterial);
-floor.rotation.x = Math.PI / 2;
-const {
-	parameters: { width: floorWidth },
-} = floorGeo;
+    const floorMaterial = new three.MeshStandardMaterial({
+        side: three.DoubleSide,
+        map: textureMaps.wood,
+    });
 
-const wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
-const { roomWalls } = wallBuilder.createWalls();
-room.add(floor, roomWalls);
+    const floorGeo = new three.PlaneGeometry(width, depth);
 
-const roomBox = new three.Box3().setFromObject(room);
-const roomSize = roomBox.getSize(new three.Vector3());
-threeRaycaster.setRoomBoundingBox(roomSize);
+    const floor = new three.Mesh(floorGeo, floorMaterial);
+    floor.rotation.x = Math.PI / 2;
+    const {
+        parameters: { width: floorWidth },
+    } = floorGeo;
+
+    wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
+    const { roomWalls } = wallBuilder.createWalls();
+    parentGroup.add(floor, roomWalls);
+};
+
+const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
+    const roomBox = new three.Box3().setFromObject(roomMesh);
+    roomSize = roomBox.getSize(new three.Vector3());
+    threeRaycaster.setRoomBoundingBox(roomSize);
+};
+
+const initRoom = (
+    width: number = defaultFloorDimension,
+    depth: number = defaultFloorDimension,
+    parentGroup: three.Group = room
+): void => {
+    createRoom({ width, depth, parentGroup });
+    calculateRoomBoundingBox();
+};
+
+initRoom();
 
 /**
  *
  * forces the loaded model to have x percentage width of the room ( scaled cause these models load big )
  */
 const normalizeModelScale = (
-	model: GLTF,
-	roomWidthPercentage: number
+    model: GLTF,
+    roomWidthPercentage: number
 ): void => {
-	const modelBox = new three.Box3().setFromObject(model.scene);
-	const modelSize = modelBox.getSize(new three.Vector3());
+    const modelBox = new three.Box3().setFromObject(model.scene);
+    const modelSize = modelBox.getSize(new three.Vector3());
 
-	const targetWidth = roomSize.x * (roomWidthPercentage / 100);
+    const targetWidth = roomSize.x * (roomWidthPercentage / 100);
 
-	const scale = targetWidth / modelSize.x;
+    const scale = targetWidth / modelSize.x;
 
-	model.scene.scale.setScalar(scale);
+    model.scene.scale.setScalar(scale);
 };
 
 type OffsetKey = "position" | "rotation";
 
 const applyModelConfigOffset = (
-	model: GLTF,
-	modelOffset: ModelOffset
+    model: GLTF,
+    modelOffset: ModelOffset
 ): void => {
-	for (const key in modelOffset) {
-		// I hate TypeScript a lot sometimes
-		const offsetKey = key as OffsetKey;
-		const offsetValue = modelOffset[offsetKey];
-		if (offsetValue) {
-			model.scene[offsetKey].set(
-				offsetValue.x || 0,
-				offsetValue.y || 0,
-				offsetValue.z || 0
-			);
-		}
-	}
+    for (const key in modelOffset) {
+        // I hate TypeScript a lot sometimes
+        const offsetKey = key as OffsetKey;
+        const offsetValue = modelOffset[offsetKey];
+        if (offsetValue) {
+            model.scene[offsetKey].set(
+                offsetValue.x || 0,
+                offsetValue.y || 0,
+                offsetValue.z || 0
+            );
+        }
+    }
 };
 
 const loadModel = async (
-	modelConfig: ModelConfig,
-	modelScale: number = 15
+    modelConfig: ModelConfig,
+    modelScale: number = 15
 ): Promise<three.Group> => {
-	try {
-		const wrapper = new three.Group();
-		const { url, offset } = modelConfig;
-		const model = await modelLoader.initModel(url);
-		normalizeModelScale(model, modelScale);
+    try {
+        const wrapper = new three.Group();
+        const { url, offset } = modelConfig;
+        const model = await modelLoader.initModel(url);
+        normalizeModelScale(model, modelScale);
 
-		if (offset) {
-			applyModelConfigOffset(model, offset);
-		}
+        if (offset) {
+            applyModelConfigOffset(model, offset);
+        }
 
-		wrapper.add(model.scene);
-		return wrapper;
-	} catch (e) {
-		console.error(e);
-		throw e;
-	}
+        wrapper.add(model.scene);
+        return wrapper;
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
 };
 
 // ----- Models ----- //
@@ -112,52 +147,56 @@ scene.add(room, bed);
 threeRaycaster.addDraggableModel(bed);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
-	if (event.button !== 0) return;
-	threeRaycaster.onMouseDown(event);
+    if (event.button !== 0) return;
+    threeRaycaster.onMouseDown(event);
 });
 
 window.addEventListener("mouseup", (event: MouseEvent) => {
-	if (event.button !== 0) return;
-	threeRaycaster.onMouseUp();
+    if (event.button !== 0) return;
+    threeRaycaster.onMouseUp();
 });
 
 window.addEventListener("mousemove", (event: MouseEvent) => {
-	threeRaycaster.onMouseMove(event);
+    threeRaycaster.onMouseMove(event);
 });
 
 export const renderModel = async (
-	modelType: ModelType,
-	modelName: ModelName
+    modelType: ModelType,
+    modelName: ModelName
 ): Promise<void> => {
-	const model = await loadModel(
-		models[modelType][modelName],
-		models[modelType][modelName]["roomSizeScale"]
-	);
-	scene.add(model);
-	threeRaycaster.addDraggableModel(model);
+    const model = await loadModel(
+        models[modelType][modelName],
+        models[modelType][modelName]["roomSizeScale"]
+    );
+    scene.add(model);
+    threeRaycaster.addDraggableModel(model);
 };
 
 export const createWall = (): void => {
-	const { mesh: wallMesh } = wallBuilder.createWall(3);
-	const wall = new three.Group();
-	wall.userData.type = WALL_DIVIDER;
-	wall.add(wallMesh);
-	room.add(wall);
-	threeRaycaster.addDraggableModel(wall);
+    const { mesh: wallMesh } = (wallBuilder as WallBuilder).createWall(3);
+    const wall = new three.Group();
+    wall.userData.type = WALL_DIVIDER;
+    wall.add(wallMesh);
+    room.add(wall);
+    threeRaycaster.addDraggableModel(wall);
 };
 
 export const rotateModel = (value: string): void => {
-	threeRaycaster.rotateModel(value);
+    threeRaycaster.rotateModel(value);
 };
 
 export const editWidthModel = (value: string): void => {
-	threeRaycaster.editWidthModel(value);
+    threeRaycaster.editWidthModel(value);
 };
 
 export const resetModelChanges = () => {
-	threeRaycaster.resetModelChanges();
+    threeRaycaster.resetModelChanges();
 };
 
 export const removeActiveModel = () => {
-	threeRaycaster.removeActiveModel();
+    threeRaycaster.removeActiveModel();
+};
+
+export const editRoomWidth = (newWidth: number): void => {
+    console.log(newWidth);
 };
