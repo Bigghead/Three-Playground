@@ -175,24 +175,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!target.matches("button") || !contentChild) return;
 
-        console.log(target);
-
         const btnAction = target.classList.contains("add-btn")
             ? "Add"
             : "Subtract";
 
-        console.log(btnAction);
-
         const valueEl = contentChild.querySelector(".value") as HTMLElement;
         const value = parseInt(valueEl.textContent);
-        console.log(value);
 
         const newValue = btnAction === "Add" ? value + 1 : value - 1;
 
         valueEl.textContent = newValue.toString();
 
         const dimensionToChange = contentChild.dataset.dimension;
-        console.log(dimensionToChange);
 
         switch (dimensionToChange) {
             case "width":

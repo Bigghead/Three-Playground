@@ -29,6 +29,20 @@ let roomSize: three.Vector3 = new three.Vector3(0, 0, 0);
 const removeGroupChildren = (group: three.Group): void => {
     while (group.children.length > 0) {
         const child = group.children[0];
+
+        if ((child as three.Mesh).isMesh) {
+            const mesh = child as three.Mesh;
+
+            if (mesh.geometry) {
+                mesh.geometry.dispose();
+            }
+
+            if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((m) => m.dispose());
+            } else if (mesh.material) {
+                mesh.material.dispose();
+            }
+        }
         group.remove(child);
     }
 };
@@ -53,11 +67,9 @@ const createRoom = ({
 
     const floor = new three.Mesh(floorGeo, floorMaterial);
     floor.rotation.x = Math.PI / 2;
-    const {
-        parameters: { width: floorWidth },
-    } = floorGeo;
 
-    wallBuilder = new WallBuilder(floorWidth, textureMaps.plasterWall);
+    wallBuilder = new WallBuilder(width, depth, textureMaps.plasterWall);
+
     const { roomWalls } = wallBuilder.createWalls();
     parentGroup.add(floor, roomWalls);
 };
@@ -198,5 +210,5 @@ export const removeActiveModel = () => {
 };
 
 export const editRoomWidth = (newWidth: number): void => {
-    console.log(newWidth);
+    initRoom(newWidth);
 };
