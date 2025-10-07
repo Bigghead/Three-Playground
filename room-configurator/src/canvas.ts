@@ -7,8 +7,9 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
-import type { ModelName, ModelType } from "./lib/types";
+import type { DimensionChange, ModelName, ModelType } from "./lib/types";
 import {
+    defaultRoomWidth,
     defaultWallHeight,
     ROOM_DEPTH,
     ROOM_HEIGHT,
@@ -127,7 +128,8 @@ const normalizeModelScale = (
     const modelBox = new three.Box3().setFromObject(model.scene);
     const modelSize = modelBox.getSize(new three.Vector3());
 
-    const targetWidth = roomSize.x * (roomWidthPercentage / 100);
+    // we're using default model scale since room dimensions can be changed now
+    const targetWidth = defaultRoomWidth * (roomWidthPercentage / 100);
 
     const scale = targetWidth / modelSize.x;
 
@@ -236,10 +238,7 @@ export const removeActiveModel = () => {
 
 export const editRoomDimensions = (
     newDimensionValue: number,
-    dimensionToChange:
-        | typeof ROOM_WIDTH
-        | typeof ROOM_DEPTH
-        | typeof ROOM_HEIGHT
+    dimensionToChange: DimensionChange
 ): void => {
     initRoom({
         floorWidth:
@@ -253,6 +252,6 @@ export const editRoomDimensions = (
         wallHeight:
             dimensionToChange === ROOM_HEIGHT
                 ? newDimensionValue
-                : defaultWallHeight,
+                : Math.round(roomSize.y),
     });
 };

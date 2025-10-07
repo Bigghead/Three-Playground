@@ -10,6 +10,7 @@ export const ROOM_HEIGHT = "room height";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
+export const defaultRoomWidth = 10;
 
 export const DomEl = {
     // ===== canvas ===== //
