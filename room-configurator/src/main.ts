@@ -3,14 +3,11 @@ import {
     ACTIVE_MODEL_CLICKED,
     INACTIVE_MODEL_EVENT,
     WALL_DIVIDER,
-    ROOM_DEPTH,
-    ROOM_WIDTH,
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
-    ROOM_HEIGHT,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
-import type { ModelType, ModelName } from "./lib/types";
+import type { ModelType, ModelName, DimensionChange } from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const {
@@ -191,30 +188,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         const valueEl = contentChild.querySelector(".value") as HTMLElement;
         const value = parseFloat(valueEl.textContent);
 
-        const { dimension: dimensionToChange, changeStep } =
-            contentChild.dataset;
+        const {
+            dimension: dimensionToChange,
+            changeStep = "1",
+            changeMin = "10",
+            changeMax = "20",
+        } = contentChild.dataset;
 
-        const newValue =
-            btnAction === ROOM_CONFIG_ACTION_ADD
-                ? value + parseFloat(changeStep || "1")
-                : value - parseFloat(changeStep || "1");
+        const isAdding = btnAction === ROOM_CONFIG_ACTION_ADD;
+        const step = parseFloat(changeStep);
+        const min = parseFloat(changeMin);
+        const max = parseFloat(changeMax);
+        const newValue = isAdding ? value + step : value - step;
+
+        if (newValue < min || newValue > max) return;
 
         valueEl.textContent = newValue.toString();
-
-        switch (dimensionToChange) {
-            case ROOM_WIDTH:
-                editRoomDimensions(newValue, ROOM_WIDTH);
-                break;
-            case ROOM_HEIGHT:
-                editRoomDimensions(newValue, ROOM_HEIGHT);
-                break;
-            case ROOM_DEPTH:
-                editRoomDimensions(newValue, ROOM_DEPTH);
-                break;
-
-            default:
-                break;
-        }
+        editRoomDimensions(newValue, dimensionToChange as DimensionChange);
     });
 
     document.addEventListener("click", (e) => {
