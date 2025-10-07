@@ -6,6 +6,7 @@ export const ROOM_CONFIG_ACTION_ADD = "room config action add";
 export const ROOM_CONFIG_ACTION_SUBTRACT = "room config action subtract";
 export const ROOM_WIDTH = "room width";
 export const ROOM_DEPTH = "room depth";
+export const ROOM_HEIGHT = "room height";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;

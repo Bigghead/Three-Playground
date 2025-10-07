@@ -7,6 +7,7 @@ import {
     ROOM_WIDTH,
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
+    ROOM_HEIGHT,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName } from "./lib/types";
@@ -188,22 +189,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             : ROOM_CONFIG_ACTION_SUBTRACT;
 
         const valueEl = contentChild.querySelector(".value") as HTMLElement;
-        const value = parseInt(valueEl.textContent);
+        const value = parseFloat(valueEl.textContent);
+
+        const { dimension: dimensionToChange, changeStep } =
+            contentChild.dataset;
 
         const newValue =
-            btnAction === ROOM_CONFIG_ACTION_ADD ? value + 1 : value - 1;
+            btnAction === ROOM_CONFIG_ACTION_ADD
+                ? value + parseFloat(changeStep || "1")
+                : value - parseFloat(changeStep || "1");
 
         valueEl.textContent = newValue.toString();
 
-        const dimensionToChange = contentChild.dataset.dimension;
-
         switch (dimensionToChange) {
-            case "width":
+            case ROOM_WIDTH:
                 editRoomDimensions(newValue, ROOM_WIDTH);
                 break;
-            case "height":
+            case ROOM_HEIGHT:
+                editRoomDimensions(newValue, ROOM_HEIGHT);
                 break;
-            case "depth":
+            case ROOM_DEPTH:
                 editRoomDimensions(newValue, ROOM_DEPTH);
                 break;
 

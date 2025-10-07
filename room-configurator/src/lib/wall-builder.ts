@@ -20,9 +20,11 @@ export class WallBuilder {
     }) {
         this.floorWidth = floorWidth;
         this.floorDepth = floorDepth;
+
         if (wallHeight) {
             this.wallHeight = wallHeight;
         }
+
         this.wallMaterial = new three.MeshStandardMaterial({
             map: textureMap,
         });
@@ -43,14 +45,14 @@ export class WallBuilder {
         const offsetWallZ = -(floorDepth / 2 - defaultWallDepth / 2);
         const offsetWallX = floorWidth / 2 - defaultWallDepth / 2;
 
-        const backWall = this.createWall(floorWidth, defaultWallHeight);
+        const backWall = this.createWall(floorWidth, this.wallHeight);
         backWall.position.set(0, backWall.position.y, offsetWallZ);
 
-        const leftWall = this.createWall(floorDepth, defaultWallHeight);
+        const leftWall = this.createWall(floorDepth, this.wallHeight);
         leftWall.position.set(offsetWallX, leftWall.position.y, 0);
         leftWall.rotation.y = Math.PI / 2;
 
-        const rightWall = this.createWall(floorDepth, defaultWallHeight);
+        const rightWall = this.createWall(floorDepth, this.wallHeight);
         rightWall.position.set(-offsetWallX, rightWall.position.y, 0);
         rightWall.rotation.y = Math.PI / 2;
 

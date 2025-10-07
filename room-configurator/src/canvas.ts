@@ -11,6 +11,7 @@ import type { ModelName, ModelType } from "./lib/types";
 import {
     defaultWallHeight,
     ROOM_DEPTH,
+    ROOM_HEIGHT,
     ROOM_WIDTH,
     WALL_DIVIDER,
 } from "./lib/constants";
@@ -75,6 +76,7 @@ const createRoom = ({
     const floor = new three.Mesh(floorGeo, floorMaterial);
     floor.rotation.x = Math.PI / 2;
 
+    console.log(wallHeight);
     wallBuilder = new WallBuilder({
         floorWidth,
         floorDepth,
@@ -234,7 +236,10 @@ export const removeActiveModel = () => {
 
 export const editRoomDimensions = (
     newDimensionValue: number,
-    dimensionToChange: typeof ROOM_WIDTH | typeof ROOM_DEPTH
+    dimensionToChange:
+        | typeof ROOM_WIDTH
+        | typeof ROOM_DEPTH
+        | typeof ROOM_HEIGHT
 ): void => {
     initRoom({
         floorWidth:
@@ -242,8 +247,12 @@ export const editRoomDimensions = (
                 ? newDimensionValue
                 : Math.round(roomSize.x),
         floorDepth:
-            dimensionToChange === ROOM_WIDTH
-                ? Math.round(roomSize.z)
-                : newDimensionValue,
+            dimensionToChange === ROOM_DEPTH
+                ? newDimensionValue
+                : Math.round(roomSize.z),
+        wallHeight:
+            dimensionToChange === ROOM_HEIGHT
+                ? newDimensionValue
+                : defaultWallHeight,
     });
 };
