@@ -33,7 +33,7 @@
                         <div class="content">
                             <div
                                 class="content-child"
-                                data-dimension="room width"
+                                data-dimension="room-width"
                                 data-change-step="1"
                                 data-change-min="5"
                                 data-change-max="20"
@@ -47,7 +47,7 @@
                             </div>
                             <div
                                 class="content-child"
-                                data-dimension="room height"
+                                data-dimension="room-height"
                                 data-change-step="0.5"
                                 data-change-min="2.5"
                                 data-change-max="5"
@@ -61,7 +61,7 @@
                             </div>
                             <div
                                 class="content-child"
-                                data-dimension="room depth"
+                                data-dimension="room-depth"
                                 data-change-step="1"
                                 data-change-min="5"
                                 data-change-max="20"
@@ -118,8 +118,12 @@
                     </div>
                 </div>
                 <div class="config-modal-action">
-                    <button id="reset-btn">Reset</button>
-                    <button id="delete-btn">Delete</button>
+                    <button id="reset-btn" data-action-type="reset">
+                        Reset
+                    </button>
+                    <button id="delete-btn" data-action-type="delete">
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>

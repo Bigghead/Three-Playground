@@ -4,9 +4,10 @@ export const INACTIVE_MODEL_EVENT = "inactive model event";
 export const WALL_DIVIDER = "wall divider";
 export const ROOM_CONFIG_ACTION_ADD = "room config action add";
 export const ROOM_CONFIG_ACTION_SUBTRACT = "room config action subtract";
-export const ROOM_WIDTH = "room width";
-export const ROOM_DEPTH = "room depth";
-export const ROOM_HEIGHT = "room height";
+export const ROOM_WIDTH = "room-width";
+export const ROOM_DEPTH = "room-depth";
+export const ROOM_HEIGHT = "room-height";
+export const ROOM_SIZE = "room-size";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
@@ -69,26 +70,13 @@ export const DomEl = {
         ) as HTMLSpanElement;
     },
 
-    get resetButton() {
-        return document.querySelector(
-            ".config-modal-action #reset-btn"
-        ) as HTMLButtonElement;
-    },
-    get deleteButton() {
-        return document.querySelector(
-            ".config-modal-action #delete-btn"
-        ) as HTMLButtonElement;
+    get configModalAction() {
+        return document.querySelector(".config-modal-action") as HTMLDivElement;
     },
 
     // ===== room configurator ===== //
     get roomConfigurator() {
         return document.querySelector(".room-configurator") as HTMLDivElement;
-    },
-
-    get roomConfigActionRoom() {
-        return document.querySelector(
-            '.room-configurator__actions button[data-configurator-action="room-size"]'
-        ) as HTMLButtonElement;
     },
 
     get roomSizeModal() {

@@ -5,6 +5,7 @@ import {
     WALL_DIVIDER,
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
+    ROOM_SIZE,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
 import type { ModelType, ModelName, DimensionChange } from "./lib/types";
@@ -112,6 +113,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         hideConfigModal();
     };
 
+    const handleEditRoomAction = (
+        targetElement: HTMLElement,
+        containerElement: HTMLElement
+    ): void => {
+        const btnAction = targetElement.classList.contains("add-btn")
+            ? ROOM_CONFIG_ACTION_ADD
+            : ROOM_CONFIG_ACTION_SUBTRACT;
+
+        const valueEl = containerElement.querySelector(".value") as HTMLElement;
+        const value = parseFloat(valueEl.textContent);
+
+        const {
+            dimension: dimensionToChange,
+            changeStep = "1",
+            changeMin = "10",
+            changeMax = "20",
+        } = containerElement.dataset;
+
+        const isAdding = btnAction === ROOM_CONFIG_ACTION_ADD;
+        const step = parseFloat(changeStep);
+        const min = parseFloat(changeMin);
+        const max = parseFloat(changeMax);
+        const newValue = isAdding ? value + step : value - step;
+
+        if (newValue < min || newValue > max) return;
+
+        valueEl.textContent = newValue.toString();
+        editRoomDimensions(newValue, dimensionToChange as DimensionChange);
+    };
+
     /**
      * Listeners
      */
@@ -161,50 +192,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         editWidthModel(target.value);
     });
 
-    DomEl.resetButton.addEventListener("click", () => {
-        resetModelChanges();
+    DomEl.configModalAction.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        if (!target.matches("button")) return;
+
+        const { actionType: btnAction } = target.dataset;
+
+        if (btnAction === "reset") {
+            resetModelChanges();
+        } else if (btnAction === "delete") {
+            removeActiveModel();
+        }
+
         resetSliders();
     });
 
-    DomEl.deleteButton.addEventListener("click", () => {
-        removeActiveModel();
-        resetSliders();
-    });
+    DomEl.roomConfigurator.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        if (!target.matches("button")) return;
 
-    DomEl.roomConfigActionRoom.addEventListener("click", () => {
-        DomEl.roomSizeModal.style.display = "block";
+        const { configuratorAction } = target.dataset;
+
+        if (configuratorAction === ROOM_SIZE) {
+            DomEl.roomSizeModal.style.display = "block";
+        }
     });
 
     DomEl.roomConfigRowElement.addEventListener("click", (e) => {
         const target = e.target as HTMLElement;
         const contentChild = target.closest(".content-child") as HTMLElement;
 
-        if (!target.matches("button") || !contentChild) return;
+        if (!contentChild) return;
 
-        const btnAction = target.classList.contains("add-btn")
-            ? ROOM_CONFIG_ACTION_ADD
-            : ROOM_CONFIG_ACTION_SUBTRACT;
-
-        const valueEl = contentChild.querySelector(".value") as HTMLElement;
-        const value = parseFloat(valueEl.textContent);
-
-        const {
-            dimension: dimensionToChange,
-            changeStep = "1",
-            changeMin = "10",
-            changeMax = "20",
-        } = contentChild.dataset;
-
-        const isAdding = btnAction === ROOM_CONFIG_ACTION_ADD;
-        const step = parseFloat(changeStep);
-        const min = parseFloat(changeMin);
-        const max = parseFloat(changeMax);
-        const newValue = isAdding ? value + step : value - step;
-
-        if (newValue < min || newValue > max) return;
-
-        valueEl.textContent = newValue.toString();
-        editRoomDimensions(newValue, dimensionToChange as DimensionChange);
+        if (target.matches("button")) {
+            handleEditRoomAction(target, contentChild);
+        }
     });
 
     document.addEventListener("click", (e) => {
