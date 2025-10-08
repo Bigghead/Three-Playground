@@ -7,8 +7,15 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
-import type { ModelName, ModelType } from "./lib/types";
-import { ROOM_DEPTH, ROOM_WIDTH, WALL_DIVIDER } from "./lib/constants";
+import type { DimensionChange, ModelName, ModelType } from "./lib/types";
+import {
+    defaultRoomWidth,
+    defaultWallHeight,
+    ROOM_DEPTH,
+    ROOM_HEIGHT,
+    ROOM_WIDTH,
+    WALL_DIVIDER,
+} from "./lib/constants";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -48,13 +55,15 @@ const removeGroupChildren = (group: three.Group): void => {
 };
 
 const createRoom = ({
-    width,
-    depth,
+    floorWidth,
+    floorDepth,
     parentGroup,
+    wallHeight,
 }: {
-    width: number;
-    depth: number;
+    floorWidth: number;
+    floorDepth: number;
     parentGroup: three.Group;
+    wallHeight?: number;
 }): void => {
     removeGroupChildren(parentGroup);
 
@@ -63,12 +72,18 @@ const createRoom = ({
         map: textureMaps.wood,
     });
 
-    const floorGeo = new three.PlaneGeometry(width, depth);
+    const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
 
     const floor = new three.Mesh(floorGeo, floorMaterial);
     floor.rotation.x = Math.PI / 2;
 
-    wallBuilder = new WallBuilder(width, depth, textureMaps.plasterWall);
+    console.log(wallHeight);
+    wallBuilder = new WallBuilder({
+        floorWidth,
+        floorDepth,
+        textureMap: textureMaps.plasterWall,
+        wallHeight,
+    });
 
     const { roomWalls } = wallBuilder.createWalls();
     parentGroup.add(floor, roomWalls);
@@ -81,22 +96,25 @@ const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
 };
 
 const initRoom = ({
-    width = defaultFloorDimension,
-    depth = defaultFloorDimension,
+    floorWidth = defaultFloorDimension,
+    floorDepth = defaultFloorDimension,
     parentGroup = room,
+    wallHeight,
 }: {
-    width?: number;
-    depth?: number;
+    floorWidth?: number;
+    floorDepth?: number;
     parentGroup?: three.Group;
+    wallHeight?: number;
 }): void => {
-    createRoom({ width, depth, parentGroup });
+    createRoom({ floorWidth, floorDepth, parentGroup, wallHeight });
     calculateRoomBoundingBox();
 };
 
 initRoom({
-    width: defaultFloorDimension,
-    depth: defaultFloorDimension,
+    floorWidth: defaultFloorDimension,
+    floorDepth: defaultFloorDimension,
     parentGroup: room,
+    wallHeight: defaultWallHeight,
 });
 
 /**
@@ -110,7 +128,8 @@ const normalizeModelScale = (
     const modelBox = new three.Box3().setFromObject(model.scene);
     const modelSize = modelBox.getSize(new three.Vector3());
 
-    const targetWidth = roomSize.x * (roomWidthPercentage / 100);
+    // we're using default model scale since room dimensions can be changed now
+    const targetWidth = defaultRoomWidth * (roomWidthPercentage / 100);
 
     const scale = targetWidth / modelSize.x;
 
@@ -219,16 +238,20 @@ export const removeActiveModel = () => {
 
 export const editRoomDimensions = (
     newDimensionValue: number,
-    dimensionToChange: typeof ROOM_WIDTH | typeof ROOM_DEPTH
+    dimensionToChange: DimensionChange
 ): void => {
     initRoom({
-        width:
+        floorWidth:
             dimensionToChange === ROOM_WIDTH
                 ? newDimensionValue
                 : Math.round(roomSize.x),
-        depth:
-            dimensionToChange === ROOM_WIDTH
-                ? Math.round(roomSize.z)
-                : newDimensionValue,
+        floorDepth:
+            dimensionToChange === ROOM_DEPTH
+                ? newDimensionValue
+                : Math.round(roomSize.z),
+        wallHeight:
+            dimensionToChange === ROOM_HEIGHT
+                ? newDimensionValue
+                : Math.round(roomSize.y),
     });
 };
