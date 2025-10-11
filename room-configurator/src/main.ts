@@ -8,7 +8,12 @@ import {
     ROOM_SIZE,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
-import type { ModelType, ModelName, DimensionChange } from "./lib/types";
+import type {
+    ModelType,
+    ModelName,
+    DimensionChange,
+    EditableTextures,
+} from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const {
@@ -19,6 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetModelChanges,
         removeActiveModel,
         editRoomDimensions,
+        updateFloorTexture,
     } = await import("./canvas");
 
     let activeMenu = "home";
@@ -235,7 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!target.matches("img")) return;
 
         const { textureMap } = target.dataset;
-        console.log(textureMap);
+        updateFloorTexture(textureMap as EditableTextures);
     });
 
     document.addEventListener("click", (e) => {

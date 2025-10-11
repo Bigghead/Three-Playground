@@ -7,7 +7,12 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
-import type { DimensionChange, ModelName, ModelType } from "./lib/types";
+import type {
+    DimensionChange,
+    EditableTextures,
+    ModelName,
+    ModelType,
+} from "./lib/types";
 import {
     defaultRoomWidth,
     defaultWallHeight,
@@ -34,6 +39,14 @@ let wallBuilder: WallBuilder | null = null;
 let roomSize: three.Vector3 = new three.Vector3(0, 0, 0);
 let floorMesh: three.Mesh;
 
+const removeMeshMaterial = (mesh: three.Mesh): void => {
+    if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((m) => m.dispose());
+    } else if (mesh.material) {
+        mesh.material.dispose();
+    }
+};
+
 const removeGroupChildren = (group: three.Group): void => {
     while (group.children.length > 0) {
         const child = group.children[0];
@@ -45,11 +58,7 @@ const removeGroupChildren = (group: three.Group): void => {
                 mesh.geometry.dispose();
             }
 
-            if (Array.isArray(mesh.material)) {
-                mesh.material.forEach((m) => m.dispose());
-            } else if (mesh.material) {
-                mesh.material.dispose();
-            }
+            removeMeshMaterial(mesh);
         }
         group.remove(child);
     }
@@ -70,7 +79,7 @@ const createRoom = ({
 
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: textureMaps.wood,
+        map: textureMaps["wood-floor"],
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
@@ -256,6 +265,16 @@ export const editRoomDimensions = (
     });
 };
 
-export const updateFloorTexture = (
-    newTexture: "wood" | "laminate-floor"
-): void => {};
+export const updateFloorTexture = (newTexture: EditableTextures): void => {
+    try {
+        const newFloorMaterial = new three.MeshStandardMaterial({
+            side: three.DoubleSide,
+            map: textureMaps[newTexture],
+        });
+
+        removeMeshMaterial(floorMesh);
+        floorMesh.material = newFloorMaterial;
+    } catch (e) {
+        console.error(e);
+    }
+};

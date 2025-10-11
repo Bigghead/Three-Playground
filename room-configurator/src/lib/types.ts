@@ -8,3 +8,5 @@ export type DimensionChange =
     | typeof ROOM_WIDTH
     | typeof ROOM_DEPTH
     | typeof ROOM_HEIGHT;
+
+export type EditableTextures = "laminate-floor" | "granite-tile";

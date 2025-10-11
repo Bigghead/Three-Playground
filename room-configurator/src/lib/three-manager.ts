@@ -230,7 +230,7 @@ export class ThreeCanvas {
             "laminate-floor": this.textureLoader.load(
                 "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
             ),
-            wood: this.textureLoader.load(
+            "wood-floor": this.textureLoader.load(
                 "/textures/wood/wood_floor_diff_1k.webp"
             ),
             "granite-tile": this.textureLoader.load(
