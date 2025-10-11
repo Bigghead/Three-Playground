@@ -101,6 +101,7 @@ body {
 }
 
 .room-size-modal,
+.floor-texture-modal,
 .room-configurator__actions {
     background-color: #fff;
     padding: 1rem;
@@ -143,6 +144,33 @@ body {
     width: 2rem;
     height: 2rem;
     padding: 0.5rem;
+    cursor: pointer;
+}
+
+.floor-texture-modal .title {
+    margin-bottom: 0.3rem;
+    padding: 0.5rem;
+}
+.floor-texture-modal .textures-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    overflow-x: scroll;
+}
+
+.texture {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+}
+.texture-name {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.floor-texture-modal .textures-container .texture img {
+    max-width: 150px;
+    border-radius: 1rem;
     cursor: pointer;
 }
 

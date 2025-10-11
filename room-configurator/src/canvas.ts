@@ -32,6 +32,7 @@ const defaultFloorDimension = 10;
 const room = new three.Group();
 let wallBuilder: WallBuilder | null = null;
 let roomSize: three.Vector3 = new three.Vector3(0, 0, 0);
+let floorMesh: three.Mesh;
 
 const removeGroupChildren = (group: three.Group): void => {
     while (group.children.length > 0) {
@@ -74,19 +75,18 @@ const createRoom = ({
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
 
-    const floor = new three.Mesh(floorGeo, floorMaterial);
-    floor.rotation.x = Math.PI / 2;
+    floorMesh = new three.Mesh(floorGeo, floorMaterial);
+    floorMesh.rotation.x = Math.PI / 2;
 
-    console.log(wallHeight);
     wallBuilder = new WallBuilder({
         floorWidth,
         floorDepth,
-        textureMap: textureMaps.plasterWall,
+        textureMap: textureMaps["plaster-wall"],
         wallHeight,
     });
 
     const { roomWalls } = wallBuilder.createWalls();
-    parentGroup.add(floor, roomWalls);
+    parentGroup.add(floorMesh, roomWalls);
 };
 
 const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
@@ -255,3 +255,7 @@ export const editRoomDimensions = (
                 : Math.round(roomSize.y),
     });
 };
+
+export const updateFloorTexture = (
+    newTexture: "wood" | "laminate-floor"
+): void => {};

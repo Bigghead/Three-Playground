@@ -218,17 +218,17 @@ export class ThreeCanvas {
 
     private initTextureMap(): void {
         this.textureMaps = {
-            beigeWall: this.textureLoader.load(
+            "beige-wall": this.textureLoader.load(
                 "textures/beige_wall/beige_wall_001_diff_1k.webp"
             ),
-            laminateFloor: this.textureLoader.load(
-                "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
-            ),
-            plasterWall: this.textureLoader.load(
+            "plaster-wall": this.textureLoader.load(
                 "textures/plaster_wall/painted_plaster_wall_diff_1k.webp"
             ),
             rosewood: this.textureLoader.load(
                 "textures/rosewood/rosewood_veneer1_diff_1k.webp"
+            ),
+            "laminate-floor": this.textureLoader.load(
+                "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
             ),
             wood: this.textureLoader.load(
                 "/textures/wood/wood_floor_diff_1k.webp"
