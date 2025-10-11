@@ -88,4 +88,8 @@ export const DomEl = {
             ".room-configurator .content"
         ) as HTMLDivElement;
     },
+
+    get floorTextureModal() {
+        return document.querySelector(".floor-texture-modal") as HTMLDivElement;
+    },
 };

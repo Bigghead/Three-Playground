@@ -233,6 +233,9 @@ export class ThreeCanvas {
             wood: this.textureLoader.load(
                 "/textures/wood/wood_floor_diff_1k.webp"
             ),
+            "granite-tile": this.textureLoader.load(
+                "/textures/granite_tile/granite_tile_diff_1k.png"
+            ),
         };
 
         for (const map in this.textureMaps) {

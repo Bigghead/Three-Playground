@@ -229,6 +229,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    DomEl.floorTextureModal.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+
+        if (!target.matches("img")) return;
+
+        const { textureMap } = target.dataset;
+        console.log(textureMap);
+    });
+
     document.addEventListener("click", (e) => {
         // hide room config modal
         const isInsideRoomConfigurator = DomEl.roomConfigurator.contains(
