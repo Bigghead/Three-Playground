@@ -79,7 +79,7 @@ const createRoom = ({
 
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: textureMaps["wood-floor"],
+        map: textureMaps["wood-floor"].texture,
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
@@ -90,7 +90,7 @@ const createRoom = ({
     wallBuilder = new WallBuilder({
         floorWidth,
         floorDepth,
-        textureMap: textureMaps["plaster-wall"],
+        textureMap: textureMaps["plaster-wall"].texture,
         wallHeight,
     });
 
@@ -267,9 +267,10 @@ export const editRoomDimensions = (
 
 export const updateFloorTexture = (newTexture: EditableTextures): void => {
     try {
+        const { texture } = textureMaps[newTexture];
         const newFloorMaterial = new three.MeshStandardMaterial({
             side: three.DoubleSide,
-            map: textureMaps[newTexture],
+            map: texture,
         });
 
         removeMeshMaterial(floorMesh);
