@@ -1,15 +1,29 @@
 import * as three from "three";
+import Stats from "stats.js";
+
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { type GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 import { ThreeRaycaster } from "./three-raycaster";
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 let { scrollY } = window;
 
 type Dimensions = {
     width: number;
     height: number;
+};
+
+type TextureMap = {
+    [key: string]: {
+        texture: three.Texture;
+        normal?: three.Texture;
+        arm?: three.Texture;
+    };
 };
 
 class Sizes {
@@ -170,7 +184,7 @@ export class ThreeCanvas {
     textureLoader = new three.TextureLoader();
     clock = new three.Clock();
 
-    textureMaps: Record<string, three.Texture> = {};
+    textureMaps: TextureMap = {};
     renderCallbacks: Array<() => void> = [];
 
     constructor({
@@ -218,29 +232,68 @@ export class ThreeCanvas {
 
     private initTextureMap(): void {
         this.textureMaps = {
-            beigeWall: this.textureLoader.load(
-                "textures/beige_wall/beige_wall_001_diff_1k.webp"
-            ),
-            laminateFloor: this.textureLoader.load(
-                "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
-            ),
-            plasterWall: this.textureLoader.load(
-                "textures/plaster_wall/painted_plaster_wall_diff_1k.webp"
-            ),
-            rosewood: this.textureLoader.load(
-                "textures/rosewood/rosewood_veneer1_diff_1k.webp"
-            ),
-            wood: this.textureLoader.load(
-                "/textures/wood/wood_floor_diff_1k.webp"
-            ),
+            "beige-wall": {
+                texture: this.textureLoader.load(
+                    "textures/beige_wall/beige_wall_001_diff_1k.webp"
+                ),
+            },
+            "plaster-wall": {
+                texture: this.textureLoader.load(
+                    "textures/plaster_wall/painted_plaster_wall_diff_1k.webp"
+                ),
+            },
+            "rosewood-floor": {
+                texture: this.textureLoader.load(
+                    "textures/rosewood/rosewood_veneer1_diff_1k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "textures/rosewood/rosewood_veneer1_arm_1k.webp"
+                ),
+            },
+            "laminate-floor": {
+                texture: this.textureLoader.load(
+                    "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/laminate_floor/laminate_floor_02_arm_1k.webp"
+                ),
+            },
+            "wood-floor": {
+                texture: this.textureLoader.load(
+                    "/textures/wood_floor/wood_floor_diff_1k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "/textures/wood_floor/wood_floor_nor_dx_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/wood_floor/wood_floor_arm_1k.webp"
+                ),
+            },
+            "granite-tile": {
+                texture: this.textureLoader.load(
+                    "/textures/granite_tile/granite_tile_diff_1k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "/textures/granite_tile/granite_tile_nor_dx_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/granite_tile/granite_tile_arm_1k.webp"
+                ),
+            },
         };
 
         for (const map in this.textureMaps) {
-            const texture = this.textureMaps[map];
+            const { texture } = this.textureMaps[map];
             texture.colorSpace = three.SRGBColorSpace;
-            texture.repeat.set(4, 4);
             texture.wrapS = three.RepeatWrapping;
             texture.wrapT = three.RepeatWrapping;
+            texture.repeat.set(4, 4);
         }
     }
 
@@ -266,6 +319,7 @@ export class ThreeCanvas {
      * Animate
      */
     public animationTick = (): void => {
+        stats.begin();
         const elapsedTime = this.clock.getElapsedTime();
 
         // Update controls
@@ -275,8 +329,7 @@ export class ThreeCanvas {
 
         // Render
         this.threeRaycaster.animate();
-        // this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
-
+        stats.end();
         // Call tick again on the next frame
         window.requestAnimationFrame(this.animationTick);
     };

@@ -6,9 +6,15 @@ import {
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
     ROOM_SIZE,
+    FLOOR_TEXTURE,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
-import type { ModelType, ModelName, DimensionChange } from "./lib/types";
+import type {
+    ModelType,
+    ModelName,
+    DimensionChange,
+    EditableTextures,
+} from "./lib/types";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const {
@@ -19,13 +25,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetModelChanges,
         removeActiveModel,
         editRoomDimensions,
+        updateFloorTexture,
     } = await import("./canvas");
 
-    let activeMenu = "home";
     const originalWallWidth = 3;
 
     /**
-     * Elements
+     * ===== Event Handlers =====
+     *
      */
 
     const handleModelImageClick =
@@ -70,13 +77,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    /**
-     * Event Handlers
-     */
-    const removeCurrentlyActiveMenu = (): void => {
-        const activeMenu = document.querySelector(
-            ".configurator-sidebar > .menu.active"
-        );
+    const removeCurrentlyActiveElement = (elementSelector: string): void => {
+        const activeMenu = document.querySelector(elementSelector);
         activeMenu?.classList.remove("active");
     };
 
@@ -143,8 +145,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         editRoomDimensions(newValue, dimensionToChange as DimensionChange);
     };
 
+    const closeConfigModals = (): void => {
+        DomEl.roomSizeModal.style.display = "none";
+        DomEl.floorTextureModal.style.display = "none";
+    };
+
     /**
-     * Listeners
+     * ===== Listeners =====
+     *
      */
 
     DomEl.configSidebarMenu.forEach((menu): void => {
@@ -157,8 +165,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             } = target;
 
             if (content) {
-                removeCurrentlyActiveMenu();
-                activeMenu = content;
+                removeCurrentlyActiveElement(
+                    ".configurator-sidebar > .menu.active"
+                );
                 renderModelImages(content as ModelType);
                 target.classList.add("active");
             }
@@ -211,11 +220,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         const target = e.target as HTMLElement;
         if (!target.matches("button")) return;
 
-        const { configuratorAction } = target.dataset;
-
-        if (configuratorAction === ROOM_SIZE) {
-            DomEl.roomSizeModal.style.display = "block";
+        if (target.classList.contains("close")) {
+            return closeConfigModals();
         }
+
+        const { configuratorAction } = target.dataset;
+        if (!configuratorAction) return;
+
+        DomEl.roomSizeModal.style.display =
+            configuratorAction === ROOM_SIZE ? "block" : "none";
+
+        DomEl.floorTextureModal.style.display =
+            configuratorAction === FLOOR_TEXTURE ? "block" : "none";
     });
 
     DomEl.roomConfigRowElement.addEventListener("click", (e) => {
@@ -229,17 +245,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    document.addEventListener("click", (e) => {
-        // hide room config modal
-        const isInsideRoomConfigurator = DomEl.roomConfigurator.contains(
-            e.target as Node
-        );
-        const isInsideRoomSizeModal = DomEl.roomSizeModal.contains(
-            e.target as Node
-        );
+    DomEl.floorTextureModal.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
 
-        if (!isInsideRoomConfigurator && !isInsideRoomSizeModal) {
-            DomEl.roomSizeModal.style.display = "none";
-        }
+        if (!target.matches("img")) return;
+
+        const textureMap = target.dataset.textureMap as EditableTextures;
+        updateFloorTexture(textureMap);
+
+        removeCurrentlyActiveElement(".texture-img.active");
+        target.classList.add("active");
     });
 });

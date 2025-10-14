@@ -101,6 +101,7 @@ body {
 }
 
 .room-size-modal,
+.floor-texture-modal,
 .room-configurator__actions {
     background-color: #fff;
     padding: 1rem;
@@ -116,9 +117,30 @@ body {
     border: 1px solid #ccc;
     cursor: pointer;
 }
+.room-size-modal .heading,
+.floor-texture-modal .heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-.room-size-modal .title {
+.room-size-modal .title,
+.floor-texture-modal .title {
     padding: 0.5rem;
+}
+
+.room-size-modal button.close,
+.floor-texture-modal button.close {
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 0.3rem;
+    background-color: coral;
+}
+
+.room-size-modal button.close:hover,
+.floor-texture-modal button.close:hover {
+    color: #fff;
+    border-color: #fff;
 }
 
 .room-size-modal .content-child,
@@ -127,6 +149,16 @@ body {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+}
+
+.room-size-modal .content-child .content-child__action div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3rem;
+    height: 2rem;
+    font-size: 1rem;
+    line-height: 1;
 }
 
 .room-size-modal .content-child {
@@ -144,6 +176,40 @@ body {
     height: 2rem;
     padding: 0.5rem;
     cursor: pointer;
+}
+
+.floor-texture-modal {
+    display: none;
+}
+
+.floor-texture-modal .title {
+    padding: 0.5rem;
+}
+.floor-texture-modal .textures-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    overflow-x: scroll;
+}
+
+.texture {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+}
+.texture-name {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.floor-texture-modal .textures-container .texture .texture-img {
+    max-width: 150px;
+    border-radius: 1rem;
+    cursor: pointer;
+    border: 3px solid transparent;
+}
+.texture-img.active {
+    border-color: skyblue !important;
 }
 
 .room-configurator__actions {

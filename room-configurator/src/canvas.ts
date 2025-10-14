@@ -7,7 +7,12 @@ import {
 } from "./lib/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
 import { WallBuilder } from "./lib/wall-builder";
-import type { DimensionChange, ModelName, ModelType } from "./lib/types";
+import type {
+    DimensionChange,
+    EditableTextures,
+    ModelName,
+    ModelType,
+} from "./lib/types";
 import {
     defaultRoomWidth,
     defaultWallHeight,
@@ -32,6 +37,15 @@ const defaultFloorDimension = 10;
 const room = new three.Group();
 let wallBuilder: WallBuilder | null = null;
 let roomSize: three.Vector3 = new three.Vector3(0, 0, 0);
+let floorMesh: three.Mesh;
+
+const removeMeshMaterial = (mesh: three.Mesh): void => {
+    if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((m) => m.dispose());
+    } else if (mesh.material) {
+        mesh.material.dispose();
+    }
+};
 
 const removeGroupChildren = (group: three.Group): void => {
     while (group.children.length > 0) {
@@ -44,11 +58,7 @@ const removeGroupChildren = (group: three.Group): void => {
                 mesh.geometry.dispose();
             }
 
-            if (Array.isArray(mesh.material)) {
-                mesh.material.forEach((m) => m.dispose());
-            } else if (mesh.material) {
-                mesh.material.dispose();
-            }
+            removeMeshMaterial(mesh);
         }
         group.remove(child);
     }
@@ -67,26 +77,30 @@ const createRoom = ({
 }): void => {
     removeGroupChildren(parentGroup);
 
+    const defaultFloor = textureMaps["wood-floor"];
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: textureMaps.wood,
+        map: defaultFloor.texture,
+        normalMap: defaultFloor.normal,
+        aoMap: defaultFloor.arm,
+        roughnessMap: defaultFloor.arm,
+        metalnessMap: defaultFloor.arm,
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
 
-    const floor = new three.Mesh(floorGeo, floorMaterial);
-    floor.rotation.x = Math.PI / 2;
+    floorMesh = new three.Mesh(floorGeo, floorMaterial);
+    floorMesh.rotation.x = Math.PI / 2;
 
-    console.log(wallHeight);
     wallBuilder = new WallBuilder({
         floorWidth,
         floorDepth,
-        textureMap: textureMaps.plasterWall,
+        textureMap: textureMaps["plaster-wall"].texture,
         wallHeight,
     });
 
     const { roomWalls } = wallBuilder.createWalls();
-    parentGroup.add(floor, roomWalls);
+    parentGroup.add(floorMesh, roomWalls);
 };
 
 const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
@@ -254,4 +268,23 @@ export const editRoomDimensions = (
                 ? newDimensionValue
                 : Math.round(roomSize.y),
     });
+};
+
+export const updateFloorTexture = (newTexture: EditableTextures): void => {
+    try {
+        const { texture, normal, arm } = textureMaps[newTexture];
+        const newFloorMaterial = new three.MeshStandardMaterial({
+            side: three.DoubleSide,
+            map: texture,
+            normalMap: normal,
+            aoMap: arm,
+            roughnessMap: arm,
+            metalnessMap: arm,
+        });
+
+        removeMeshMaterial(floorMesh);
+        floorMesh.material = newFloorMaterial;
+    } catch (e) {
+        console.error(e);
+    }
 };
