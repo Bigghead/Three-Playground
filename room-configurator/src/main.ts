@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateFloorTexture,
     } = await import("./canvas");
 
-    let activeMenu = "home";
     const originalWallWidth = 3;
 
     /**
@@ -79,10 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     /**
      * Event Handlers
      */
-    const removeCurrentlyActiveMenu = (): void => {
-        const activeMenu = document.querySelector(
-            ".configurator-sidebar > .menu.active"
-        );
+    const removeCurrentlyActiveElement = (elementSelector: string): void => {
+        const activeMenu = document.querySelector(elementSelector);
         activeMenu?.classList.remove("active");
     };
 
@@ -163,8 +160,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             } = target;
 
             if (content) {
-                removeCurrentlyActiveMenu();
-                activeMenu = content;
+                removeCurrentlyActiveElement(
+                    ".configurator-sidebar > .menu.active"
+                );
                 renderModelImages(content as ModelType);
                 target.classList.add("active");
             }
@@ -240,8 +238,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!target.matches("img")) return;
 
-        const { textureMap } = target.dataset;
-        updateFloorTexture(textureMap as EditableTextures);
+        const textureMap = target.dataset.textureMap as EditableTextures;
+        updateFloorTexture(textureMap);
+
+        removeCurrentlyActiveElement(".texture-img.active");
+        target.classList.add("active");
     });
 
     document.addEventListener("click", (e) => {
