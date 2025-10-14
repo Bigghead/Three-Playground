@@ -77,9 +77,14 @@ const createRoom = ({
 }): void => {
     removeGroupChildren(parentGroup);
 
+    const defaultFloor = textureMaps["wood-floor"];
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: textureMaps["wood-floor"].texture,
+        map: defaultFloor.texture,
+        normalMap: defaultFloor.normal,
+        aoMap: defaultFloor.arm,
+        roughnessMap: defaultFloor.arm,
+        metalnessMap: defaultFloor.arm,
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
@@ -267,10 +272,14 @@ export const editRoomDimensions = (
 
 export const updateFloorTexture = (newTexture: EditableTextures): void => {
     try {
-        const { texture } = textureMaps[newTexture];
+        const { texture, normal, arm } = textureMaps[newTexture];
         const newFloorMaterial = new three.MeshStandardMaterial({
             side: three.DoubleSide,
             map: texture,
+            normalMap: normal,
+            aoMap: arm,
+            roughnessMap: arm,
+            metalnessMap: arm,
         });
 
         removeMeshMaterial(floorMesh);

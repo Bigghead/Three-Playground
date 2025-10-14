@@ -242,24 +242,48 @@ export class ThreeCanvas {
                     "textures/plaster_wall/painted_plaster_wall_diff_1k.webp"
                 ),
             },
-            rosewood: {
+            "rosewood-floor": {
                 texture: this.textureLoader.load(
                     "textures/rosewood/rosewood_veneer1_diff_1k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "textures/rosewood/rosewood_veneer1_arm_1k.webp"
                 ),
             },
             "laminate-floor": {
                 texture: this.textureLoader.load(
                     "/textures/laminate_floor/laminate_floor_02_diff_2k.webp"
                 ),
+                normal: this.textureLoader.load(
+                    "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/laminate_floor/laminate_floor_02_arm_1k.webp"
+                ),
             },
             "wood-floor": {
                 texture: this.textureLoader.load(
                     "/textures/wood_floor/wood_floor_diff_1k.webp"
                 ),
+                normal: this.textureLoader.load(
+                    "/textures/wood_floor/wood_floor_nor_dx_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/wood_floor/wood_floor_arm_1k.webp"
+                ),
             },
             "granite-tile": {
                 texture: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_diff_1k.png"
+                    "/textures/granite_tile/granite_tile_diff_1k.webp"
+                ),
+                normal: this.textureLoader.load(
+                    "/textures/granite_tile/granite_tile_nor_dx_1k.webp"
+                ),
+                arm: this.textureLoader.load(
+                    "/textures/granite_tile/granite_tile_arm_1k.webp"
                 ),
             },
         };
@@ -267,9 +291,9 @@ export class ThreeCanvas {
         for (const map in this.textureMaps) {
             const { texture } = this.textureMaps[map];
             texture.colorSpace = three.SRGBColorSpace;
-            texture.repeat.set(4, 4);
             texture.wrapS = three.RepeatWrapping;
             texture.wrapT = three.RepeatWrapping;
+            texture.repeat.set(4, 4);
         }
     }
 
