@@ -117,9 +117,30 @@ body {
     border: 1px solid #ccc;
     cursor: pointer;
 }
+.room-size-modal .heading,
+.floor-texture-modal .heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-.room-size-modal .title {
+.room-size-modal .title,
+.floor-texture-modal .title {
     padding: 0.5rem;
+}
+
+.room-size-modal button.close,
+.floor-texture-modal button.close {
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 0.3rem;
+    background-color: coral;
+}
+
+.room-size-modal button.close:hover,
+.floor-texture-modal button.close:hover {
+    color: #fff;
+    border-color: #fff;
 }
 
 .room-size-modal .content-child,
@@ -162,7 +183,6 @@ body {
 }
 
 .floor-texture-modal .title {
-    margin-bottom: 0.3rem;
     padding: 0.5rem;
 }
 .floor-texture-modal .textures-container {

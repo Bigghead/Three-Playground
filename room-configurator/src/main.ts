@@ -31,7 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const originalWallWidth = 3;
 
     /**
-     * Elements
+     * ===== Event Handlers =====
+     *
      */
 
     const handleModelImageClick =
@@ -76,9 +77,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    /**
-     * Event Handlers
-     */
     const removeCurrentlyActiveElement = (elementSelector: string): void => {
         const activeMenu = document.querySelector(elementSelector);
         activeMenu?.classList.remove("active");
@@ -147,8 +145,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         editRoomDimensions(newValue, dimensionToChange as DimensionChange);
     };
 
+    const closeConfigModals = (): void => {
+        DomEl.roomSizeModal.style.display = "none";
+        DomEl.floorTextureModal.style.display = "none";
+    };
+
     /**
-     * Listeners
+     * ===== Listeners =====
+     *
      */
 
     DomEl.configSidebarMenu.forEach((menu): void => {
@@ -216,7 +220,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const target = e.target as HTMLElement;
         if (!target.matches("button")) return;
 
+        if (target.classList.contains("close")) {
+            return closeConfigModals();
+        }
+
         const { configuratorAction } = target.dataset;
+        if (!configuratorAction) return;
 
         DomEl.roomSizeModal.style.display =
             configuratorAction === ROOM_SIZE ? "block" : "none";
@@ -246,17 +255,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         removeCurrentlyActiveElement(".texture-img.active");
         target.classList.add("active");
-    });
-
-    document.addEventListener("click", (e) => {
-        // hide room config modal
-        const isInsideRoomConfigurator = DomEl.roomConfigurator.contains(
-            e.target as Node
-        );
-
-        if (!isInsideRoomConfigurator) {
-            DomEl.roomSizeModal.style.display = "none";
-            DomEl.floorTextureModal.style.display = "none";
-        }
     });
 });

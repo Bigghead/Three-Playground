@@ -329,8 +329,6 @@ export class ThreeCanvas {
 
         // Render
         this.threeRaycaster.animate();
-        // this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
-        console.log(stats);
         stats.end();
         // Call tick again on the next frame
         window.requestAnimationFrame(this.animationTick);
