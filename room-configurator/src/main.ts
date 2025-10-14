@@ -6,6 +6,7 @@ import {
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
     ROOM_SIZE,
+    FLOOR_TEXTURE,
 } from "./lib/constants";
 import { models, type ModelVector3 } from "./lib/model-configs";
 import type {
@@ -217,9 +218,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const { configuratorAction } = target.dataset;
 
-        if (configuratorAction === ROOM_SIZE) {
-            DomEl.roomSizeModal.style.display = "block";
-        }
+        DomEl.roomSizeModal.style.display =
+            configuratorAction === ROOM_SIZE ? "block" : "none";
+
+        DomEl.floorTextureModal.style.display =
+            configuratorAction === FLOOR_TEXTURE ? "block" : "none";
     });
 
     DomEl.roomConfigRowElement.addEventListener("click", (e) => {
@@ -250,12 +253,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isInsideRoomConfigurator = DomEl.roomConfigurator.contains(
             e.target as Node
         );
-        const isInsideRoomSizeModal = DomEl.roomSizeModal.contains(
-            e.target as Node
-        );
 
-        if (!isInsideRoomConfigurator && !isInsideRoomSizeModal) {
+        if (!isInsideRoomConfigurator) {
             DomEl.roomSizeModal.style.display = "none";
+            DomEl.floorTextureModal.style.display = "none";
         }
     });
 });

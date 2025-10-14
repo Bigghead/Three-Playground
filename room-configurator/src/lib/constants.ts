@@ -8,6 +8,7 @@ export const ROOM_WIDTH = "room-width";
 export const ROOM_DEPTH = "room-depth";
 export const ROOM_HEIGHT = "room-height";
 export const ROOM_SIZE = "room-size";
+export const FLOOR_TEXTURE = "floor-texture";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
