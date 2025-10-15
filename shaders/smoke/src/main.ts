@@ -9,7 +9,8 @@ if (!canvas) {
     console.error("Canvas element not found.");
 }
 
-const { textureLoader, scene } = new ThreeCanvas({ canvas, initShadow: false });
+const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
+const { textureLoader, scene } = threeCanvas;
 
 const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
     new three.Mesh(
@@ -33,6 +34,7 @@ const smokeMaterial = new three.ShaderMaterial({
     fragmentShader,
     uniforms: {
         uPerlinTexture: { value: perlinTexture },
+        uTime: { value: 0 },
     },
 });
 
@@ -43,3 +45,7 @@ const smokeMesh = new three.Mesh(smokeGeo, smokeMaterial);
 smokeMesh.position.y = -5;
 
 scene.add(smokeMesh);
+
+threeCanvas.addAnimationCallback((elapsedTime) => {
+    smokeMaterial.uniforms.uTime.value = elapsedTime;
+});
