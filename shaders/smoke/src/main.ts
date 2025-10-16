@@ -12,13 +12,7 @@ if (!canvas) {
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 const { textureLoader, scene } = threeCanvas;
 
-const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
-    new three.Mesh(
-        new three.BoxGeometry(1, 1, 1),
-        new three.MeshBasicMaterial({ color: 0x00ff00 })
-    );
-
-scene.add(cube, new three.AxesHelper(10));
+scene.add(new three.AxesHelper(10));
 
 const perlinTexture = textureLoader.load("/perlin.png");
 perlinTexture.wrapS = three.RepeatWrapping;
@@ -27,7 +21,7 @@ console.log(perlinTexture);
 
 const smokeGeo = new three.PlaneGeometry(1, 1, 16, 64);
 const smokeMaterial = new three.ShaderMaterial({
-    // wireframe: true,
+    wireframe: true,
     transparent: true,
     side: three.DoubleSide,
     vertexShader,
@@ -40,7 +34,7 @@ const smokeMaterial = new three.ShaderMaterial({
 
 // moves the origin / pivot point of the geometry to the very bottom ( height of geo / 2 )
 smokeGeo.translate(0, 0.5, 0);
-smokeGeo.scale(10, 10, 1.5);
+smokeGeo.scale(3, 10, 1.5);
 const smokeMesh = new three.Mesh(smokeGeo, smokeMaterial);
 smokeMesh.position.y = -5;
 
