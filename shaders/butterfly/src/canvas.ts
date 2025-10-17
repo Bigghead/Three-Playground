@@ -131,6 +131,8 @@ export class ThreeCanvas {
     textureLoader = new three.TextureLoader();
     clock = new three.Clock();
 
+    private animationCallbacks: ((elapsedTime: number) => void)[] = [];
+
     constructor({
         canvas,
         initShadow,
@@ -184,11 +186,17 @@ export class ThreeCanvas {
         // Update controls
         this.controls.update();
 
+        this.animationCallbacks.forEach((fn) => fn(elapsedTime));
+
         // Render
         this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
 
         // Call tick again on the next frame
         window.requestAnimationFrame(this.animationTick);
+    };
+
+    public addAnimationCallback = (fn: (elapsedTime: number) => void): void => {
+        this.animationCallbacks.push(fn);
     };
 
     public dispose = (): void => {

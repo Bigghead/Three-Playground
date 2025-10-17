@@ -1,7 +1,14 @@
 varying vec2 vUv;
 
+uniform float uTime;
+
+
 void main () {
-    vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+
+    vec3 newPosition = position;
+    newPosition.y += uTime;
+
+    vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
 
