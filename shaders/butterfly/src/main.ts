@@ -27,7 +27,7 @@ const butterflyMaterial = new three.ShaderMaterial({
         uTexture: { value: butterflyTexture },
         uTime: { value: 0.0 },
         uFlapSpeed: { value: 5.0 },
-        uFlapMagnitude: { value: 0.15 },
+        uFlapMagnitude: { value: 1.0 },
     },
 });
 
