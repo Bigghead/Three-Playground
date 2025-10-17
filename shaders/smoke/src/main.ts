@@ -1,0 +1,45 @@
+import * as three from "three";
+import { ThreeCanvas } from "./canvas";
+
+import vertexShader from "./shaders/vertex.glsl";
+import fragmentShader from "./shaders/fragment.glsl";
+
+const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
+if (!canvas) {
+    console.error("Canvas element not found.");
+}
+
+const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
+const { textureLoader, scene } = threeCanvas;
+
+scene.add(new three.AxesHelper(10));
+
+const perlinTexture = textureLoader.load("/perlin.png");
+perlinTexture.wrapS = three.RepeatWrapping;
+perlinTexture.wrapT = three.RepeatWrapping;
+console.log(perlinTexture);
+
+const smokeGeo = new three.PlaneGeometry(1, 1, 16, 64);
+const smokeMaterial = new three.ShaderMaterial({
+    wireframe: true,
+    transparent: true,
+    side: three.DoubleSide,
+    vertexShader,
+    fragmentShader,
+    uniforms: {
+        uPerlinTexture: { value: perlinTexture },
+        uTime: { value: 0 },
+    },
+});
+
+// moves the origin / pivot point of the geometry to the very bottom ( height of geo / 2 )
+smokeGeo.translate(0, 0.5, 0);
+smokeGeo.scale(3, 10, 1.5);
+const smokeMesh = new three.Mesh(smokeGeo, smokeMaterial);
+smokeMesh.position.y = -5;
+
+scene.add(smokeMesh);
+
+threeCanvas.addAnimationCallback((elapsedTime) => {
+    smokeMaterial.uniforms.uTime.value = elapsedTime;
+});
