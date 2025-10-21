@@ -9,9 +9,7 @@ void main () {
 
     vec3 newPosition = position;
 
-
-    // kinda working flapping, but only does downward and looks robotic
-    float wave = sin(uTime * uFlapSpeed);
+    float wave = sin(uTime * uFlapSpeed - (newPosition.y * 0.8));
     float influence = pow(abs(uv.x - 0.5) * 2.0, 2.0);
     float zOffset = wave * influence * uFlapMagnitude;
     newPosition.z += zOffset;

@@ -33,9 +33,21 @@ const butterflyMaterial = new three.ShaderMaterial({
 
 butterflyGeo.scale(3, 3, 1.5);
 const butterfly = new three.Mesh(butterflyGeo, butterflyMaterial);
+// butterfly.rotation.x = -Math.PI / 2;
+
+const forwardVector = new three.Vector3(0, 0, 1);
 
 scene.add(butterfly);
 
 threeCanvas.addAnimationCallback((elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
+
+    // todo - change the mesh position to follow a flight direction following
+    // where its head is pointing
+    const orientation = new three.Quaternion();
+    butterfly.getWorldQuaternion(orientation);
+
+    const direction = forwardVector.clone().applyQuaternion(orientation);
+
+    butterfly.position.addScaledVector(direction, 0.02);
 });
