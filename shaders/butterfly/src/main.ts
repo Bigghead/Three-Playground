@@ -33,21 +33,48 @@ const butterflyMaterial = new three.ShaderMaterial({
 
 butterflyGeo.scale(3, 3, 1.5);
 const butterfly = new three.Mesh(butterflyGeo, butterflyMaterial);
-// butterfly.rotation.x = -Math.PI / 2;
+butterfly.rotation.x = -Math.PI / 2;
+// butterfly.rotation.set(
+//     Math.random() * Math.PI * 2, // Pitch
+//     Math.random() * Math.PI * 2, // Yaw
+//     Math.random() * Math.PI * 2 // Roll
+// );
 
-const forwardVector = new three.Vector3(0, 0, 1);
+const forwardVector = new three.Vector3(0, 0, -1);
 
 scene.add(butterfly);
+
+// ===== Testing movment with just threejs ===== //
+const start = new three.Vector3(0, 0, 0);
+
+const control = new three.Vector3(
+    Math.random() * 2 - 1,
+    Math.random() * 2,
+    Math.random() * 2 - 1
+);
+
+const end = new three.Vector3(
+    Math.random() * 2 + 2,
+    Math.random() * 1,
+    Math.random() * 2 - 1
+);
+
+const curve = new three.QuadraticBezierCurve3(start, control, end);
+let move = 0;
 
 threeCanvas.addAnimationCallback((elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
     // todo - change the mesh position to follow a flight direction following
     // where its head is pointing
-    const orientation = new three.Quaternion();
-    butterfly.getWorldQuaternion(orientation);
 
-    const direction = forwardVector.clone().applyQuaternion(orientation);
+    // kinda works but wonky
+    move += 0.002;
+    if (move > 1) move = 0;
 
-    butterfly.position.addScaledVector(direction, 0.02);
+    const point = curve.getPointAt(move);
+    butterfly.position.copy(point);
+
+    const tangent = curve.getTangentAt(move);
+    butterfly.lookAt(point.clone().add(tangent));
 });
