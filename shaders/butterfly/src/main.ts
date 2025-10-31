@@ -34,17 +34,18 @@ const butterflyMaterial = new three.ShaderMaterial({
 butterflyGeo.scale(3, 3, 1.5);
 const butterfly = new three.Mesh(butterflyGeo, butterflyMaterial);
 butterfly.rotation.x = -Math.PI / 2;
-// butterfly.rotation.set(
-//     Math.random() * Math.PI * 2, // Pitch
-//     Math.random() * Math.PI * 2, // Yaw
-//     Math.random() * Math.PI * 2 // Roll
-// );
-
-const forwardVector = new three.Vector3(0, 0, -1);
+butterfly.rotation.set(
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2,
+    Math.random() * Math.PI * 2
+);
 
 scene.add(butterfly);
 
 // ===== Testing movment with just threejs ===== //
+/**
+ * This is wonky, might have to test out boids algo in js
+ */
 const start = new three.Vector3(0, 0, 0);
 
 const control = new three.Vector3(
