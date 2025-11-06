@@ -26,6 +26,9 @@ export const modelScaling = {
     bed: 22.5,
 };
 
+/**
+ * How big in room width the default models are sized down to
+ */
 const modelRoomScales = {
     bed: 33,
     sofa: 45,
@@ -80,14 +83,24 @@ export const models = {
             },
             imageUrl: "images/bed/bed-3.webp",
         },
+        bed4: {
+            url: "/models/bed/bed-4-draco.glb",
+            roomSizeScale: modelRoomScales.bed,
+            offset: {
+                rotation: {
+                    y: -Math.PI / 2,
+                },
+            },
+            imageUrl: "images/bed/bed-4.webp",
+        },
     },
     sofa: {
         sofa1: {
             url: "/models/sofa/sofa-1-draco.glb",
             imageUrl: "images/sofa/sofa-1.webp",
-            roomSizeScale: modelRoomScales.sofa,
+            roomSizeScale: 50,
             offset: {
-                // position: { y: 0.7 },
+                position: { y: 0.7 },
             },
         },
         sofa2: {
@@ -101,6 +114,11 @@ export const models = {
         sofa3: {
             url: "/models/sofa/sofa-3-draco.glb",
             imageUrl: "images/sofa/sofa-3.webp",
+            roomSizeScale: modelRoomScales.sofa,
+        },
+        sofa4: {
+            url: "/models/sofa/sofa-4-draco.glb",
+            imageUrl: "images/sofa/sofa-4.webp",
             roomSizeScale: modelRoomScales.sofa,
         },
     },
