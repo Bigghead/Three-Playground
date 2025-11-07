@@ -33,6 +33,8 @@ const modelRoomScales = {
     bed: 33,
     sofa: 45,
     table: 25,
+    cabinet: 15,
+    lamp: 5,
     toilet: 10,
     sink: 10,
     shower: 12.5,
@@ -48,6 +50,7 @@ const modelRoomScales = {
  * - set default model position ( the offsets ) cause creators will have wildly different model origins
  */
 
+// ===== Todo: better way to set configs? Cause kinda a lot copying ===== //
 export const models = {
     bed: {
         bed1: {
@@ -143,6 +146,47 @@ export const models = {
             url: "/models/table/table-4-draco.glb",
             imageUrl: "images/table/table-4.webp",
             roomSizeScale: modelRoomScales.table,
+        },
+    },
+
+    cabinet: {
+        cabinet1: {
+            url: "/models/cabinet/cabinet-1.glb",
+            imageUrl: "images/cabinet/cabinet-1.webp",
+            roomSizeScale: modelRoomScales.cabinet,
+        },
+        cabinet2: {
+            url: "/models/cabinet/cabinet-2.glb",
+            imageUrl: "images/cabinet/cabinet-2.webp",
+            roomSizeScale: modelRoomScales.cabinet,
+        },
+        cabinet3: {
+            url: "/models/cabinet/cabinet-3.glb",
+            imageUrl: "images/cabinet/cabinet-3.webp",
+            roomSizeScale: modelRoomScales.cabinet,
+        },
+    },
+
+    lighting: {
+        lamp1: {
+            url: "/models/lamp/lamp-1-draco.glb",
+            imageUrl: "images/lamp/lamp-1.webp",
+            roomSizeScale: modelRoomScales.lamp,
+        },
+        lamp2: {
+            url: "/models/lamp/lamp-2-draco.glb",
+            imageUrl: "images/lamp/lamp-2.webp",
+            roomSizeScale: modelRoomScales.lamp,
+        },
+        lamp3: {
+            url: "/models/lamp/lamp-3-draco.glb",
+            imageUrl: "images/lamp/lamp-3.webp",
+            roomSizeScale: modelRoomScales.lamp,
+        },
+        lamp4: {
+            url: "/models/lamp/lamp-4-draco.glb",
+            imageUrl: "images/lamp/lamp-4.webp",
+            roomSizeScale: modelRoomScales.lamp,
         },
     },
 
