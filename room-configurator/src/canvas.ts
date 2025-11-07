@@ -175,6 +175,7 @@ const loadModel = async (
     modelScale: number = 15
 ): Promise<three.Group> => {
     try {
+        // need each model in a group for the mouse drag / raycaster
         const wrapper = new three.Group();
         const { url, offset } = modelConfig;
         const model = await modelLoader.initModel(url);
