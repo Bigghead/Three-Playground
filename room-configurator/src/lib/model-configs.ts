@@ -193,12 +193,12 @@ export const models = {
     bathroom: {
         toilet: {
             url: "/models/bathroom/toilet-draco.glb",
-            imageUrl: "images/sofa/sofa-3.png",
+            imageUrl: "images/bathroom/toilet.webp",
             roomSizeScale: modelRoomScales.toilet,
         },
         shower: {
             url: "/models/bathroom/shower-draco.glb",
-            imageUrl: "images/sofa/sofa-3.png",
+            imageUrl: "images/bathroom/shower-1.webp",
             roomSizeScale: modelRoomScales.shower,
             offset: {
                 rotation: {
@@ -207,17 +207,24 @@ export const models = {
             },
         },
         sink: {
-            url: "/models/bathroom/sink-draco.glb",
-            imageUrl: "images/sofa/sofa-3.png",
-            roomSizeScale: modelRoomScales.sink,
+            url: "/models/bathroom/sink-1-draco.glb",
+            imageUrl: "images/bathroom/sink.webp",
+            roomSizeScale: 8,
             offset: {
-                position: {
-                    y: 1.2,
+                rotation: {
+                    y: -Math.PI / 2,
                 },
             },
         },
+        sink2: {
+            url: "/models/bathroom/sink-2-draco.glb",
+            imageUrl: "images/bathroom/sink-2.webp",
+            roomSizeScale: modelRoomScales.sink,
+        },
     },
     wall: {
-        divider: {},
+        divider: {
+            imageUrl: "images/wall/wall.webp",
+        },
     },
 };
