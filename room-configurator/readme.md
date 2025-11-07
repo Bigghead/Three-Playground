@@ -1,11 +1,11 @@
 ## Work in Progress
 All components functionally working, just need to make it pretty
-<img width="2558" height="1449" alt="image" src="https://github.com/user-attachments/assets/790093bb-931b-4c84-b2d7-3544e1658888" />
+<img width="2553" height="1443" alt="image" src="https://github.com/user-attachments/assets/5cdff114-c67d-4671-ad28-e6395067149b" />
+
 
 
 ### Todo: 
-- Dynamic size room
-- Room textures
-- Fill all models
 - Style UIs
+- Fix bug with wall divider visibly dissapearing ( but still in the scene ) after room size is changed
 - Fix bug with slight model jumping when first moved
+- Fill in decorational models ( tv, plants, lego sets etc ) 
