@@ -35,6 +35,17 @@ document.addEventListener("DOMContentLoaded", async () => {
      *
      */
 
+    const renderOverlyProgress = (): HTMLDivElement => {
+        const overlayElement = document.createElement("div");
+        overlayElement.classList.add("overlay");
+
+        const progressBar = document.createElement("progress");
+        progressBar.max = 100;
+        progressBar.value = 0;
+        overlayElement.appendChild(progressBar);
+        return overlayElement;
+    };
+
     const handleModelImageClick =
         (modelType: ModelType, modelKey: ModelName) =>
         async (e: MouseEvent) => {
@@ -44,18 +55,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return createWall();
                 }
 
-                const overlay = document.createElement("div");
-                overlay.classList.add("overlay");
+                const overlayElement = renderOverlyProgress();
+                const progressBar = overlayElement
+                    .children[0] as HTMLProgressElement;
+                div.appendChild(overlayElement);
 
-                const progressBar = document.createElement("progress");
-                progressBar.max = 100;
-                progressBar.value = 70;
-                progressBar.textContent = "70%";
-                overlay.appendChild(progressBar);
-
-                div.appendChild(overlay);
                 await renderModel(modelType, modelKey, ({ loaded, total }) => {
-                    console.log(loaded / total);
+                    progressBar.value = Math.round((loaded / total) * 100);
+
+                    if (progressBar.value >= 100) {
+                        overlayElement.remove();
+                    }
                 });
             } catch (e) {
                 console.error(e);
