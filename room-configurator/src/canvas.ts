@@ -215,18 +215,27 @@ window.addEventListener("mousemove", (event: MouseEvent) => {
     threeRaycaster.onMouseMove(event);
 });
 
-export const renderModel = async (
-    modelType: ModelType,
-    modelName: ModelName,
-    progressCallback: (progress: ProgressEvent) => void
-): Promise<void> => {
+export const renderModel = async ({
+    modelType,
+    modelName,
+    addToScene = true,
+    progressCallback,
+}: {
+    modelType: ModelType;
+    modelName: ModelName;
+    addToScene?: boolean;
+    progressCallback?: (progress: ProgressEvent) => void;
+}): Promise<void> => {
     const model = await loadModel(
         models[modelType][modelName],
         models[modelType][modelName]["roomSizeScale"],
         progressCallback
     );
-    scene.add(model);
-    threeRaycaster.addDraggableModel(model);
+
+    if (addToScene) {
+        scene.add(model);
+        threeRaycaster.addDraggableModel(model);
+    }
 };
 
 export const createWall = (): void => {

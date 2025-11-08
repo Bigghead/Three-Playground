@@ -35,6 +35,23 @@ document.addEventListener("DOMContentLoaded", async () => {
      *
      */
 
+    /**
+     * Todo: cache model cause it restarts the fetch everytime you move away from image
+     * preload model asset in the background on image hover but not render
+     */
+    const loadBackgroundModel =
+        (modelType: ModelType, modelName: ModelName) => async () => {
+            try {
+                await renderModel({
+                    modelType,
+                    modelName,
+                    addToScene: false,
+                });
+            } catch (e) {
+                console.error(`Error loading background model. Error: ${e}`);
+            }
+        };
+
     const renderOverlyProgress = (): HTMLDivElement => {
         const overlayElement = document.createElement("div");
         overlayElement.classList.add("overlay");
@@ -47,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const handleModelImageClick =
-        (modelType: ModelType, modelKey: ModelName) =>
+        (modelType: ModelType, modelName: ModelName) =>
         async (e: MouseEvent) => {
             const div = e.currentTarget as HTMLDivElement;
             try {
@@ -55,17 +72,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return createWall();
                 }
 
+                /**
+                 * Still to be determined if we need this
+                 * biggest asset is 10MB but it loads decently fast
+                 * and the progress bar ends up looking like a bug cause it just flashes on the page since model loads quick
+                 */
                 const overlayElement = renderOverlyProgress();
                 const progressBar = overlayElement
                     .children[0] as HTMLProgressElement;
                 div.appendChild(overlayElement);
 
-                await renderModel(modelType, modelKey, ({ loaded, total }) => {
-                    progressBar.value = Math.round((loaded / total) * 100);
+                await renderModel({
+                    modelType,
+                    modelName,
+                    progressCallback: ({ loaded, total }) => {
+                        progressBar.value = Math.round((loaded / total) * 100);
 
-                    if (progressBar.value >= 100) {
-                        overlayElement.remove();
-                    }
+                        if (progressBar.value >= 100) {
+                            overlayElement.remove();
+                        }
+                    },
                 });
             } catch (e) {
                 console.error(e);
@@ -92,6 +118,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             img.alt = `${modelType} - ${modelKey}`;
 
             div.appendChild(img);
+
+            // ===== preload asset on hover ===== //
+            div.addEventListener(
+                "mouseenter",
+                loadBackgroundModel(modelType, modelKey)
+            );
             div.addEventListener(
                 "click",
                 handleModelImageClick(modelType, modelKey)
