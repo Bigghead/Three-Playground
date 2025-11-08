@@ -36,13 +36,27 @@ document.addEventListener("DOMContentLoaded", async () => {
      */
 
     const handleModelImageClick =
-        (modelType: ModelType, modelKey: ModelName) => async () => {
+        (modelType: ModelType, modelKey: ModelName) =>
+        async (e: MouseEvent) => {
+            const div = e.currentTarget as HTMLDivElement;
             try {
                 if (modelType === "wall") {
                     return createWall();
                 }
 
-                await renderModel(modelType, modelKey);
+                const overlay = document.createElement("div");
+                overlay.classList.add("overlay");
+
+                const progressBar = document.createElement("progress");
+                progressBar.max = 100;
+                progressBar.value = 70;
+                progressBar.textContent = "70%";
+                overlay.appendChild(progressBar);
+
+                div.appendChild(overlay);
+                await renderModel(modelType, modelKey, ({ loaded, total }) => {
+                    console.log(loaded / total);
+                });
             } catch (e) {
                 console.error(e);
             }
