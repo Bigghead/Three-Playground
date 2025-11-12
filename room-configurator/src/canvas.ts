@@ -181,14 +181,13 @@ const loadModel = async (
         const wrapper = new three.Group();
         const { url, offset } = modelConfig;
         const model = await modelLoader.initModel(url, progressCallback);
-        console.log(model);
         normalizeModelScale(model, modelScale);
 
         if (offset) {
             applyModelConfigOffset(model, offset);
         }
 
-        wrapper.add(model.scene.clone());
+        wrapper.add(model.scene);
         return wrapper;
     } catch (e) {
         console.error(e);
