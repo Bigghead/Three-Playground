@@ -177,16 +177,18 @@ const loadModel = async (
 ): Promise<three.Group> => {
     try {
         // need each model in a group for the mouse drag / raycaster
+        console.log(modelConfig);
         const wrapper = new three.Group();
         const { url, offset } = modelConfig;
         const model = await modelLoader.initModel(url, progressCallback);
+        console.log(model);
         normalizeModelScale(model, modelScale);
 
         if (offset) {
             applyModelConfigOffset(model, offset);
         }
 
-        wrapper.add(model.scene);
+        wrapper.add(model.scene.clone());
         return wrapper;
     } catch (e) {
         console.error(e);

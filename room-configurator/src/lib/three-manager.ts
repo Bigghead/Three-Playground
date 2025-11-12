@@ -150,6 +150,8 @@ class ThreeModelLoader {
     gltfLoader: GLTFLoader = new GLTFLoader();
     dracoLoader: DRACOLoader = new DRACOLoader();
 
+    modelCache: Map<string, Promise<GLTF>> = new Map();
+
     constructor() {
         this.dracoLoader.setDecoderPath("/loader/draco/");
         this.gltfLoader.setDRACOLoader(this.dracoLoader);
@@ -159,7 +161,12 @@ class ThreeModelLoader {
         modelSrc: string,
         progressCallback?: (progress: ProgressEvent) => void
     ): Promise<GLTF> {
-        return new Promise((resolve, reject) => {
+        if (this.modelCache.get(modelSrc)) {
+            return this.modelCache.get(modelSrc)!;
+        }
+
+        // ===== Todo - caching the promise works but it breaks the progress callback ===== //
+        const modelPromise = new Promise<GLTF>((resolve, reject) => {
             this.gltfLoader.load(
                 modelSrc,
                 (gltf) => resolve(gltf),
@@ -174,6 +181,9 @@ class ThreeModelLoader {
                 }
             );
         });
+
+        this.modelCache.set(modelSrc, modelPromise);
+        return modelPromise;
     }
 }
 
