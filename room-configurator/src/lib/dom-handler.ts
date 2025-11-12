@@ -1,14 +1,17 @@
 import { createWall, editRoomDimensions, renderModel } from "../canvas";
 import {
     DomEl,
+    FLOOR_TEXTURE,
     ROOM_CONFIG_ACTION_ADD,
     ROOM_CONFIG_ACTION_SUBTRACT,
+    ROOM_SIZE,
+    WALL_DIVIDER,
 } from "./constants";
 
 import { type ModelType, type ModelName, type DimensionChange } from "./types";
 import { models, type ModelVector3 } from "./model-configs";
 
-class DomHandler {
+export class DomHandler {
     originalWallWidth = 3;
 
     /**
@@ -20,7 +23,7 @@ class DomHandler {
      * Todo: cache model cause it restarts the fetch everytime you move away from image
      * preload model asset in the background on image hover but not render
      */
-    loadBackgroundModel =
+    private loadBackgroundModel =
         (modelType: ModelType, modelName: ModelName) => async () => {
             try {
                 await renderModel({
@@ -33,7 +36,7 @@ class DomHandler {
             }
         };
 
-    renderOverlayProgress = (): HTMLDivElement => {
+    private renderOverlayProgress = (): HTMLDivElement => {
         const overlayElement = document.createElement("div");
         overlayElement.classList.add("overlay");
 
@@ -44,7 +47,7 @@ class DomHandler {
         return overlayElement;
     };
 
-    handleModelImageClick =
+    private handleModelImageClick =
         (modelType: ModelType, modelName: ModelName) =>
         async (e: MouseEvent) => {
             const div = e.currentTarget as HTMLDivElement;
@@ -79,11 +82,11 @@ class DomHandler {
             }
         };
 
-    clearModelImages = (): void => {
+    private clearModelImages = (): void => {
         DomEl.configuratorContent.innerHTML = "";
     };
 
-    renderModelImages = (modelType: ModelType): void => {
+    private renderModelImages = (modelType: ModelType): void => {
         this.clearModelImages();
         const chosenModels = models[modelType];
 
@@ -114,16 +117,7 @@ class DomHandler {
         }
     };
 
-    removeCurrentlyActiveElement = (elementSelector: string): void => {
-        const activeMenu = document.querySelector(elementSelector);
-        activeMenu?.classList.remove("active");
-    };
-
-    hideConfigModal = (): void => {
-        DomEl.configModal.style.visibility = "hidden";
-    };
-
-    initWidthSlider = (scale: ModelVector3): void => {
+    private initWidthSlider = (scale: ModelVector3): void => {
         const { x } = scale;
         DomEl.modelWidthSliderContainer.style.display = "block";
         const widthValue = (this.originalWallWidth * x).toString();
@@ -131,7 +125,7 @@ class DomHandler {
         DomEl.modelWidthSlider.value = widthValue;
     };
 
-    initRotationSlider = (rotation: ModelVector3): void => {
+    private initRotationSlider = (rotation: ModelVector3): void => {
         const { y } = rotation;
 
         // need to turn rotation radians back to degrees
@@ -144,12 +138,57 @@ class DomHandler {
         DomEl.configModal.style.visibility = "visible";
     };
 
+    removeCurrentlyActiveElement = (elementSelector: string): void => {
+        const activeMenu = document.querySelector(elementSelector);
+        activeMenu?.classList.remove("active");
+    };
+
+    handleMenuClick = (e: PointerEvent): void => {
+        e.stopPropagation();
+
+        const target = e.target as HTMLElement;
+        const {
+            dataset: { content },
+        } = target;
+        console.log(e);
+        if (content) {
+            this.removeCurrentlyActiveElement(
+                ".configurator-sidebar > .menu.active"
+            );
+            this.renderModelImages(content as ModelType);
+            target.classList.add("active");
+        }
+    };
+
+    handleActiveModelClick = (e: CustomEvent): void => {
+        const custom = e as CustomEvent;
+        DomEl.modelWidthSliderContainer.style.display = "none";
+
+        if (custom.detail.type && custom.detail.type === WALL_DIVIDER) {
+            this.initWidthSlider(custom.detail.scale);
+        }
+
+        this.initRotationSlider(custom.detail.rotation);
+    };
+
+    hideConfigModal = (): void => {
+        DomEl.configModal.style.visibility = "hidden";
+    };
+
     resetSliders = (): void => {
         DomEl.modelWidthText.innerText = this.originalWallWidth.toString();
         DomEl.modelWidthSlider.value = this.originalWallWidth.toString();
         DomEl.modelRotationText.innerText = "0";
         DomEl.modelRotationSlider.value = "0";
         this.hideConfigModal();
+    };
+
+    handleRenderConfigModals = (configuratorAction: string): void => {
+        DomEl.roomSizeModal.style.display =
+            configuratorAction === ROOM_SIZE ? "block" : "none";
+
+        DomEl.floorTextureModal.style.display =
+            configuratorAction === FLOOR_TEXTURE ? "block" : "none";
     };
 
     handleEditRoomAction = (
