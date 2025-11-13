@@ -14,17 +14,27 @@ import { models, type ModelVector3 } from "./model-configs";
 export class DomHandler {
     originalWallWidth = 3;
 
+    private modelCache: Map<string, boolean> = new Map();
+
     /**
      * ===== Event Handlers =====
      *
      */
 
     /**
-     * Todo: cache model cause it restarts the fetch everytime you move away from image
      * preload model asset in the background on image hover but not render
      */
     private loadBackgroundModel =
         (modelType: ModelType, modelName: ModelName) => async () => {
+            const modelKey = `${modelType} - ${modelName}`;
+
+            if (this.modelCache.get(modelKey)) {
+                // only prefetch once, duh
+                return;
+            }
+
+            this.modelCache.set(modelKey, true);
+
             try {
                 await renderModel({
                     modelType,
