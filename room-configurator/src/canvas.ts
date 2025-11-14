@@ -64,6 +64,11 @@ const removeGroupChildren = (group: three.Group): void => {
     }
 };
 
+/**
+ * Todo:
+ * 1) Keep default floor if only dimensions are changed
+ * 2) For some reason wall dividers are removed if dimensions are changed but not any other models
+ */
 const createRoom = ({
     floorWidth,
     floorDepth,
@@ -77,14 +82,22 @@ const createRoom = ({
 }): void => {
     removeGroupChildren(parentGroup);
 
-    const defaultFloor = textureMaps["wood-floor"];
+    // ===== use default floor 1st time page loads, use last floor when room dimension is updated ===== //
+    const currentFloorMesh = floorMesh?.material as three.MeshStandardMaterial;
+    const defaultFloorTexture = textureMaps["wood-floor"];
+    const defaultFloorMaterial = {
+        texture: currentFloorMesh?.map || defaultFloorTexture.texture,
+        normal: currentFloorMesh?.normalMap || defaultFloorTexture.normal,
+        arm: currentFloorMesh?.aoMap || defaultFloorTexture.arm,
+    };
+
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: defaultFloor.texture,
-        normalMap: defaultFloor.normal,
-        aoMap: defaultFloor.arm,
-        roughnessMap: defaultFloor.arm,
-        metalnessMap: defaultFloor.arm,
+        map: defaultFloorMaterial.texture,
+        normalMap: defaultFloorMaterial.normal,
+        aoMap: defaultFloorMaterial.arm,
+        roughnessMap: defaultFloorMaterial.arm,
+        metalnessMap: defaultFloorMaterial.arm,
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
@@ -109,6 +122,9 @@ const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
     threeRaycaster.setRoomBoundingBox(roomSize);
 };
 
+/**
+ * This is called everytime room dimensions are changed
+ */
 const initRoom = ({
     floorWidth = defaultFloorDimension,
     floorDepth = defaultFloorDimension,
