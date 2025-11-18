@@ -64,11 +64,6 @@ const removeGroupChildren = (group: three.Group): void => {
     }
 };
 
-/**
- * Todo:
- * 1) Keep default floor if only dimensions are changed
- * 2) For some reason wall dividers are removed if dimensions are changed but not any other models
- */
 const createRoom = ({
     floorWidth,
     floorDepth,
@@ -258,9 +253,13 @@ export const renderModel = async ({
 export const createWall = (): void => {
     const wallMesh = (wallBuilder as WallBuilder).createWall(3);
     const wall = new three.Group();
+
+    // ===== using cusomdata to check model type in custom click event in raycaster ===== //
     wall.userData.type = WALL_DIVIDER;
     wall.add(wallMesh);
-    room.add(wall);
+
+    // ===== add wall into scene, not into room cause we reset room when we change dimensions ===== //
+    scene.add(wall);
     threeRaycaster.addDraggableModel(wall);
 };
 
