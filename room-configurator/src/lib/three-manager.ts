@@ -155,12 +155,20 @@ class ThreeModelLoader {
         this.gltfLoader.setDRACOLoader(this.dracoLoader);
     }
 
-    async initModel(modelSrc: string): Promise<GLTF> {
-        return new Promise((resolve, reject) => {
+    async initModel(
+        modelSrc: string,
+        progressCallback?: (progress: ProgressEvent) => void
+    ): Promise<GLTF> {
+        // ===== Todo - caching the promise works but it breaks the progress callback ===== //
+        return new Promise<GLTF>((resolve, reject) => {
             this.gltfLoader.load(
                 modelSrc,
                 (gltf) => resolve(gltf),
-                (progress) => {},
+                (progress) => {
+                    if (progressCallback) {
+                        progressCallback(progress);
+                    }
+                },
                 (e) => {
                     console.error(e);
                     reject(e);

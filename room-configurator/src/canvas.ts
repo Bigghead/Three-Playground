@@ -77,14 +77,22 @@ const createRoom = ({
 }): void => {
     removeGroupChildren(parentGroup);
 
-    const defaultFloor = textureMaps["wood-floor"];
+    // ===== use default floor 1st time page loads, use last floor when room dimension is updated ===== //
+    const currentFloorMesh = floorMesh?.material as three.MeshStandardMaterial;
+    const defaultFloorTexture = textureMaps["wood-floor"];
+    const defaultFloorMaterial = {
+        texture: currentFloorMesh?.map || defaultFloorTexture.texture,
+        normal: currentFloorMesh?.normalMap || defaultFloorTexture.normal,
+        arm: currentFloorMesh?.aoMap || defaultFloorTexture.arm,
+    };
+
     const floorMaterial = new three.MeshStandardMaterial({
         side: three.DoubleSide,
-        map: defaultFloor.texture,
-        normalMap: defaultFloor.normal,
-        aoMap: defaultFloor.arm,
-        roughnessMap: defaultFloor.arm,
-        metalnessMap: defaultFloor.arm,
+        map: defaultFloorMaterial.texture,
+        normalMap: defaultFloorMaterial.normal,
+        aoMap: defaultFloorMaterial.arm,
+        roughnessMap: defaultFloorMaterial.arm,
+        metalnessMap: defaultFloorMaterial.arm,
     });
 
     const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
@@ -109,6 +117,9 @@ const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
     threeRaycaster.setRoomBoundingBox(roomSize);
 };
 
+/**
+ * This is called everytime room dimensions are changed
+ */
 const initRoom = ({
     floorWidth = defaultFloorDimension,
     floorDepth = defaultFloorDimension,
@@ -172,13 +183,15 @@ const applyModelConfigOffset = (
 
 const loadModel = async (
     modelConfig: ModelConfig,
-    modelScale: number = 15
+    modelScale: number,
+    progressCallback?: (progress: ProgressEvent) => void
 ): Promise<three.Group> => {
     try {
         // need each model in a group for the mouse drag / raycaster
+        console.log(modelConfig);
         const wrapper = new three.Group();
         const { url, offset } = modelConfig;
-        const model = await modelLoader.initModel(url);
+        const model = await modelLoader.initModel(url, progressCallback);
         normalizeModelScale(model, modelScale);
 
         if (offset) {
@@ -194,7 +207,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed.bed1);
+const bed = await loadModel(models.bed.bed1, 15);
 
 scene.add(room, bed);
 
@@ -214,24 +227,39 @@ window.addEventListener("mousemove", (event: MouseEvent) => {
     threeRaycaster.onMouseMove(event);
 });
 
-export const renderModel = async (
-    modelType: ModelType,
-    modelName: ModelName
-): Promise<void> => {
+export const renderModel = async ({
+    modelType,
+    modelName,
+    addToScene = true,
+    progressCallback,
+}: {
+    modelType: ModelType;
+    modelName: ModelName;
+    addToScene?: boolean;
+    progressCallback?: (progress: ProgressEvent) => void;
+}): Promise<void> => {
     const model = await loadModel(
         models[modelType][modelName],
-        models[modelType][modelName]["roomSizeScale"]
+        models[modelType][modelName]["roomSizeScale"],
+        progressCallback
     );
-    scene.add(model);
-    threeRaycaster.addDraggableModel(model);
+
+    if (addToScene) {
+        scene.add(model);
+        threeRaycaster.addDraggableModel(model);
+    }
 };
 
 export const createWall = (): void => {
     const wallMesh = (wallBuilder as WallBuilder).createWall(3);
     const wall = new three.Group();
+
+    // ===== using cusomdata to check model type in custom click event in raycaster ===== //
     wall.userData.type = WALL_DIVIDER;
     wall.add(wallMesh);
-    room.add(wall);
+
+    // ===== add wall into scene, not into room cause we reset room when we change dimensions ===== //
+    scene.add(wall);
     threeRaycaster.addDraggableModel(wall);
 };
 
