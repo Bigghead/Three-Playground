@@ -23,6 +23,27 @@ body {
     height: 100vh;
 }
 
+.frosted-background {
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 20px;
+}
+
+.action-button {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 1rem;
+    background-color: #8affc8;
+}
+.action-button:hover {
+    background-color: #2f3061;
+    color: #fff;
+}
+
 .configurator {
     display: flex;
     flex-direction: row;
@@ -131,18 +152,6 @@ body {
 
 .room-size-modal {
     display: none;
-}
-
-.room-configurator__actions button {
-    padding: 1rem;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    border-radius: 1rem;
-    background-color: #8affc8;
-}
-.room-configurator__actions button:hover {
-    background-color: #2f3061;
-    color: #fff;
 }
 
 .room-size-modal {
@@ -258,20 +267,21 @@ body {
     left: 5rem;
     min-width: 250px;
     min-height: 200px;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 1rem;
-    background-color: azure;
     visibility: hidden;
 }
 
 .config-modal-title,
 .config-modal-description {
-    color: #000;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
     margin: 0.5rem auto;
 }
 
 .config-modal-slider {
     margin: 0.5rem auto;
+    /* cursor: pointer; */
 }
 
 .config-modal-slider > #model-rotation,
@@ -290,7 +300,9 @@ body {
     gap: 1rem;
 }
 .config-modal-action > button {
-    padding: 0.5rem;
-    border: 2px solid gray;
-    border-radius: 0.2rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 1rem;
+    background-color: #8affc8;
 }
