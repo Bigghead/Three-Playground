@@ -295,9 +295,7 @@ export const editRoomDimensions = (
                 ? newDimensionValue
                 : Math.round(roomSize.z),
         wallHeight:
-            dimensionToChange === ROOM_HEIGHT
-                ? newDimensionValue
-                : Math.round(roomSize.y),
+            dimensionToChange === ROOM_HEIGHT ? newDimensionValue : roomSize.y,
     });
 };
 
