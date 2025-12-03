@@ -33,6 +33,8 @@ const { textureMaps, scene, modelLoader, threeRaycaster, threeCamera } =
         initShadow: false,
     });
 
+scene.background = new three.Color("#0A2342");
+
 const defaultFloorDimension = 10;
 const room = new three.Group();
 let wallBuilder: WallBuilder | null = null;

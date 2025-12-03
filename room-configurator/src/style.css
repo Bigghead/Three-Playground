@@ -8,6 +8,7 @@
 html,
 body {
     overflow: hidden;
+    background-color: #0a2342;
 }
 
 .main {
@@ -30,6 +31,7 @@ body {
     position: fixed;
     top: 0;
     right: 0;
+    background-color: #087e8b;
 }
 
 .configurator-sidebar {
@@ -42,14 +44,20 @@ body {
     gap: 1rem;
 }
 .configurator-sidebar > .menu {
+    font-size: 1.2rem;
+    width: 100%;
+    text-align: center;
     padding: 1rem;
     cursor: pointer;
-    border-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    color: #fff;
+    margin-top: 0.5rem;
 }
 
 .configurator-sidebar > .menu.active {
-    background-color: skyblue;
-    color: #fff;
+    background-color: #8affc8;
+    color: #000;
 }
 
 .configurator-content {
@@ -116,7 +124,7 @@ body {
 .room-size-modal,
 .floor-texture-modal,
 .room-configurator__actions {
-    background-color: #fff;
+    background-color: #087e8b;
     padding: 1rem;
     border-radius: 1rem;
 }
@@ -129,6 +137,16 @@ body {
     padding: 1rem;
     border: 1px solid #ccc;
     cursor: pointer;
+    border-radius: 1rem;
+    background-color: #8affc8;
+}
+.room-configurator__actions button:hover {
+    background-color: #2f3061;
+    color: #fff;
+}
+
+.room-size-modal {
+    color: #fff;
 }
 .room-size-modal .heading,
 .floor-texture-modal .heading {
@@ -185,14 +203,16 @@ body {
     gap: 0.5rem;
 }
 .room-size-modal .content-child .content-child__action button {
-    width: 2rem;
-    height: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 0.5rem;
     cursor: pointer;
+    border-radius: 0.5rem;
 }
 
 .floor-texture-modal {
     display: none;
+    color: #fff;
 }
 
 .floor-texture-modal .title {
