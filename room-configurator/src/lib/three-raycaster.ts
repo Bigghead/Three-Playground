@@ -297,10 +297,17 @@ class CollisionManager {
         return false;
     }
 
-    handleCollidingModel(
-        activeModel: ModelChild,
-        isColliding: boolean = false
-    ): void {
+    handleCollidingModel(activeModel: ModelChild, models: ModelChild[]): void {
+        const activeModelBox = this.activeModelBox.setFromObject(activeModel);
+
+        this.setRoomBounds(activeModel);
+
+        const isColliding = this.checkModelCollision(
+            activeModel,
+            activeModelBox,
+            models
+        );
+
         if (isColliding) {
             this.modelManager.changeModelColor(activeModel, "red");
             this._isActiveModelColliding = true;
@@ -333,7 +340,7 @@ class CollisionManager {
      * Use room min/max coordinates to check if dragged object is hitting edges
      * Clamp / stop the drag by backing off dragged model slightly
      */
-    checkRoomBounds(activeModel: ModelChild) {
+    setRoomBounds(activeModel: ModelChild) {
         const activeModelBox = this.activeModelBox;
         const { min, max } = this._roomBoundingBox;
         const { position } = activeModel;
@@ -456,17 +463,8 @@ export class ThreeRaycaster {
 
         // todo: fix small model jumping when first moved
         this.dragManager.updatePosition(this.collisionManager.intersectPoint);
-        const activeModelBox =
-            this.collisionManager.activeModelBox.setFromObject(activeModel);
 
-        this.collisionManager.checkRoomBounds(activeModel);
-
-        const isColliding = this.collisionManager.checkModelCollision(
-            activeModel,
-            activeModelBox,
-            models
-        );
-        this.collisionManager.handleCollidingModel(activeModel, isColliding);
+        this.collisionManager.handleCollidingModel(activeModel, models);
     }
 
     onMouseDown(event: MouseEvent): void {
