@@ -75,6 +75,7 @@ DomEl.roomConfigurator.addEventListener("click", (e) => {
     domHandler.handleRenderConfigModals(configuratorAction);
 });
 
+// ===== Todo: edit max wall divider width to match new max width / depth ===== //
 DomEl.roomConfigRowElement.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     const contentChild = target.closest(".content-child") as HTMLElement;

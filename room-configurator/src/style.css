@@ -8,6 +8,7 @@
 html,
 body {
     overflow: hidden;
+    background-color: #0a2342;
 }
 
 .main {
@@ -22,6 +23,27 @@ body {
     height: 100vh;
 }
 
+.frosted-background {
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 20px;
+}
+
+.action-button {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 1rem;
+    background-color: #8affc8;
+}
+.action-button:hover {
+    background-color: #2f3061;
+    color: #fff;
+}
+
 .configurator {
     display: flex;
     flex-direction: row;
@@ -30,6 +52,7 @@ body {
     position: fixed;
     top: 0;
     right: 0;
+    background-color: #087e8b;
 }
 
 .configurator-sidebar {
@@ -42,14 +65,20 @@ body {
     gap: 1rem;
 }
 .configurator-sidebar > .menu {
+    font-size: 1.2rem;
+    width: 100%;
+    text-align: center;
     padding: 1rem;
     cursor: pointer;
-    border-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    color: #fff;
+    margin-top: 0.5rem;
 }
 
 .configurator-sidebar > .menu.active {
-    background-color: skyblue;
-    color: #fff;
+    background-color: #8affc8;
+    color: #000;
 }
 
 .configurator-content {
@@ -116,7 +145,7 @@ body {
 .room-size-modal,
 .floor-texture-modal,
 .room-configurator__actions {
-    background-color: #fff;
+    background-color: #087e8b;
     padding: 1rem;
     border-radius: 1rem;
 }
@@ -125,10 +154,8 @@ body {
     display: none;
 }
 
-.room-configurator__actions button {
-    padding: 1rem;
-    border: 1px solid #ccc;
-    cursor: pointer;
+.room-size-modal {
+    color: #fff;
 }
 .room-size-modal .heading,
 .floor-texture-modal .heading {
@@ -185,14 +212,16 @@ body {
     gap: 0.5rem;
 }
 .room-size-modal .content-child .content-child__action button {
-    width: 2rem;
-    height: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
     padding: 0.5rem;
     cursor: pointer;
+    border-radius: 0.5rem;
 }
 
 .floor-texture-modal {
     display: none;
+    color: #fff;
 }
 
 .floor-texture-modal .title {
@@ -238,20 +267,21 @@ body {
     left: 5rem;
     min-width: 250px;
     min-height: 200px;
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 1rem;
-    background-color: azure;
     visibility: hidden;
 }
 
 .config-modal-title,
 .config-modal-description {
-    color: #000;
-    margin: 0.5rem auto;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+    margin: 1rem auto;
 }
 
 .config-modal-slider {
     margin: 0.5rem auto;
+    /* cursor: pointer; */
 }
 
 .config-modal-slider > #model-rotation,
@@ -267,10 +297,13 @@ body {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    padding: 1rem;
+    gap: 1.5rem;
 }
 .config-modal-action > button {
-    padding: 0.5rem;
-    border: 2px solid gray;
-    border-radius: 0.2rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 1rem;
+    background-color: #8affc8;
 }
