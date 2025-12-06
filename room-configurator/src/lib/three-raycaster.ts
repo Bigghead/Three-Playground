@@ -216,7 +216,7 @@ class CollisionManager {
     private _modelBox = new three.Box3();
     private _isActiveModelColliding = false;
 
-    private _canvasBoundsRect: DOMRect;
+    private _canvasBoundsRect!: DOMRect;
     private _camera: three.PerspectiveCamera;
 
     modelManager: ModelManager;
@@ -230,7 +230,7 @@ class CollisionManager {
         camera: three.PerspectiveCamera;
         modelManager: ModelManager;
     }) {
-        this._canvasBoundsRect = canvas.getBoundingClientRect();
+        this.setNewCanvasBounds(canvas);
         this._camera = camera;
         this.modelManager = modelManager;
     }
@@ -253,6 +253,10 @@ class CollisionManager {
 
     get isactiveModelColliding() {
         return this._isActiveModelColliding;
+    }
+
+    setNewCanvasBounds(canvas: HTMLCanvasElement): void {
+        this._canvasBoundsRect = canvas.getBoundingClientRect();
     }
 
     setRaycastingPointer(event: MouseEvent): void {
