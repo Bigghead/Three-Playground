@@ -39,8 +39,8 @@ class Sizes {
         return window.innerWidth * this.fullscreenSizeMax;
     }
 
-    public resize(canvas: HTMLCanvasElement | null) {
-        this.width = canvas?.clientWidth || this.getWidth();
+    public resize(canvas: HTMLCanvasElement) {
+        this.width = canvas.clientWidth || this.getWidth();
         this.height = window.innerHeight;
     }
 }
@@ -309,7 +309,7 @@ export class ThreeCanvas {
      * Event Actions
      */
     public resizeCanvas =
-        (canvas: HTMLCanvasElement | null): (() => void) =>
+        (canvas: HTMLCanvasElement): (() => void) =>
         () => {
             // Update sizes
             this.sizes.resize(canvas);
@@ -317,6 +317,8 @@ export class ThreeCanvas {
             this.threeCamera.resize();
             // Update renderer
             this.threeRenderer.resize();
+
+            this.threeRaycaster.collisionManager.setNewCanvasBounds(canvas);
         };
 
     public handleScroll = (): void => {
