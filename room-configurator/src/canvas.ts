@@ -80,7 +80,7 @@ const createRoom = ({
     removeGroupChildren(parentGroup);
 
     // ===== use default floor 1st time page loads, use last floor when room dimension is updated ===== //
-    const currentFloorMesh = floorMesh?.material as three.MeshStandardMaterial;
+    const currentFloorMesh = floorMesh?.material as three.MeshLambertMaterial;
     const defaultFloorTexture = textureMaps["wood-floor"];
     const defaultFloorMaterial = {
         texture: currentFloorMesh?.map || defaultFloorTexture.texture,
@@ -211,6 +211,7 @@ const loadModel = async (
 // ----- Models ----- //
 const bed = await loadModel(models.bed.bed1, 15);
 
+room.matrixAutoUpdate = false;
 scene.add(room, bed);
 
 threeRaycaster.addDraggableModel(bed);
