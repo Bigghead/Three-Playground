@@ -36,11 +36,15 @@ class Sizes {
     }
 
     private getWidth(): number {
-        return window.innerWidth * this.fullscreenSizeMax;
+        const isMobile = window.innerWidth <= 768;
+
+        return isMobile
+            ? window.innerWidth
+            : window.innerWidth * this.fullscreenSizeMax;
     }
 
-    public resize(canvas: HTMLCanvasElement) {
-        this.width = canvas.clientWidth || this.getWidth();
+    public resize() {
+        this.width = this.getWidth();
         this.height = window.innerHeight;
     }
 }
@@ -312,7 +316,7 @@ export class ThreeCanvas {
         (canvas: HTMLCanvasElement): (() => void) =>
         () => {
             // Update sizes
-            this.sizes.resize(canvas);
+            this.sizes.resize();
             // Update camera
             this.threeCamera.resize();
             // Update renderer

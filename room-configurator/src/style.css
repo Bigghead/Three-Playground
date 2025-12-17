@@ -44,6 +44,10 @@ body {
     color: #fff;
 }
 
+.hide-large {
+    display: none;
+}
+
 .configurator {
     display: flex;
     flex-direction: row;
@@ -53,6 +57,17 @@ body {
     top: 0;
     right: 0;
     background-color: #087e8b;
+}
+
+.configurator .close-button {
+    background: none;
+    border: none;
+    color: white;
+    margin-bottom: 1rem;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.8rem;
 }
 
 .configurator-sidebar {
@@ -306,4 +321,35 @@ body {
     cursor: pointer;
     border-radius: 1rem;
     background-color: #8affc8;
+}
+
+.menu-button {
+    position: fixed;
+    display: none;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.8rem;
+    background: none;
+    border: none;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    canvas.webgl {
+        width: 100vw;
+    }
+    .configurator {
+        display: none;
+        width: 100%;
+        z-index: 10;
+    }
+    .hide-large {
+        display: block;
+    }
+    .menu-button {
+        display: block;
+    }
+    .close-button {
+        z-index: 100;
+    }
 }
