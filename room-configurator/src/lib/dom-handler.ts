@@ -150,6 +150,12 @@ export class DomHandler {
         DomEl.configModal.style.visibility = "visible";
     };
 
+    toggleSidebar = (button: HTMLButtonElement): void => {
+        const configurator = DomEl.configurator;
+        const isOpen = configurator.classList.toggle("open");
+        button.textContent = isOpen ? "X" : "☰";
+    };
+
     removeCurrentlyActiveElement = (elementSelector: string): void => {
         const activeMenu = document.querySelector(elementSelector);
         activeMenu?.classList.remove("active");

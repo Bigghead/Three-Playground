@@ -58,16 +58,8 @@ body {
     right: 0;
     background-color: #087e8b;
 }
-
-.configurator .close-button {
-    background: none;
-    border: none;
-    color: white;
-    margin-bottom: 1rem;
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    font-size: 1.8rem;
+.configurator.open {
+    display: flex;
 }
 
 .configurator-sidebar {
@@ -329,9 +321,13 @@ body {
     top: 1rem;
     right: 1rem;
     font-size: 1.8rem;
-    background: none;
     border: none;
     color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    background-color: coral;
+    z-index: 100;
 }
 
 @media (max-width: 768px) {
@@ -343,13 +339,29 @@ body {
         width: 100%;
         z-index: 10;
     }
+    .room-configurator {
+        left: 50%;
+    }
     .hide-large {
         display: block;
     }
     .menu-button {
         display: block;
     }
-    .close-button {
-        z-index: 100;
+}
+
+@media (max-width: 480px) {
+    .config-modal {
+        left: 50%;
+        transform: translateX(-50%);
+        min-height: auto;
+    }
+    .config-modal-title,
+    .config-modal-description {
+        margin: 0.75rem auto;
+    }
+    .config-modal-action {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
 }

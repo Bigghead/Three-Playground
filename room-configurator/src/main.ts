@@ -20,6 +20,10 @@ const domHandler = new DomHandler();
  * ===== Listeners =====
  *
  */
+DomEl.menuButton.addEventListener("click", (e) => {
+    domHandler.toggleSidebar(e.currentTarget as HTMLButtonElement);
+});
+
 DomEl.configSidebarMenu.forEach((menu): void => {
     menu.addEventListener("click", (e) => {
         domHandler.handleMenuClick(e);
