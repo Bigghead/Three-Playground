@@ -77,6 +77,8 @@ export class DomHandler {
                     .children[0] as HTMLProgressElement;
                 div.appendChild(overlayElement);
 
+                this.toggleSidebar(DomEl.menuButton);
+
                 await renderModel({
                     modelType,
                     modelName,
