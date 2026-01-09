@@ -44,6 +44,10 @@ body {
     color: #fff;
 }
 
+.hide-large {
+    display: none;
+}
+
 .configurator {
     display: flex;
     flex-direction: row;
@@ -53,6 +57,9 @@ body {
     top: 0;
     right: 0;
     background-color: #087e8b;
+}
+.configurator.open {
+    display: flex;
 }
 
 .configurator-sidebar {
@@ -306,4 +313,55 @@ body {
     cursor: pointer;
     border-radius: 1rem;
     background-color: #8affc8;
+}
+
+.menu-button {
+    position: fixed;
+    display: none;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.8rem;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    background-color: coral;
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    canvas.webgl {
+        width: 100vw;
+    }
+    .configurator {
+        display: none;
+        width: 100%;
+        z-index: 10;
+    }
+    .room-configurator {
+        left: 50%;
+    }
+    .hide-large {
+        display: block;
+    }
+    .menu-button {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .config-modal {
+        left: 50%;
+        transform: translateX(-50%);
+        min-height: auto;
+    }
+    .config-modal-title,
+    .config-modal-description {
+        margin: 0.75rem auto;
+    }
+    .config-modal-action {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
 }

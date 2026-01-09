@@ -21,6 +21,9 @@ export const DomEl = {
     },
 
     // ===== sidebar configurator ===== //
+    get menuButton() {
+        return document.querySelector(".menu-button") as HTMLButtonElement;
+    },
     get configurator() {
         return document.querySelector(".configurator") as HTMLDivElement;
     },

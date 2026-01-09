@@ -77,6 +77,8 @@ export class DomHandler {
                     .children[0] as HTMLProgressElement;
                 div.appendChild(overlayElement);
 
+                this.toggleSidebar(DomEl.menuButton);
+
                 await renderModel({
                     modelType,
                     modelName,
@@ -148,6 +150,12 @@ export class DomHandler {
         DomEl.modelRotationText.innerText = degreeValue;
         DomEl.modelRotationSlider.value = degreeValue;
         DomEl.configModal.style.visibility = "visible";
+    };
+
+    toggleSidebar = (button: HTMLButtonElement): void => {
+        const configurator = DomEl.configurator;
+        const isOpen = configurator.classList.toggle("open");
+        button.textContent = isOpen ? "X" : "☰";
     };
 
     removeCurrentlyActiveElement = (elementSelector: string): void => {
