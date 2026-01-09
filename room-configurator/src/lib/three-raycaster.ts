@@ -45,8 +45,10 @@ class ModelManager {
         const renderPass = new RenderPass(scene, camera);
         this._composer.addPass(renderPass);
 
+        // This is verrry computationally expensive
+        // we don't need full resolution just for a model outline
         this._outlinePass = new OutlinePass(
-            new three.Vector2(canvas.width, canvas.height),
+            new three.Vector2(canvas.width * 0.05, canvas.height * 0.05),
             scene,
             camera
         );
