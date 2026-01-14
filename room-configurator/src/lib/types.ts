@@ -10,3 +10,19 @@ export type DimensionChange =
     | typeof ROOM_HEIGHT;
 
 export type EditableTextures = "laminate-floor" | "granite-tile";
+
+export type RoomDimension = {
+    label: string;
+    value: number;
+    step: number;
+    min: number;
+    max: number;
+    key: string;
+};
+
+export type TextureConfig = {
+    name: string;
+    src: string;
+    alt: string;
+    map: string;
+};

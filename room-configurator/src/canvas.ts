@@ -6,7 +6,7 @@ import {
     type ModelOffset,
 } from "./lib/THREE/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
-import { WallBuilder } from "./lib/wall-builder";
+import { WallBuilder } from "./lib/THREE/wall-builder";
 import type {
     DimensionChange,
     EditableTextures,

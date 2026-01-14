@@ -40,7 +40,6 @@ export class DomHandler {
                     modelType,
                     modelName,
                     addToScene: false,
-                    // progressCallback: (progress) => console.log(progress),
                 });
             } catch (e) {
                 console.error(`Error loading background model. Error: ${e}`);
@@ -85,7 +84,7 @@ export class DomHandler {
                     addToScene: true,
                     progressCallback: ({ loaded, total }) => {
                         progressBar.value = Math.round((loaded / total) * 100);
-                        console.log(progressBar.value);
+
                         if (progressBar.value >= 100) {
                             overlayElement.remove();
                         }
