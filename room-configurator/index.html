@@ -34,113 +34,29 @@
                     <div class="room-size-modal">
                         <div class="heading">
                             <div class="title">Dimensions</div>
-                            <button class="close">X</button>
+                            <button class="close hover-animate">X</button>
                         </div>
-                        <div class="content">
-                            <div
-                                class="content-child"
-                                data-dimension="room-width"
-                                data-change-step="1"
-                                data-change-min="5"
-                                data-change-max="20"
-                            >
-                                <label for="width">Width</label>
-                                <div class="content-child__action">
-                                    <button class="subtract-btn">-</button>
-                                    <div><span class="value">10</span>m</div>
-                                    <button class="add-btn">+</button>
-                                </div>
-                            </div>
-                            <div
-                                class="content-child"
-                                data-dimension="room-height"
-                                data-change-step="0.5"
-                                data-change-min="2.5"
-                                data-change-max="5"
-                            >
-                                <label for="width">Height</label>
-                                <div class="content-child__action">
-                                    <button class="subtract-btn">-</button>
-                                    <div><span class="value">2.5</span>m</div>
-                                    <button class="add-btn">+</button>
-                                </div>
-                            </div>
-                            <div
-                                class="content-child"
-                                data-dimension="room-depth"
-                                data-change-step="1"
-                                data-change-min="5"
-                                data-change-max="20"
-                            >
-                                <label for="width">Depth</label>
-                                <div class="content-child__action">
-                                    <button class="subtract-btn">-</button>
-                                    <div><span class="value">10</span>m</div>
-                                    <button class="add-btn">+</button>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="content"></div>
                     </div>
 
                     <div class="floor-texture-modal">
                         <div class="heading">
                             <div class="title">Floor Texture</div>
-                            <button class="close">X</button>
+                            <button class="close hover-animate">X</button>
                         </div>
                         <div class="content">
-                            <div class="textures-container">
-                                <div class="texture">
-                                    <div class="texture-name">Wood Floor</div>
-                                    <img
-                                        src="images/textures/wood-floor.webp"
-                                        alt="wood floor image"
-                                        data-texture-map="wood-floor"
-                                        class="texture-img active"
-                                    />
-                                </div>
-                                <div class="texture">
-                                    <div class="texture-name">
-                                        Rosewood Floor
-                                    </div>
-                                    <img
-                                        src="images/textures/rosewood.webp"
-                                        alt="rosewood floor image"
-                                        data-texture-map="rosewood-floor"
-                                        class="texture-img"
-                                    />
-                                </div>
-                                <div class="texture">
-                                    <div class="texture-name">
-                                        Laminate Floor
-                                    </div>
-                                    <img
-                                        src="images/textures/laminate-floor.webp"
-                                        alt="laminate floor image"
-                                        data-texture-map="laminate-floor"
-                                        class="texture-img"
-                                    />
-                                </div>
-                                <div class="texture">
-                                    <div class="texture-name">Granite Tile</div>
-                                    <img
-                                        src="images/textures/granite-tile.webp"
-                                        alt="granite tile floor image"
-                                        data-texture-map="granite-tile"
-                                        class="texture-img"
-                                    />
-                                </div>
-                            </div>
+                            <div class="textures-container"></div>
                         </div>
                     </div>
                     <div class="room-configurator__actions">
                         <button
-                            class="action-button"
+                            class="action-button hover-animate"
                             data-configurator-action="room-size"
                         >
                             Room Size
                         </button>
                         <button
-                            class="action-button"
+                            class="action-button hover-animate"
                             data-configurator-action="floor-texture"
                         >
                             Floor Texture
@@ -182,14 +98,14 @@
                 </div>
                 <div class="config-modal-action">
                     <button
-                        id="reset-btn"
+                        id="reset-btn hover-animate"
                         class="action-button"
                         data-action-type="reset"
                     >
                         Reset
                     </button>
                     <button
-                        id="delete-btn"
+                        id="delete-btn hover-animate"
                         class="action-button"
                         data-action-type="delete"
                     >

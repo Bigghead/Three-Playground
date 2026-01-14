@@ -2,6 +2,8 @@ import {
     DomEl,
     ACTIVE_MODEL_CLICKED,
     INACTIVE_MODEL_EVENT,
+    roomConfigDimensions,
+    roomConfigTextures,
 } from "./lib/constants";
 import { DomHandler } from "./lib/dom-handler";
 import type { EditableTextures } from "./lib/types";
@@ -16,6 +18,50 @@ const {
 
 const domHandler = new DomHandler();
 
+/**
+ * ===== Init HTML Renders =====
+ */
+const roomConfigContent = DomEl.roomConfigurator.querySelector(
+    ".content"
+) as HTMLDivElement;
+const roomTexturesContent = DomEl.floorTextureModal.querySelector(
+    ".textures-container"
+) as HTMLDivElement;
+
+roomConfigContent.innerHTML = roomConfigDimensions
+    .map(
+        (d) => `
+            <div class="content-child"
+                data-dimension="${d.key}"
+                data-change-step="${d.step}"
+                data-change-min="${d.min}"
+                data-change-max="${d.max}">
+                <label>${d.label}</label>
+                <div class="content-child__action">
+                <button data-action="decrement" class="subtract-btn hover-animate">-</button>
+                <div><span class="value">${d.value}</span>m</div>
+                <button data-action="increment" class="add-btn hover-animate">+</button>
+                </div>
+            </div>
+        `
+    )
+    .join("");
+
+roomTexturesContent.innerHTML = roomConfigTextures
+    .map(
+        (t, index) =>
+            ` <div class="texture">
+                <div class="texture-name">${t.name}</div>
+                <img
+                    src="${t.src}"
+                    alt="${t.alt}"
+                    data-texture-map="${t.map}"
+                    class="texture-img ${index === 0 ? "active" : ""}"
+                />
+            </div>
+            `
+    )
+    .join("");
 /**
  * ===== Listeners =====
  *
