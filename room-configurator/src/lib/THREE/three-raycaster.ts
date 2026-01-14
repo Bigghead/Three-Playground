@@ -5,7 +5,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
-import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "./constants";
+import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "../constants";
 
 // room wall has a depth of 0.1
 const ROOM_WALL_OFFSET = 0.1;

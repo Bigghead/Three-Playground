@@ -1,5 +1,5 @@
 import * as three from "three";
-import { defaultWallDepth, defaultWallHeight } from "./constants";
+import { defaultWallDepth, defaultWallHeight } from "../constants";
 
 export class WallBuilder {
     private floorWidth: number;

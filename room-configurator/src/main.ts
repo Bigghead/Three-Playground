@@ -5,7 +5,7 @@ import {
     roomConfigDimensions,
     roomConfigTextures,
 } from "./lib/constants";
-import { DomHandler } from "./lib/dom-handler";
+import { DomHandler } from "./lib/UI/dom-handler";
 import type { EditableTextures } from "./lib/types";
 
 const {

@@ -1,4 +1,4 @@
-import { createWall, editRoomDimensions, renderModel } from "../canvas";
+import { createWall, editRoomDimensions, renderModel } from "../../canvas";
 import {
     DomEl,
     FLOOR_TEXTURE,
@@ -6,10 +6,10 @@ import {
     ROOM_CONFIG_ACTION_SUBTRACT,
     ROOM_SIZE,
     WALL_DIVIDER,
-} from "./constants";
+} from "../constants";
 
-import { type ModelType, type ModelName, type DimensionChange } from "./types";
-import { models, type ModelVector3 } from "./model-configs";
+import { type ModelType, type ModelName, type DimensionChange } from "../types";
+import { models, type ModelVector3 } from "../THREE/model-configs";
 
 export class DomHandler {
     originalWallWidth = 3;
