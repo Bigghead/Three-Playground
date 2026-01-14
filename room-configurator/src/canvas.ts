@@ -1,12 +1,12 @@
 import * as three from "three";
-import { ThreeCanvas } from "./lib/three-manager";
+import { ThreeCanvas } from "./lib/THREE/three-manager";
 import {
     models,
     type ModelConfig,
     type ModelOffset,
-} from "./lib/model-configs";
+} from "./lib/THREE/model-configs";
 import { type GLTF } from "three/examples/jsm/Addons.js";
-import { WallBuilder } from "./lib/wall-builder";
+import { WallBuilder } from "./lib/THREE/wall-builder";
 import type {
     DimensionChange,
     EditableTextures,

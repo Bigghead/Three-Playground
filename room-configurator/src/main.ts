@@ -2,9 +2,12 @@ import {
     DomEl,
     ACTIVE_MODEL_CLICKED,
     INACTIVE_MODEL_EVENT,
+    roomConfigDimensions,
+    roomConfigTextures,
 } from "./lib/constants";
-import { DomHandler } from "./lib/dom-handler";
+import { DomHandler } from "./lib/UI/dom-handler";
 import type { EditableTextures } from "./lib/types";
+import { DimensionControl, TextureCard } from "./lib/UI/components";
 
 const {
     rotateModel,
@@ -15,6 +18,26 @@ const {
 } = await import("./canvas");
 
 const domHandler = new DomHandler();
+
+/**
+ * ===== Init HTML Renders =====
+ */
+(function initRender() {
+    const roomConfigContent = DomEl.roomConfigurator.querySelector(
+        ".content"
+    ) as HTMLDivElement;
+    const roomTexturesContent = DomEl.floorTextureModal.querySelector(
+        ".textures-container"
+    ) as HTMLDivElement;
+
+    roomConfigContent.innerHTML = roomConfigDimensions
+        .map((dimension) => DimensionControl(dimension))
+        .join("");
+
+    roomTexturesContent.innerHTML = roomConfigTextures
+        .map((texture, index) => TextureCard(texture, index === 0))
+        .join("");
+})();
 
 /**
  * ===== Listeners =====

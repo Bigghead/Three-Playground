@@ -1,4 +1,4 @@
-import { createWall, editRoomDimensions, renderModel } from "../canvas";
+import { createWall, editRoomDimensions, renderModel } from "../../canvas";
 import {
     DomEl,
     FLOOR_TEXTURE,
@@ -6,10 +6,10 @@ import {
     ROOM_CONFIG_ACTION_SUBTRACT,
     ROOM_SIZE,
     WALL_DIVIDER,
-} from "./constants";
+} from "../constants";
 
-import { type ModelType, type ModelName, type DimensionChange } from "./types";
-import { models, type ModelVector3 } from "./model-configs";
+import { type ModelType, type ModelName, type DimensionChange } from "../types";
+import { models, type ModelVector3 } from "../THREE/model-configs";
 
 export class DomHandler {
     originalWallWidth = 3;
@@ -40,7 +40,6 @@ export class DomHandler {
                     modelType,
                     modelName,
                     addToScene: false,
-                    // progressCallback: (progress) => console.log(progress),
                 });
             } catch (e) {
                 console.error(`Error loading background model. Error: ${e}`);
@@ -85,7 +84,7 @@ export class DomHandler {
                     addToScene: true,
                     progressCallback: ({ loaded, total }) => {
                         progressBar.value = Math.round((loaded / total) * 100);
-                        console.log(progressBar.value);
+
                         if (progressBar.value >= 100) {
                             overlayElement.remove();
                         }

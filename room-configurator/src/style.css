@@ -32,6 +32,15 @@ body {
     padding: 20px;
 }
 
+.hover-animate {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-animate:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
 .action-button {
     padding: 1rem;
     border: 1px solid #ccc;
@@ -221,7 +230,7 @@ body {
 .room-size-modal .content-child .content-child__action button {
     width: 2.5rem;
     height: 2.5rem;
-    padding: 0.5rem;
+    font-size: 1.5rem;
     cursor: pointer;
     border-radius: 0.5rem;
 }

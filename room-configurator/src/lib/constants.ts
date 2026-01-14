@@ -14,6 +14,46 @@ export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
 export const defaultRoomWidth = 10;
 
+export const roomConfigDimensions = [
+    { label: "Width", value: 10, step: 1, min: 5, max: 20, key: "room-width" },
+    {
+        label: "Height",
+        value: 2.5,
+        step: 0.5,
+        min: 2.5,
+        max: 5,
+        key: "room-height",
+    },
+    { label: "Depth", value: 10, step: 1, min: 5, max: 20, key: "room-depth" },
+];
+
+export const roomConfigTextures = [
+    {
+        name: "Wood Floor",
+        src: "images/textures/wood-floor.webp",
+        alt: "wood floor image",
+        map: "wood-floor",
+    },
+    {
+        name: "Rosewood Floor",
+        src: "images/textures/rosewood.webp",
+        alt: "rosewood floor image",
+        map: "rosewood-floor",
+    },
+    {
+        name: "Laminate Floor",
+        src: "images/textures/laminate-floor.webp",
+        alt: "laminate floor image",
+        map: "laminate-floor",
+    },
+    {
+        name: "Granite Tile",
+        src: "images/textures/granite-tile.webp",
+        alt: "granite tile floor image",
+        map: "granite-tile",
+    },
+];
+
 export const DomEl = {
     // ===== canvas ===== //
     get canvas() {
