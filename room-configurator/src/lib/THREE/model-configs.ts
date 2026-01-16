@@ -29,7 +29,7 @@ export const modelScaling = {
 };
 
 /**
- * How big in room width the default models are sized down to
+ * How big in room width percentage ( 100 spans the whole room ) the default models are sized down to
  */
 const modelRoomScales = {
     bed: 33,
@@ -53,13 +53,14 @@ const modelRoomScales = {
  * - set default model position ( the offsets ) cause creators will have wildly different model origins
  */
 
+// ===== Todo: Normalize origin and pivot points on all dynamic loaded models ===== //
 const generateModelConfig = (
     modelCategory: keyof typeof modelRoomScales,
     modelName: string,
     offset: ModelOffset = {},
-    customOffset: number | null = null
+    customScale: number | null = null,
 ): ModelConfig => {
-    const roomSizeScale = customOffset || modelRoomScales[modelCategory];
+    const roomSizeScale = customScale || modelRoomScales[modelCategory];
     return {
         url: `/models/${modelCategory}/${modelName}-draco.glb`,
         imageUrl: `images/${modelCategory}/${modelName}.webp`,
@@ -92,7 +93,7 @@ export const models = {
             "sofa",
             "sofa-1",
             { position: { y: 0.7 } },
-            50
+            50,
         ),
         sofa2: generateModelConfig("sofa", "sofa-2", {
             position: { y: -0.55 },
@@ -122,7 +123,7 @@ export const models = {
             "bathroom",
             "toilet",
             {},
-            modelRoomScales.toilet
+            modelRoomScales.toilet,
         ),
         shower: generateModelConfig(
             "bathroom",
@@ -130,19 +131,19 @@ export const models = {
             {
                 rotation: { y: Math.PI },
             },
-            modelRoomScales.shower
+            modelRoomScales.shower,
         ),
         sink: generateModelConfig(
             "bathroom",
             "sink-1",
             { rotation: { y: -Math.PI / 2 } },
-            8
+            8,
         ),
         sink2: generateModelConfig(
             "bathroom",
             "sink-2",
             {},
-            modelRoomScales.sink
+            modelRoomScales.sink,
         ),
     },
     wall: {

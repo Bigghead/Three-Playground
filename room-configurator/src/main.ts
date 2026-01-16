@@ -24,19 +24,19 @@ const domHandler = new DomHandler();
  */
 (function initRender() {
     const roomConfigContent = DomEl.roomConfigurator.querySelector(
-        ".content"
+        ".content",
     ) as HTMLDivElement;
     const roomTexturesContent = DomEl.floorTextureModal.querySelector(
-        ".textures-container"
+        ".textures-container",
     ) as HTMLDivElement;
 
-    roomConfigContent.innerHTML = roomConfigDimensions
-        .map((dimension) => DimensionControl(dimension))
-        .join("");
+    roomConfigDimensions.forEach((dimension) =>
+        roomConfigContent.appendChild(DimensionControl(dimension)),
+    );
 
-    roomTexturesContent.innerHTML = roomConfigTextures
-        .map((texture, index) => TextureCard(texture, index === 0))
-        .join("");
+    roomConfigTextures.forEach((texture, index) =>
+        roomTexturesContent.appendChild(TextureCard(texture, index === 0)),
+    );
 })();
 
 /**

@@ -150,7 +150,7 @@ initRoom({
  */
 const normalizeModelScale = (
     model: GLTF,
-    roomWidthPercentage: number
+    roomWidthPercentage: number,
 ): void => {
     const modelBox = new three.Box3().setFromObject(model.scene);
     const modelSize = modelBox.getSize(new three.Vector3());
@@ -167,7 +167,7 @@ type OffsetKey = "position" | "rotation";
 
 const applyModelConfigOffset = (
     model: GLTF,
-    modelOffset: ModelOffset
+    modelOffset: ModelOffset,
 ): void => {
     for (const key in modelOffset) {
         // I hate TypeScript a lot sometimes
@@ -177,7 +177,7 @@ const applyModelConfigOffset = (
             model.scene[offsetKey].set(
                 offsetValue.x || 0,
                 offsetValue.y || 0,
-                offsetValue.z || 0
+                offsetValue.z || 0,
             );
         }
     }
@@ -186,7 +186,7 @@ const applyModelConfigOffset = (
 const loadModel = async (
     modelConfig: ModelConfig,
     modelScale: number,
-    progressCallback?: (progress: ProgressEvent) => void
+    progressCallback?: (progress: ProgressEvent) => void,
 ): Promise<three.Group> => {
     try {
         // need each model in a group for the mouse drag / raycaster
@@ -244,7 +244,7 @@ export const renderModel = async ({
     const model = await loadModel(
         models[modelType][modelName],
         models[modelType][modelName]["roomSizeScale"],
-        progressCallback
+        progressCallback,
     );
 
     if (addToScene) {
@@ -284,7 +284,7 @@ export const removeActiveModel = () => {
 
 export const editRoomDimensions = (
     newDimensionValue: number,
-    dimensionToChange: DimensionChange
+    dimensionToChange: DimensionChange,
 ): void => {
     initRoom({
         floorWidth:
