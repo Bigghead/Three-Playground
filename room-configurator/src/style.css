@@ -15,6 +15,7 @@ body {
     width: 100%;
     height: 100%;
 }
+
 .webgl {
     position: fixed;
     top: 0;
@@ -33,12 +34,14 @@ body {
 }
 
 .hover-animate {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
 
-.hover-animate:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
 }
 
 .action-button {
@@ -47,15 +50,18 @@ body {
     cursor: pointer;
     border-radius: 1rem;
     background-color: #8affc8;
-}
-.action-button:hover {
-    background-color: #2f3061;
-    color: #fff;
+
+    &:hover {
+        background-color: #2f3061;
+        color: #fff;
+    }
 }
 
 .hide-large {
     display: none;
 }
+
+/* ---------------- Configurator ---------------- */
 
 .configurator {
     display: flex;
@@ -66,9 +72,10 @@ body {
     top: 0;
     right: 0;
     background-color: #087e8b;
-}
-.configurator.open {
-    display: flex;
+
+    &.open {
+        display: flex;
+    }
 }
 
 .configurator-sidebar {
@@ -79,22 +86,23 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-}
-.configurator-sidebar > .menu {
-    font-size: 1.2rem;
-    width: 100%;
-    text-align: center;
-    padding: 1rem;
-    cursor: pointer;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    color: #fff;
-    margin-top: 0.5rem;
-}
 
-.configurator-sidebar > .menu.active {
-    background-color: #8affc8;
-    color: #000;
+    > .menu {
+        font-size: 1.2rem;
+        width: 100%;
+        text-align: center;
+        padding: 1rem;
+        cursor: pointer;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        color: #fff;
+        margin-top: 0.5rem;
+
+        &.active {
+            background-color: #8affc8;
+            color: #000;
+        }
+    }
 }
 
 .configurator-content {
@@ -105,45 +113,48 @@ body {
     width: 70%;
     height: 100%;
     overflow-y: auto;
-}
-.configurator-content .image-container {
-    transform-origin: center center;
-    flex: 0 0 auto;
-    overflow: hidden;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
-    border: 2px solid transparent;
-    position: relative;
+
+    .image-container {
+        transform-origin: center center;
+        flex: 0 0 auto;
+        overflow: hidden;
+        border-radius: 8px;
+        cursor: pointer;
+        position: relative;
+        border: 2px solid transparent;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border 0.2s ease;
+
+        &:hover {
+            transform: scale(1.05);
+            border: 2px solid skyblue;
+        }
+
+        &.active {
+            border: 2px solid deepskyblue;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
 }
 
-.configurator-content .image-container:hover {
-    transform: scale(1.05);
-    border: 2px solid skyblue;
-}
-
-.configurator-content .image-container.active {
-    border: 2px solid deepskyblue;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
-
-.configurator-content .image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.configurator-content .image-container .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+/* ---------------- Room Configurator ---------------- */
 
 .room-configurator {
     width: 18rem;
@@ -166,109 +177,118 @@ body {
     border-radius: 1rem;
 }
 
+/* ---------------- Room Size Modal ---------------- */
+
 .room-size-modal {
     display: none;
-}
-
-.room-size-modal {
     color: #fff;
-}
-.room-size-modal .heading,
-.floor-texture-modal .heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .title {
+        padding: 0.5rem;
+    }
+
+    button.close {
+        cursor: pointer;
+        padding: 0.3rem;
+        border-radius: 0.3rem;
+        background-color: coral;
+
+        &:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+    }
+
+    .content-child {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 0.3rem;
+        padding: 0.5rem;
+
+        .content-child__action {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+
+            div {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 3rem;
+                height: 2rem;
+                font-size: 1rem;
+                line-height: 1;
+            }
+
+            button {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.5rem;
+                cursor: pointer;
+                border-radius: 0.5rem;
+            }
+        }
+    }
 }
 
-.room-size-modal .title,
-.floor-texture-modal .title {
-    padding: 0.5rem;
-}
-
-.room-size-modal button.close,
-.floor-texture-modal button.close {
-    cursor: pointer;
-    padding: 0.3rem;
-    border-radius: 0.3rem;
-    background-color: coral;
-}
-
-.room-size-modal button.close:hover,
-.floor-texture-modal button.close:hover {
-    color: #fff;
-    border-color: #fff;
-}
-
-.room-size-modal .content-child,
-.room-size-modal .content-child .content-child__action {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-}
-
-.room-size-modal .content-child .content-child__action div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 3rem;
-    height: 2rem;
-    font-size: 1rem;
-    line-height: 1;
-}
-
-.room-size-modal .content-child {
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 0.3rem;
-    padding: 0.5rem;
-}
-
-.room-size-modal .content-child .content-child__action {
-    gap: 0.5rem;
-}
-.room-size-modal .content-child .content-child__action button {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    border-radius: 0.5rem;
-}
+/* ---------------- Floor Texture Modal ---------------- */
 
 .floor-texture-modal {
     display: none;
     color: #fff;
+
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .title {
+        padding: 0.5rem;
+    }
+
+    .textures-container {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        overflow-x: scroll;
+
+        .texture {
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem;
+
+            .texture-name {
+                text-align: center;
+                margin-bottom: 0.5rem;
+            }
+
+            .texture-img {
+                max-width: 150px;
+                border-radius: 1rem;
+                cursor: pointer;
+                border: 3px solid transparent;
+
+                &.active {
+                    border-color: skyblue !important;
+                }
+            }
+        }
+    }
 }
 
-.floor-texture-modal .title {
-    padding: 0.5rem;
-}
-.floor-texture-modal .textures-container {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    overflow-x: scroll;
-}
-
-.texture {
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem;
-}
-.texture-name {
-    text-align: center;
-    margin-bottom: 0.5rem;
-}
-
-.floor-texture-modal .textures-container .texture .texture-img {
-    max-width: 150px;
-    border-radius: 1rem;
-    cursor: pointer;
-    border: 3px solid transparent;
-}
-.texture-img.active {
-    border-color: skyblue !important;
-}
+/* ---------------- Actions ---------------- */
 
 .room-configurator__actions {
     display: flex;
@@ -276,6 +296,8 @@ body {
     justify-content: space-between;
     gap: 0.5rem;
 }
+
+/* ---------------- Config Modal ---------------- */
 
 .config-modal {
     position: absolute;
@@ -286,6 +308,15 @@ body {
     padding: 1rem;
     border-radius: 1rem;
     visibility: hidden;
+
+    &-slider {
+        margin: 0.5rem auto;
+
+        > #model-rotation,
+        > #model-width {
+            width: 100%;
+        }
+    }
 }
 
 .config-modal-title,
@@ -295,34 +326,27 @@ body {
     margin: 1rem auto;
 }
 
-.config-modal-slider {
-    margin: 0.5rem auto;
-    /* cursor: pointer; */
-}
-
-.config-modal-slider > #model-rotation,
-.config-modal-slider > #model-width {
-    width: 100%;
-}
 .config-modal-slider--container__hidden {
     display: none;
 }
 
 .config-modal-action {
     display: flex;
-    flex-direction: row;
     justify-content: center;
     align-items: center;
     padding: 1rem;
     gap: 1.5rem;
+
+    > button {
+        padding: 1rem;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 1rem;
+        background-color: #8affc8;
+    }
 }
-.config-modal-action > button {
-    padding: 1rem;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    border-radius: 1rem;
-    background-color: #8affc8;
-}
+
+/* ---------------- Menu Button ---------------- */
 
 .menu-button {
     position: fixed;
@@ -339,21 +363,27 @@ body {
     z-index: 100;
 }
 
+/* ---------------- Media Queries ---------------- */
+
 @media (max-width: 768px) {
     canvas.webgl {
         width: 100vw;
     }
+
     .configurator {
         display: none;
         width: 100%;
         z-index: 10;
     }
+
     .room-configurator {
         left: 50%;
     }
+
     .hide-large {
         display: block;
     }
+
     .menu-button {
         display: block;
     }
@@ -365,10 +395,12 @@ body {
         transform: translateX(-50%);
         min-height: auto;
     }
+
     .config-modal-title,
     .config-modal-description {
         margin: 0.75rem auto;
     }
+
     .config-modal-action {
         padding-left: 0.75rem;
         padding-right: 0.75rem;

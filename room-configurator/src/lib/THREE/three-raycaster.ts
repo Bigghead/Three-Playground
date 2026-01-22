@@ -7,14 +7,14 @@ import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
 import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "../constants";
 
-// room wall has a depth of 0.1
+// room wall has a thickness of 0.1
 const ROOM_WALL_OFFSET = 0.1;
 
 type ModelChild = three.Group<three.Object3DEventMap>;
 
 const traverseModelChildren = (
     activeModel: ModelChild,
-    callbackFunc: (child: three.Mesh) => void
+    callbackFunc: (child: three.Mesh) => void,
 ): void => {
     activeModel?.traverse((child) => {
         if (!(child instanceof three.Mesh)) return;
@@ -50,7 +50,7 @@ class ModelManager {
         this._outlinePass = new OutlinePass(
             new three.Vector2(canvas.width * 0.05, canvas.height * 0.05),
             scene,
-            camera
+            camera,
         );
         this._outlinePass.edgeStrength = 2.5;
         this._outlinePass.edgeGlow = 0.0;
@@ -76,7 +76,7 @@ class ModelManager {
             if (!activeModel.userData.originalColorMaterial.has(child.uuid)) {
                 activeModel.userData.originalColorMaterial.set(
                     child.uuid,
-                    child.material
+                    child.material,
                 );
             }
             const newMat = (child.material as three.Material).clone();
@@ -104,7 +104,7 @@ class ModelManager {
                     scale: model.scale,
                     type: model.userData?.type || null,
                 },
-            })
+            }),
         );
 
         document.body.style.cursor = "grabbing";
@@ -158,7 +158,7 @@ class DragManager {
     removeDraggableModel(activeModel: ModelChild): void {
         const { uuid } = activeModel;
         this._draggableModels = this.draggableModels.filter(
-            (model) => model.uuid !== uuid
+            (model) => model.uuid !== uuid,
         );
     }
 
@@ -169,7 +169,7 @@ class DragManager {
             if (!modelOriginalColors.has(child.uuid)) {
                 modelOriginalColors.set(
                     child.uuid,
-                    child.material as three.Material
+                    child.material as three.Material,
                 );
             }
         });
@@ -200,7 +200,7 @@ class DragManager {
     resetModelPosition(): void {
         if (!this._activeModel) return;
         this._activeModel.position.copy(
-            this._activeModel.userData.originalPosition
+            this._activeModel.userData.originalPosition,
         );
     }
 }
@@ -280,14 +280,14 @@ class CollisionManager {
         // and sets / updates intersectPoint
         return this._raycaster.ray.intersectPlane(
             this._plane,
-            this._intersectPoint
+            this._intersectPoint,
         );
     }
 
     checkModelCollision(
         activeModel: ModelChild,
         activeModelBox: three.Box3,
-        models: Array<ModelChild>
+        models: Array<ModelChild>,
     ): boolean {
         if (!models.length) return false;
 
@@ -311,7 +311,7 @@ class CollisionManager {
         const isColliding = this.checkModelCollision(
             activeModel,
             activeModelBox,
-            models
+            models,
         );
 
         if (isColliding) {
@@ -332,13 +332,13 @@ class CollisionManager {
             new three.Vector3(
                 -x / 2 + ROOM_WALL_OFFSET,
                 0,
-                -z / 2 + ROOM_WALL_OFFSET
+                -z / 2 + ROOM_WALL_OFFSET,
             ),
             new three.Vector3(
                 x / 2 - ROOM_WALL_OFFSET,
                 y,
-                z / 2 - ROOM_WALL_OFFSET
-            )
+                z / 2 - ROOM_WALL_OFFSET,
+            ),
         );
     }
 
@@ -481,7 +481,7 @@ export class ThreeRaycaster {
         for (const model of models) {
             const intersects = this.collisionManager.raycaster.intersectObject(
                 model,
-                true
+                true,
             );
 
             if (intersects.length > 0) {
