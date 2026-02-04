@@ -10,10 +10,12 @@ if (!canvas) {
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 10));
 
+const gridSize = 10;
+const gridSpacing = 0.75;
 const gridGroup = new three.Group();
 const gridMaterial = new three.MeshBasicMaterial({});
+let pixelData: ImageDataArray;
 
-// ===== Todo: split video into each individual child geo ===== //
 const loadVideoTexture = () => {
     try {
         const video = document.createElement("video");
@@ -36,15 +38,51 @@ const loadVideoTexture = () => {
     }
 };
 
-const createGrid = () => {
-    const gridSize = 10;
-    const gridSpacing = 0.75;
+const createVideoMap = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    canvas.width = gridSize;
+    canvas.height = gridSize;
 
+    /**
+     * draw invisible black / white background
+     * we need to check black / white to render the "grid" below later
+     * start will full black background, and draw white "map"
+     */
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, gridSize, gridSize);
+    ctx.fillStyle = "white";
+    ctx.font = "10px serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // ===== start drawing in the middle of canvas ===== //
+    ctx.fillText("❤", gridSize / 2, gridSize / 2);
+
+    pixelData = ctx.getImageData(0, 0, gridSize, gridSize).data;
+
+    console.log(pixelData);
+
+    document.body.append(canvas);
+};
+
+// ===== Todo: instancedMesh box. Though I think it's fine for 10 x 10 for now ===== //
+const createGrid = () => {
     for (let x = 0; x <= gridSize; x++) {
         for (let y = 0; y <= gridSize; y++) {
             const geometry = new three.BoxGeometry(0.65, 0.65, 0.65);
             const uv = geometry.attributes.uv;
-            console.log(uv);
+
+            // ===== shift index by 4 to check "r, g, b, a" values from canvas image we created ===== //
+            const colorIndex = (y * gridSize + x) * 4;
+            const r = pixelData[colorIndex];
+            const g = pixelData[colorIndex + 1];
+            const b = pixelData[colorIndex + 2];
+
+            // ===== 255 is full white, we need to ignore the threshold to black ===== //
+            if ((r + g + b) / 3 < 128) {
+                continue;
+            }
 
             // ===== 24 vertices "count" from 6 face cube X 4 edges ===== //
             for (let i = 0; i < uv.count; i++) {
@@ -73,8 +111,9 @@ const createGrid = () => {
             const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
                 new three.Mesh(geometry, gridMaterial);
 
-            cube.position.x = (x - gridSize / 2) * gridSpacing;
-            cube.position.y = (y - gridSize / 2) * gridSpacing;
+            cube.position.x = x - gridSize / 2;
+            // Flip Y: Canvas (0 is top) vs Three.js (0 is center, positive is up)
+            cube.position.y = -(y - gridSize / 2);
             cube.position.z = 0;
 
             gridGroup.add(cube);
@@ -96,6 +135,7 @@ const createGrid = () => {
 };
 
 loadVideoTexture();
+createVideoMap();
 createGrid();
 const axes = new three.AxesHelper(15);
-threeCanvas.scene.add(axes);
+// threeCanvas.scene.add(axes);
