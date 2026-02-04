@@ -7,11 +7,33 @@ if (!canvas) {
 }
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
+threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 10));
 
-const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
-    new three.Mesh(
-        new three.BoxGeometry(1, 1, 1),
-        new three.MeshBasicMaterial({ color: 0x00ff00 }),
-    );
+const gridGroup = new three.Group();
 
-threeCanvas.scene.add(cube);
+const createGrid = () => {
+    const gridSize = 10;
+    const gridSpacing = 1;
+    const gridMaterial = new three.MeshBasicMaterial({ color: 0x00ff00 });
+
+    for (let x = 0; x <= gridSize; x++) {
+        for (let y = 0; y <= gridSize; y++) {
+            const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
+                new three.Mesh(
+                    new three.BoxGeometry(0.65, 0.65, 0.65),
+                    gridMaterial,
+                );
+            cube.position.x = (x - gridSize / 2) * gridSpacing;
+            cube.position.y = (y - gridSize / 2) * gridSpacing;
+            cube.position.z = 0;
+
+            gridGroup.add(cube);
+        }
+    }
+
+    threeCanvas.scene.add(gridGroup);
+};
+
+createGrid();
+const axes = new three.AxesHelper(15);
+threeCanvas.scene.add(axes);

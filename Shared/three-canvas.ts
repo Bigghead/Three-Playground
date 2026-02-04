@@ -37,6 +37,11 @@ class ThreeCamera {
         this.camera.aspect = this.sizes.width / this.sizes.height;
         this.camera.updateProjectionMatrix();
     }
+
+    public updateCameraPosition(newPosition: three.Vector3) {
+        const { x, y, z } = newPosition;
+        this.camera.position.set(x, y, z);
+    }
 }
 
 class ThreeRenderer {
