@@ -38,7 +38,7 @@ const loadVideoTexture = () => {
 
 const createGrid = () => {
     const gridSize = 10;
-    const gridSpacing = 1;
+    const gridSpacing = 0.75;
 
     for (let x = 0; x <= gridSize; x++) {
         for (let y = 0; y <= gridSize; y++) {
@@ -79,6 +79,17 @@ const createGrid = () => {
 
             gridGroup.add(cube);
         }
+
+        // ===== sin wave the grid ===== //
+        threeCanvas.addAnimationCallback((elapsedTime: number) => {
+            gridGroup.children.forEach((cube) => {
+                const cubeX = cube.position.x;
+                const cubeY = cube.position.y;
+
+                cube.position.z =
+                    Math.sin(cubeX * 0.5 + cubeY * 0.5 + elapsedTime) * 0.25;
+            });
+        });
     }
 
     threeCanvas.scene.add(gridGroup);

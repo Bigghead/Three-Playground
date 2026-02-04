@@ -136,6 +136,8 @@ export class ThreeCanvas {
     textureLoader = new three.TextureLoader();
     clock = new three.Clock();
 
+    animationCallbacks: Array<(time: number) => void> = [];
+
     constructor({
         canvas,
         initShadow,
@@ -202,12 +204,18 @@ export class ThreeCanvas {
         // Update controls
         this.controls.update();
 
+        this.animationCallbacks.forEach((callback) => callback(elapsedTime));
+
         // Render
         this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
 
         // Call tick again on the next frame
         window.requestAnimationFrame(this.animationTick);
     };
+
+    public addAnimationCallback(callback: (time: number) => void) {
+        this.animationCallbacks.push(callback);
+    }
 
     public dispose = (): void => {
         window.removeEventListener("resize", this.resizeCanvas);
