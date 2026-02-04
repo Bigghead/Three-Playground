@@ -10,7 +10,7 @@ if (!canvas) {
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 10));
 
-const gridSize = 10;
+const gridSize = 50;
 const gridSpacing = 0.75;
 const gridGroup = new three.Group();
 const gridMaterial = new three.MeshBasicMaterial({});
@@ -52,7 +52,7 @@ const createVideoMap = () => {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, gridSize, gridSize);
     ctx.fillStyle = "white";
-    ctx.font = "10px serif";
+    ctx.font = `${gridSize * 0.8}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -68,8 +68,8 @@ const createVideoMap = () => {
 
 // ===== Todo: instancedMesh box. Though I think it's fine for 10 x 10 for now ===== //
 const createGrid = () => {
-    for (let x = 0; x <= gridSize; x++) {
-        for (let y = 0; y <= gridSize; y++) {
+    for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
             const geometry = new three.BoxGeometry(0.65, 0.65, 0.65);
             const uv = geometry.attributes.uv;
 
@@ -118,19 +118,29 @@ const createGrid = () => {
 
             gridGroup.add(cube);
         }
-
-        // ===== sin wave the grid ===== //
-        threeCanvas.addAnimationCallback((elapsedTime: number) => {
-            gridGroup.children.forEach((cube) => {
-                const cubeX = cube.position.x;
-                const cubeY = cube.position.y;
-
-                cube.position.z =
-                    Math.sin(cubeX * 0.5 + cubeY * 0.5 + elapsedTime) * 0.25;
-            });
-        });
     }
 
+    // ===== sin wave the grid ===== //
+    threeCanvas.addAnimationCallback((elapsedTime: number) => {
+        gridGroup.children.forEach((cube) => {
+            const cubeX = cube.position.x;
+            const cubeY = cube.position.y;
+
+            cube.position.z =
+                Math.sin(cubeX * 0.5 + cubeY * 0.5 + elapsedTime) * 0.25;
+        });
+    });
+
+    renderGrid();
+};
+
+const renderGrid = () => {
+    const box = new three.Box3().setFromObject(gridGroup);
+
+    const center = new three.Vector3();
+    box.getCenter(center);
+
+    gridGroup.position.sub(center);
     threeCanvas.scene.add(gridGroup);
 };
 
@@ -138,4 +148,4 @@ loadVideoTexture();
 createVideoMap();
 createGrid();
 const axes = new three.AxesHelper(15);
-// threeCanvas.scene.add(axes);
+threeCanvas.scene.add(axes);
