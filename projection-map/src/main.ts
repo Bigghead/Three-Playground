@@ -15,15 +15,38 @@ const gridSpacing = 0.75;
 const gridGroup = new three.Group();
 const gridMaterial = new three.MeshBasicMaterial({});
 let pixelData: ImageDataArray;
+const videoRatio = {
+    width: 0,
+    height: 0,
+};
 
 const loadVideoTexture = () => {
     try {
         const video = document.createElement("video");
-        video.src = videoSource;
+        video.src =
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
         video.crossOrigin = "anonymous";
         video.loop = true;
         video.muted = true;
         video.play();
+
+        video.onloadedmetadata = () => {
+            const originalWidth = video.videoWidth;
+            const originalHeight = video.videoHeight;
+            const aspectRatio = originalWidth / originalHeight;
+
+            // Adjust gridWidth or gridHeight based on the video shape
+            if (aspectRatio > 1) {
+                videoRatio.width = gridSize;
+                videoRatio.height = Math.round(gridSize / aspectRatio);
+            } else {
+                videoRatio.height = gridSize;
+                videoRatio.width = Math.round(gridSize * aspectRatio);
+            }
+
+            createVideoMap();
+            createGrid();
+        };
 
         const videoTexture = new three.VideoTexture(video);
         // ===== expensive calculation every frame ===== //
@@ -39,10 +62,11 @@ const loadVideoTexture = () => {
 };
 
 const createVideoMap = () => {
+    const { height, width } = videoRatio;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    canvas.width = gridSize;
-    canvas.height = gridSize;
+    canvas.width = width;
+    canvas.height = height;
 
     /**
      * draw invisible black / white background
@@ -50,31 +74,28 @@ const createVideoMap = () => {
      * start will full black background, and draw white "map"
      */
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, gridSize, gridSize);
+    ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "white";
     ctx.font = `${gridSize * 0.8}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     // ===== start drawing in the middle of canvas ===== //
-    ctx.fillText("❤", gridSize / 2, gridSize / 2);
+    ctx.fillText("❤", width / 2, height / 2);
 
-    pixelData = ctx.getImageData(0, 0, gridSize, gridSize).data;
-
-    console.log(pixelData);
-
-    document.body.append(canvas);
+    pixelData = ctx.getImageData(0, 0, width, height).data;
 };
 
 // ===== Todo: instancedMesh box. Though I think it's fine for 10 x 10 for now ===== //
 const createGrid = () => {
-    for (let x = 0; x < gridSize; x++) {
-        for (let y = 0; y < gridSize; y++) {
+    const { width, height } = videoRatio;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             const geometry = new three.BoxGeometry(0.65, 0.65, 0.65);
             const uv = geometry.attributes.uv;
 
             // ===== shift index by 4 to check "r, g, b, a" values from canvas image we created ===== //
-            const colorIndex = (y * gridSize + x) * 4;
+            const colorIndex = (y * width + x) * 4;
             const r = pixelData[colorIndex];
             const g = pixelData[colorIndex + 1];
             const b = pixelData[colorIndex + 2];
@@ -145,7 +166,6 @@ const renderGrid = () => {
 };
 
 loadVideoTexture();
-createVideoMap();
-createGrid();
+
 const axes = new three.AxesHelper(15);
 threeCanvas.scene.add(axes);
