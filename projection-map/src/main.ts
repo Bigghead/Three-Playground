@@ -49,6 +49,7 @@ const loadVideoTexture = () => {
         };
 
         const videoTexture = new three.VideoTexture(video);
+        videoTexture.flipY = true;
         // ===== expensive calculation every frame ===== //
         videoTexture.minFilter = three.LinearFilter;
         videoTexture.magFilter = three.LinearFilter;
@@ -91,7 +92,7 @@ const createGrid = () => {
     const { width, height } = videoRatio;
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            const geometry = new three.BoxGeometry(0.65, 0.65, 0.65);
+            const geometry = new three.BoxGeometry(0.55, 0.55, 0.55);
             const uv = geometry.attributes.uv;
 
             // ===== shift index by 4 to check "r, g, b, a" values from canvas image we created ===== //
@@ -115,8 +116,8 @@ const createGrid = () => {
                  * the video grid goes from 0 -> 100% texture or 0 -> 1 in uv sizing
                  * if the gridsize is 10, each face will take in 10% or 0.1 of the texture
                  */
-                u /= gridSize;
-                v /= gridSize;
+                u /= width;
+                v /= height;
 
                 /**
                  * shift uv position to take in the next slice of the texture
@@ -124,17 +125,17 @@ const createGrid = () => {
                  * if x is 0, do nothing
                  * If the cube is at x = 1, we add 0.10 to the coordinates. Now it’s looking the 0.1 - 0.2 mark of the x texture.
                  */
-                u += x / gridSize;
-                v += y / gridSize;
+                u += x / width;
+                v = 1.0 - y / height - 1.0 / height + v;
 
                 uv.setXY(i, u, v);
             }
             const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
                 new three.Mesh(geometry, gridMaterial);
 
-            cube.position.x = x - gridSize / 2;
+            cube.position.x = (x - gridSize / 2) * gridSpacing;
             // Flip Y: Canvas (0 is top) vs Three.js (0 is center, positive is up)
-            cube.position.y = -(y - gridSize / 2);
+            cube.position.y = -(y - gridSize / 2) * gridSpacing;
             cube.position.z = 0;
 
             gridGroup.add(cube);
