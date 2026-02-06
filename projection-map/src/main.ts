@@ -1,6 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/video.mp4";
+import videoSource from "/video/trippy-tunnel.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -23,8 +23,7 @@ const videoRatio = {
 const loadVideoTexture = () => {
     try {
         const video = document.createElement("video");
-        video.src =
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+        video.src = videoSource;
         video.crossOrigin = "anonymous";
         video.loop = true;
         video.muted = true;
