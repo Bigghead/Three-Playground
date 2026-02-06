@@ -8,7 +8,8 @@ if (!canvas) {
 }
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
-threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
+const { cursor: mouseCursor, threeCamera, threeRaycaster, scene } = threeCanvas;
+threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 
 const gridSize = 50;
 const gridSpacing = 0.65;
@@ -139,6 +140,8 @@ const createGrid = () => {
             cube.position.y = -(y - (height - 1) / 2) * gridSpacing;
             cube.position.z = 0;
 
+            cube.userData.baseZ = cube.position.z;
+
             gridGroup.add(cube);
         }
     }
@@ -150,12 +153,25 @@ const createGrid = () => {
 const animateCells = () => {
     threeCanvas.addAnimationCallback((elapsedTime: number) => {
         if (!gridGroup.children.length) return;
-        gridGroup.children.forEach((cube) => {
-            const cubeX = cube.position.x;
-            const cubeY = cube.position.y;
 
-            cube.position.z =
-                Math.sin(cubeX * 0.5 + cubeY * 0.5 + elapsedTime) * 0.25;
+        const { x: mouseX, y: mouseY } =
+            threeRaycaster.getNormalizedDeviceCoords(
+                mouseCursor,
+                threeCamera.camera,
+            );
+
+        gridGroup.children.forEach((cube) => {
+            /**
+             * check how close the mouse is to each cube
+             * and have them "follow" the mouse cursor
+             */
+            const dx = mouseX - cube.position.x;
+            const dy = mouseY - cube.position.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // ===== this "eases" the animation ===== //
+            const zOffset = Math.max(1, 5 - dist * 0.5);
+            cube.position.z += (zOffset - cube.position.z) * 0.1;
         });
     });
 };
@@ -174,4 +190,4 @@ const renderGrid = () => {
 loadVideoTexture();
 
 const axes = new three.AxesHelper(15);
-threeCanvas.scene.add(axes);
+scene.add(axes);

@@ -138,7 +138,7 @@ class ThreeRaycaster {
 
     /**
      *
-     * Convert a 2d coordinate ( defaults with mouse ) into usable threejs world coordinates
+     * Convert a 2d coordinate ( defaults with mouse ) into usable threejs world coordinates.
      * Useful for cursor tracking
      * @returns threejs vector3 coordinates
      */
@@ -146,6 +146,9 @@ class ThreeRaycaster {
         coords: three.Vector2,
         camera: three.Camera,
     ): three.Vector3 => {
+        /**
+         * track 2d coordinated from camera, store when we intersect ( infinite flat plane ) in mouseworld coords
+         */
         this.raycaster.setFromCamera(coords, camera);
         this.raycaster.ray.intersectPlane(this.plane, this.mouseWorld);
 
