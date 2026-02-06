@@ -1,6 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/trippy-tunnel.mp4";
+import videoSource from "/video/galaxy.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -11,7 +11,7 @@ const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 
 const gridSize = 50;
-const gridSpacing = 0.75;
+const gridSpacing = 0.65;
 const gridGroup = new three.Group();
 const gridMaterial = new three.MeshBasicMaterial({ side: three.FrontSide });
 let pixelData: ImageDataArray;
@@ -161,7 +161,7 @@ const animateCells = () => {
 };
 
 const renderGrid = () => {
-    // animateCells();
+    animateCells();
     const box = new three.Box3().setFromObject(gridGroup);
 
     const center = new three.Vector3();
