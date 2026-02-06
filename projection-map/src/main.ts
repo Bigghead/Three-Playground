@@ -8,12 +8,12 @@ if (!canvas) {
 }
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
-threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 10));
+threeCanvas.threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 
 const gridSize = 50;
 const gridSpacing = 0.75;
 const gridGroup = new three.Group();
-const gridMaterial = new three.MeshBasicMaterial({});
+const gridMaterial = new three.MeshBasicMaterial({ side: three.FrontSide });
 let pixelData: ImageDataArray;
 const videoRatio = {
     width: 0,
@@ -51,11 +51,13 @@ const loadVideoTexture = () => {
         const videoTexture = new three.VideoTexture(video);
         videoTexture.flipY = true;
         // ===== expensive calculation every frame ===== //
-        videoTexture.minFilter = three.LinearFilter;
-        videoTexture.magFilter = three.LinearFilter;
+        videoTexture.minFilter = three.NearestFilter;
+        videoTexture.magFilter = three.NearestFilter;
         videoTexture.generateMipmaps = false;
         // ===== expensive calculation every frame ===== //
         videoTexture.colorSpace = three.SRGBColorSpace;
+        videoTexture.wrapS = three.ClampToEdgeWrapping;
+        videoTexture.wrapT = three.ClampToEdgeWrapping;
         gridMaterial.map = videoTexture;
     } catch (e) {
         console.error(`Error in loading video texture. Error: ${e}`);
@@ -133,17 +135,22 @@ const createGrid = () => {
             const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
                 new three.Mesh(geometry, gridMaterial);
 
-            cube.position.x = (x - gridSize / 2) * gridSpacing;
+            cube.position.x = (x - (width - 1) / 2) * gridSpacing;
             // Flip Y: Canvas (0 is top) vs Three.js (0 is center, positive is up)
-            cube.position.y = -(y - gridSize / 2) * gridSpacing;
+            cube.position.y = -(y - (height - 1) / 2) * gridSpacing;
             cube.position.z = 0;
 
             gridGroup.add(cube);
         }
     }
 
-    // ===== sin wave the grid ===== //
+    renderGrid();
+};
+
+// ===== sin wave the grid ===== //
+const animateCells = () => {
     threeCanvas.addAnimationCallback((elapsedTime: number) => {
+        if (!gridGroup.children.length) return;
         gridGroup.children.forEach((cube) => {
             const cubeX = cube.position.x;
             const cubeY = cube.position.y;
@@ -152,11 +159,10 @@ const createGrid = () => {
                 Math.sin(cubeX * 0.5 + cubeY * 0.5 + elapsedTime) * 0.25;
         });
     });
-
-    renderGrid();
 };
 
 const renderGrid = () => {
+    // animateCells();
     const box = new three.Box3().setFromObject(gridGroup);
 
     const center = new three.Vector3();
