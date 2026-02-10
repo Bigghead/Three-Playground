@@ -1,6 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/footage.mp4";
+import videoSource from "/video/trippy-tunnel.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -12,7 +12,7 @@ const { cursor: mouseCursor, threeCamera, threeRaycaster, scene } = threeCanvas;
 threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 
 class ProjectionMap {
-    _gridSize = 50;
+    _gridSize = 75;
     _gridSpacing = 0.65;
     _gridGroup = new three.Group();
     _gridMaterial = new three.MeshBasicMaterial({ side: three.FrontSide });
@@ -78,26 +78,26 @@ class ProjectionMap {
             "❤",
             "★",
             "☀",
-            "☁",
-            "♦",
             "♣",
             "♠",
             "🌙",
-            "☄",
             "❄",
             "✿",
             "✽",
-            "⬢",
             "❣",
-            "❥",
             "❧",
         ];
 
         return unicodeShapes[Math.floor(Math.random() * unicodeShapes.length)];
     };
 
-    private createVideoMap = (): void => {
-        const { height, width } = this._videoRatio;
+    private createCanvasCtx = ({
+        height,
+        width,
+    }: {
+        height: number;
+        width: number;
+    }): CanvasRenderingContext2D => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
         canvas.width = width;
@@ -111,12 +111,42 @@ class ProjectionMap {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, width, height);
         ctx.fillStyle = "white";
-        ctx.font = `${this._gridSize * 0.8}px serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
 
-        // ===== start drawing in the middle of canvas ===== //
-        ctx.fillText(this.getRandomUnicodeShape(), width / 2, height / 2);
+        const BASE = 100;
+        ctx.font = `${BASE}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        return ctx;
+    };
+
+    private createVideoMap = (): void => {
+        const { height, width } = this._videoRatio;
+        const ctx = this.createCanvasCtx({ height, width });
+
+        /**
+         * There was a bug with the shape "clipping" cause we were guessing the size using the canvas width / height
+         * the fix is to use the actual unicode shape to scale out in the 2d canvas
+         */
+        const text = this.getRandomUnicodeShape();
+        const measurement = ctx.measureText(text);
+
+        const glyphW =
+            measurement.actualBoundingBoxLeft +
+            measurement.actualBoundingBoxRight;
+        const glyphH =
+            measurement.actualBoundingBoxAscent +
+            measurement.actualBoundingBoxDescent;
+
+        console.log(glyphW, glyphH);
+
+        const scale = Math.min(width / glyphW, height / glyphH) * 0.9;
+
+        // ===== center at 0, 0 ===== //
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        ctx.scale(scale, scale);
+
+        ctx.fillText(text, 0, measurement.actualBoundingBoxAscent - glyphH / 2);
 
         this._pixelData = ctx.getImageData(0, 0, width, height).data;
     };
@@ -136,7 +166,7 @@ class ProjectionMap {
                 const b = this._pixelData[colorIndex + 2];
 
                 // ===== 255 is full white, we need to ignore the threshold to black ===== //
-                if ((r + g + b) / 3 < 128) {
+                if ((r + g + b) / 3 < 129) {
                     continue;
                 }
 
@@ -231,6 +261,3 @@ class ProjectionMap {
 
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
-
-const axes = new three.AxesHelper(15);
-scene.add(axes);
