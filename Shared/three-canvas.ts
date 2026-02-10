@@ -157,7 +157,13 @@ class ThreeRaycaster {
 }
 
 export class ThreeCanvas {
-    cursor = new three.Vector2();
+    /**
+     * set this to some insane offsides vector
+     * cause our object starts at 0,0 for animation
+     * might break other things later
+     */
+    cursor = new three.Vector2(9999, 9999);
+
     sizes: Sizes;
     threeCamera: ThreeCamera;
     controls: OrbitControls;
