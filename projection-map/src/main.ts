@@ -1,6 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/galaxy.mp4";
+import videoSource from "/video/footage.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -140,7 +140,7 @@ const createGrid = () => {
             cube.position.y = -(y - (height - 1) / 2) * gridSpacing;
             cube.position.z = 0;
 
-            cube.userData.baseZ = cube.position.z;
+            cube.userData.originalPosition = cube.position.clone();
 
             gridGroup.add(cube);
         }
@@ -149,7 +149,7 @@ const createGrid = () => {
     renderGrid();
 };
 
-// ===== sin wave the grid ===== //
+// ===== Quick maffs ===== //
 const animateCells = () => {
     threeCanvas.addAnimationCallback((elapsedTime: number) => {
         if (!gridGroup.children.length) return;
@@ -161,6 +161,7 @@ const animateCells = () => {
             );
 
         gridGroup.children.forEach((cube) => {
+            const orig = cube.userData.originalPosition;
             /**
              * check how close the mouse is to each cube
              * and have them "follow" the mouse cursor
@@ -170,8 +171,14 @@ const animateCells = () => {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             // ===== this "eases" the animation ===== //
-            const zOffset = Math.max(1, 5 - dist * 0.5);
-            cube.position.z += (zOffset - cube.position.z) * 0.1;
+            const offset = Math.max(0, 5 - dist);
+            // const targetX = orig.x + dx * (offset / 5) * 0.5;
+            const targetY = orig.y + dy * (offset / 5) * 0.5;
+            const targetZ = (offset - cube.position.z) * 0.5;
+
+            // cube.position.x += targetX - cube.position.x;
+            cube.position.y += targetY - cube.position.y;
+            cube.position.z += targetZ;
         });
     });
 };
