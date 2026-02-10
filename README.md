@@ -11,7 +11,8 @@
 ### Example Screenshots for the memes:
 
 ( Current Work in Progress ):  
-![output](https://github.com/user-attachments/assets/6a20ee82-7785-4960-bb5e-57be3d842774)
+![demo2](https://github.com/user-attachments/assets/14524efd-9520-43b4-a407-c1a80c49f9c0)
+
 
 
 ---
