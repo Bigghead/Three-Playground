@@ -124,13 +124,52 @@ class ThreeLighting {
     };
 }
 
+class ThreeRaycaster {
+    /**
+     * Mouse tracking on 2d flat plane
+     */
+    raycaster = new three.Raycaster();
+    // ==== empty coords to store where we intersect ===== //
+    mouseWorld = new three.Vector3();
+    // ===== infinite flat plane facing camera, on z axis ===== //
+    plane = new three.Plane(new three.Vector3(0, 0, 1), 0);
+
+    constructor() {}
+
+    /**
+     *
+     * Convert a 2d coordinate ( defaults with mouse ) into usable threejs world coordinates.
+     * Useful for cursor tracking
+     * @returns threejs vector3 coordinates
+     */
+    public getNormalizedDeviceCoords = (
+        coords: three.Vector2,
+        camera: three.Camera,
+    ): three.Vector3 => {
+        /**
+         * track 2d coordinated from camera, store when we intersect ( infinite flat plane ) in mouseworld coords
+         */
+        this.raycaster.setFromCamera(coords, camera);
+        this.raycaster.ray.intersectPlane(this.plane, this.mouseWorld);
+
+        return this.mouseWorld;
+    };
+}
+
 export class ThreeCanvas {
-    cursor = { x: 0, y: 0 };
+    /**
+     * set this to some insane offsides vector
+     * cause our object starts at 0,0 for animation
+     * might break other things later
+     */
+    cursor = new three.Vector2(9999, 9999);
+
     sizes: Sizes;
     threeCamera: ThreeCamera;
     controls: OrbitControls;
     threeRenderer: ThreeRenderer;
     lighting: ThreeLighting;
+    threeRaycaster: ThreeRaycaster;
 
     scene = new three.Scene();
     textureLoader = new three.TextureLoader();
@@ -157,6 +196,7 @@ export class ThreeCanvas {
             renderer: this.threeRenderer.renderer,
             initShadow,
         });
+        this.threeRaycaster = new ThreeRaycaster();
 
         this.scene.add(
             this.lighting.ambientLight,
@@ -191,8 +231,8 @@ export class ThreeCanvas {
     public handleMouseMove = (e: MouseEvent): void => {
         const { clientX, clientY } = e;
         const { width, height } = this.sizes;
-        this.cursor.x = clientX / width - 0.5;
-        this.cursor.y = clientY / height - 0.5;
+        this.cursor.x = (clientX / width) * 2 - 1;
+        this.cursor.y = -(clientY / height) * 2 + 1;
     };
 
     /**
@@ -223,45 +263,5 @@ export class ThreeCanvas {
         window.removeEventListener("mousemove", this.handleMouseMove);
         this.controls.dispose();
         this.threeRenderer.renderer.dispose();
-    };
-
-    /**
-     *
-     * Convert a 2d coordinate into usable threejs world coordinates
-     * Useful for cursor tracking
-     * @returns threejs vector3 coordinates
-     */
-    public getNormalizedDeviceCoords = ({
-        x,
-        y,
-        mirrored = false,
-    }: {
-        x: number;
-        y: number;
-        mirrored?: boolean;
-    }): three.Vector3 => {
-        // First step is converting the coords to range from -1 - 1 ( [-1, 1 ] )
-        // Using a flag to see if we should flip x / y ( like for webcam )
-        const flipMirrorFlag = mirrored ? -1 : 1;
-        const coordX = flipMirrorFlag * (x * 2 - 1);
-        const coordY = flipMirrorFlag * (y * 2 - 1);
-        const normalizedCoordinates = new three.Vector3(coordX, coordY, 0);
-
-        // this is the magic trick, it turns the above vector3 to a point according to where the camera sees it
-        normalizedCoordinates.unproject(this.threeCamera.camera);
-
-        // then this gives us an invisible ray ( from the camera to the normalized Vector3 )
-        // to where we want to position the object to later
-        const direction = normalizedCoordinates
-            .sub(this.threeCamera.camera.position)
-            .normalize();
-
-        const fixedDistance = 5;
-        const worldPos = this.threeCamera.camera.position
-            .clone()
-            .add(direction.multiplyScalar(fixedDistance));
-
-        // then we move the object we want to what we are tracking ( finger )
-        return worldPos;
     };
 }
