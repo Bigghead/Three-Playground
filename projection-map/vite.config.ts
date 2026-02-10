@@ -3,12 +3,17 @@ import path from "path";
 
 export default defineConfig({
     resolve: {
-        alias: {
-            // Use 'join' to ensure absolute pathing is bulletproof
-            three: path.resolve(__dirname, "node_modules/three"),
-        },
-        // This is the most important setting for your specific setup
-        preserveSymlinks: true,
+        alias: [
+            {
+                find: /^three\/(.*)$/,
+                replacement: path.resolve(__dirname, "node_modules/three/$1"),
+            },
+            {
+                find: "three",
+                replacement: path.resolve(__dirname, "node_modules/three"),
+            },
+        ],
+        preserveSymlinks: false, // Try setting this to false to let Vite "flatten" the file structure
     },
     server: {
         fs: {
