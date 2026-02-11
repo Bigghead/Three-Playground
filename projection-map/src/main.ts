@@ -17,10 +17,16 @@ scene.background = new three.Color(0x0000ff);
 );
 
 const videoSources = {
-    gridVideo: "/video/colorful-ball.mp4",
+    gridVideo: "/video/tunnel.mp4",
     backgroundVideo: "/video/stars.mp4",
 };
 
+/**
+ * Todo: Performance
+ * - Chunk building the "grid" in waves / rows etc
+ * - InstancedMesh grid cells
+ * - Shaders for the uv projection in grid?
+ */
 class ProjectionMap {
     _gridSize = 75;
     _gridSpacing = 0.65;
@@ -40,7 +46,10 @@ class ProjectionMap {
                 await document.fonts.ready;
                 this.resizeGridAspect(video);
 
-                // ===== kinda need this to avoid a "pause" / lag spike on first load ===== //
+                /**
+                 * kinda need this to avoid a "pause" / lag spike on first load
+                 * since onloadedmetadata does heavy video computation stuff, alongside our grid rendering stuff
+                 */
                 requestAnimationFrame(() => {
                     setTimeout(() => {
                         this.createVideoMap();
@@ -291,8 +300,8 @@ class ProjectionMap {
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
 
-// const backgroundVideo = projectionMap.createVideoElement(
-//     videoSources.backgroundVideo,
-// );
-// const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
-// scene.background = backgroundTexture;
+const backgroundVideo = projectionMap.createVideoElement(
+    videoSources.backgroundVideo,
+);
+const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
+scene.background = backgroundTexture;
