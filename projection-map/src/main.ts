@@ -1,6 +1,6 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/trippy-tunnel.mp4";
+import videoSource from "/video/tunnel.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -9,7 +9,13 @@ if (!canvas) {
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 const { cursor: mouseCursor, threeCamera, threeRaycaster, scene } = threeCanvas;
-threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
+threeCamera.updateCameraPosition(new three.Vector3(0, 0, 22.5));
+scene.background = new three.Color(0x0000ff);
+(scene.background as three.Color).lerpColors(
+    new three.Color(0x0000ff),
+    new three.Color(0x00ff00),
+    0.5,
+);
 
 class ProjectionMap {
     _gridSize = 75;
@@ -54,6 +60,7 @@ class ProjectionMap {
         video.crossOrigin = "anonymous";
         video.loop = true;
         video.muted = true;
+        video.playbackRate = 0.75;
         video.play();
         return video;
     };
@@ -74,19 +81,7 @@ class ProjectionMap {
     };
 
     private getRandomUnicodeShape = (): string => {
-        const unicodeShapes = [
-            "❤",
-            "★",
-            "☀",
-            "♣",
-            "♠",
-            "🌙",
-            "❄",
-            "✿",
-            "✽",
-            "❣",
-            "❧",
-        ];
+        const unicodeShapes = ["❤", "★", "♣", "♠", "❄", "✽", "❣", "❧"];
 
         return unicodeShapes[Math.floor(Math.random() * unicodeShapes.length)];
     };
@@ -216,6 +211,8 @@ class ProjectionMap {
     // ===== Quick maffs ===== //
     private animateCells = (): void => {
         threeCanvas.addAnimationCallback((elapsedTime: number) => {
+            const lerpRadius = 3.0;
+            const pullStrength = 5;
             if (!this._gridGroup.children.length) return;
 
             const { x: mouseX, y: mouseY } =
@@ -236,13 +233,22 @@ class ProjectionMap {
 
                 // ===== this "eases" the animation ===== //
                 const offset = Math.max(0, 5 - dist);
-                // const targetX = orig.x + dx * (offset / 5) * 0.5;
-                const targetY = orig.y + dy * (offset / 5) * 0.5;
-                const targetZ = (offset - cube.position.z) * 0.5;
+                const distSq = dx * dx + dy * dy;
 
-                // cube.position.x += targetX - cube.position.x;
+                const falloff = Math.exp(
+                    -distSq / (10 * Math.pow(lerpRadius, 2)),
+                );
+
+                const targetY = orig.y + dy * (offset / 5);
+                const targetX = orig.x + dx * (offset / 5) * 0.5;
+                // ===== Smooth lerp for z , cause the bulge following cursor is intense ===== //
+                const targetZ = orig.z + falloff * pullStrength;
+
                 cube.position.y += targetY - cube.position.y;
-                cube.position.z += targetZ;
+                cube.position.x += targetX - cube.position.x;
+                cube.position.z += targetZ - cube.position.z;
+                // const targetZ = offset - cube.position.z;
+                // cube.position.z += targetZ;
             });
         });
     };
