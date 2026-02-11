@@ -1,5 +1,10 @@
 import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import Stats from "three/examples/jsm/libs/stats.module.js";
+
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 let { scrollY } = window;
 
@@ -239,6 +244,8 @@ export class ThreeCanvas {
      * Animate
      */
     public animationTick = (): void => {
+        stats.begin();
+
         const elapsedTime = this.clock.getElapsedTime();
 
         // Update controls
@@ -248,6 +255,8 @@ export class ThreeCanvas {
 
         // Render
         this.threeRenderer.renderer.render(this.scene, this.threeCamera.camera);
+
+        stats.end();
 
         // Call tick again on the next frame
         window.requestAnimationFrame(this.animationTick);

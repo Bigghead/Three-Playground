@@ -1,6 +1,5 @@
 import * as three from "three";
 import { ThreeCanvas } from "../../Shared/three-canvas";
-import videoSource from "/video/tunnel.mp4";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -17,6 +16,11 @@ scene.background = new three.Color(0x0000ff);
     0.5,
 );
 
+const videoSources = {
+    gridVideo: "/video/colorful-ball.mp4",
+    backgroundVideo: "/video/stars.mp4",
+};
+
 class ProjectionMap {
     _gridSize = 75;
     _gridSpacing = 0.65;
@@ -31,38 +35,57 @@ class ProjectionMap {
 
     loadVideoTexture = () => {
         try {
-            const video = this.createVideoElement();
-            video.onloadedmetadata = () => {
+            const video = this.createVideoElement(videoSources.gridVideo);
+            video.onloadedmetadata = async () => {
+                await document.fonts.ready;
                 this.resizeGridAspect(video);
-                this.createVideoMap();
-                this.createGrid();
-            };
 
-            const videoTexture = new three.VideoTexture(video);
-            videoTexture.flipY = true;
-            // ===== expensive calculation every frame ===== //
-            videoTexture.minFilter = three.NearestFilter;
-            videoTexture.magFilter = three.NearestFilter;
-            videoTexture.generateMipmaps = false;
-            // ===== expensive calculation every frame ===== //
-            videoTexture.colorSpace = three.SRGBColorSpace;
-            videoTexture.wrapS = three.ClampToEdgeWrapping;
-            videoTexture.wrapT = three.ClampToEdgeWrapping;
+                // ===== kinda need this to avoid a "pause" / lag spike on first load ===== //
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        this.createVideoMap();
+                        this.createGrid();
+                    }, 100);
+                });
+            };
+            const videoTexture = this.createVideoTexture(video);
             this._gridMaterial.map = videoTexture;
         } catch (e) {
             console.error(`Error in loading video texture. Error: ${e}`);
         }
     };
 
-    private createVideoElement = (): HTMLVideoElement => {
+    createVideoElement = (videoSource: string): HTMLVideoElement => {
         const video = document.createElement("video");
         video.src = videoSource;
         video.crossOrigin = "anonymous";
         video.loop = true;
         video.muted = true;
         video.playbackRate = 0.75;
-        video.play();
+        video.addEventListener(
+            "canplaythrough",
+            () => {
+                video.play();
+            },
+            { once: true },
+        );
         return video;
+    };
+
+    createVideoTexture = (
+        videoElement: HTMLVideoElement,
+    ): three.VideoTexture => {
+        const videoTexture = new three.VideoTexture(videoElement);
+        videoTexture.flipY = true;
+        // ===== expensive calculation every frame ===== //
+        videoTexture.minFilter = three.NearestFilter;
+        videoTexture.magFilter = three.NearestFilter;
+        videoTexture.generateMipmaps = false;
+        // ===== expensive calculation every frame ===== //
+        videoTexture.colorSpace = three.SRGBColorSpace;
+        videoTexture.wrapS = three.ClampToEdgeWrapping;
+        videoTexture.wrapT = three.ClampToEdgeWrapping;
+        return videoTexture;
     };
 
     private resizeGridAspect = (videoElement: HTMLVideoElement): void => {
@@ -240,7 +263,7 @@ class ProjectionMap {
                 );
 
                 const targetY = orig.y + dy * (offset / 5);
-                const targetX = orig.x + dx * (offset / 5) * 0.5;
+                const targetX = orig.x + dx * (offset / 5);
                 // ===== Smooth lerp for z , cause the bulge following cursor is intense ===== //
                 const targetZ = orig.z + falloff * pullStrength;
 
@@ -267,3 +290,9 @@ class ProjectionMap {
 
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
+
+// const backgroundVideo = projectionMap.createVideoElement(
+//     videoSources.backgroundVideo,
+// );
+// const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
+// scene.background = backgroundTexture;
