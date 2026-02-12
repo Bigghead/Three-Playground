@@ -37,7 +37,7 @@ class ProjectionMap {
         width: 0,
         height: 0,
     };
-    constuctor() {}
+    constructor() {}
 
     loadVideoTexture = () => {
         try {
@@ -118,6 +118,9 @@ class ProjectionMap {
         return unicodeShapes[Math.floor(Math.random() * unicodeShapes.length)];
     };
 
+    /**
+     * Creates invisible canvas with video dimensions
+     */
     private createCanvasCtx = ({
         height,
         width,
@@ -133,7 +136,6 @@ class ProjectionMap {
         /**
          * draw invisible black / white background
          * we need to check black / white to render the "grid" below later
-         * start will full black background, and draw white "map"
          */
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, width, height);
@@ -146,6 +148,10 @@ class ProjectionMap {
         return ctx;
     };
 
+    /**
+     * Using ^canvas, scale our unicode shape to fit the canvas
+     * Store individual pixel data
+     */
     private createVideoMap = (): void => {
         const { height, width } = this._videoRatio;
         const ctx = this.createCanvasCtx({ height, width });
@@ -164,8 +170,6 @@ class ProjectionMap {
             measurement.actualBoundingBoxAscent +
             measurement.actualBoundingBoxDescent;
 
-        console.log(glyphW, glyphH);
-
         const scale = Math.min(width / glyphW, height / glyphH) * 0.9;
 
         // ===== center at 0, 0 ===== //
@@ -181,12 +185,13 @@ class ProjectionMap {
     // ===== Todo: instancedMesh box. Though I think it's fine for 10 x 10 for now ===== //
     private createGrid = (): void => {
         const { width, height } = this._videoRatio;
+
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const geometry = new three.BoxGeometry(0.55, 0.55, 0.55);
                 const uv = geometry.attributes.uv;
 
-                // ===== shift index by 4 to check "r, g, b, a" values from canvas image we created ===== //
+                // ===== shift index by 4 to check "r, g, b, a" values from canvas _pixelData we created ===== //
                 const colorIndex = (y * width + x) * 4;
                 const r = this._pixelData[colorIndex];
                 const g = this._pixelData[colorIndex + 1];
@@ -231,7 +236,9 @@ class ProjectionMap {
                 cube.position.y = -(y - (height - 1) / 2) * this._gridSpacing;
                 cube.position.z = 0;
 
-                cube.userData.originalPosition = cube.position.clone();
+                cube.userData.originalX = cube.position.x;
+                cube.userData.originalY = cube.position.y;
+                cube.userData.originalZ = cube.position.z;
 
                 this._gridGroup.add(cube);
             }
@@ -254,7 +261,7 @@ class ProjectionMap {
                 );
 
             this._gridGroup.children.forEach((cube) => {
-                const orig = cube.userData.originalPosition;
+                const { originalX, originalY, originalZ } = cube.userData;
                 /**
                  * check how close the mouse is to each cube
                  * and have them "follow" the mouse cursor
@@ -262,22 +269,22 @@ class ProjectionMap {
                 const dx = mouseX - cube.position.x;
                 const dy = mouseY - cube.position.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
+                const distSq = dx * dx + dy * dy;
 
                 // ===== this "eases" the animation ===== //
                 const offset = Math.max(0, 5 - dist);
-                const distSq = dx * dx + dy * dy;
 
                 const falloff = Math.exp(
                     -distSq / (10 * Math.pow(lerpRadius, 2)),
                 );
 
-                const targetY = orig.y + dy * (offset / 5);
-                const targetX = orig.x + dx * (offset / 5);
+                const targetX = originalX + dx * (offset / 5);
+                const targetY = originalY + dy * (offset / 5);
                 // ===== Smooth lerp for z , cause the bulge following cursor is intense ===== //
-                const targetZ = orig.z + falloff * pullStrength;
+                const targetZ = originalZ + falloff * pullStrength;
 
-                cube.position.y += targetY - cube.position.y;
                 cube.position.x += targetX - cube.position.x;
+                cube.position.y += targetY - cube.position.y;
                 cube.position.z += targetZ - cube.position.z;
                 // const targetZ = offset - cube.position.z;
                 // cube.position.z += targetZ;
