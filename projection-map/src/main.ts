@@ -8,7 +8,7 @@ if (!canvas) {
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 const { cursor: mouseCursor, threeCamera, threeRaycaster, scene } = threeCanvas;
-threeCamera.updateCameraPosition(new three.Vector3(0, 0, 22.5));
+threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 scene.background = new three.Color(0x0000ff);
 (scene.background as three.Color).lerpColors(
     new three.Color(0x0000ff),
@@ -307,8 +307,9 @@ class ProjectionMap {
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
 
-const backgroundVideo = projectionMap.createVideoElement(
-    videoSources.backgroundVideo,
-);
-const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
-scene.background = backgroundTexture;
+// ===== still undecided if we want canvas background ===== //
+// const backgroundVideo = projectionMap.createVideoElement(
+//     videoSources.backgroundVideo,
+// );
+// const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
+// scene.background = backgroundTexture;
