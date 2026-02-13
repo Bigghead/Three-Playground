@@ -315,7 +315,7 @@ class ProjectionMap {
             defaults: { ease: "power1.out", duration: 2 },
         });
 
-        this._gridGroup.children.forEach((cell) => {
+        this._gridGroup.children.forEach((cell, index) => {
             const { originalX, originalY } = cell.userData;
             // ===== atan2 gives angle from center origin to move away from  ===== //
             const angleToFly = Math.atan2(originalY, originalX);
@@ -325,11 +325,52 @@ class ProjectionMap {
             const newTargetY =
                 originalY + Math.cos(angleToFly) * -animationIntensity;
 
+            const exitDuration = 1;
+            const startTime = index * 0.001;
+
+            const endOfExit = startTime + exitDuration;
+
+            // ===== exit animation ===== //
             tl.to(
                 cell.scale,
-                { x: 0, y: 0, z: 0, ease: "power3.inOut" },
-                0.001,
-            ).to(cell.position, { x: newTargetX, y: newTargetY, z: 10 }, "<");
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    duration: exitDuration,
+                    ease: "power3.inOut",
+                },
+                startTime,
+            ).to(
+                cell.position,
+                {
+                    x: newTargetX,
+                    y: newTargetY,
+                    z: 10,
+                    duration: exitDuration,
+                },
+                startTime,
+            );
+
+            // ===== move cells asap to outside screen ===== //
+            tl.set(
+                cell.position,
+                { x: originalX * 20, y: originalY * 20, z: 30 },
+                endOfExit,
+            )
+                // ===== re-entry from outside screen ===== //
+                .to(
+                    cell.position,
+                    {
+                        x: originalX,
+                        y: originalY,
+                        z: 0,
+                        duration: 1.5,
+                        ease: "power2.out",
+                    },
+                    endOfExit,
+                )
+                .to(cell.scale, { x: 1, y: 1, z: 1, duration: 1.5 }, endOfExit);
         });
 
         await tl;
@@ -341,9 +382,9 @@ class ProjectionMap {
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
 
-setTimeout(() => {
-    projectionMap.animageGsapCells();
-}, 500);
+// setInterval(() => {
+//     projectionMap.animageGsapCells();
+// }, 5000);
 // ===== still undecided if we want canvas background ===== //
 // const backgroundVideo = projectionMap.createVideoElement(
 //     videoSources.backgroundVideo,
