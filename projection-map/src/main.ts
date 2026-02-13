@@ -1,4 +1,5 @@
 import * as three from "three";
+import { gsap } from "gsap";
 import { ThreeCanvas } from "../../Shared/three-canvas";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -37,6 +38,7 @@ class ProjectionMap {
         width: 0,
         height: 0,
     };
+    _isAnimatingGsap = false;
     constructor() {}
 
     loadVideoTexture = () => {
@@ -252,7 +254,8 @@ class ProjectionMap {
         threeCanvas.addAnimationCallback((elapsedTime: number) => {
             const lerpRadius = 3.0;
             const pullStrength = 5;
-            if (!this._gridGroup.children.length) return;
+            if (!this._gridGroup.children.length || this._isAnimatingGsap)
+                return;
 
             const { x: mouseX, y: mouseY } =
                 threeRaycaster.getNormalizedDeviceCoords(
@@ -302,11 +305,35 @@ class ProjectionMap {
         this._gridGroup.position.sub(center);
         threeCanvas.scene.add(this._gridGroup);
     };
+
+    public animageGsapCells = async (): Promise<void> => {
+        this._isAnimatingGsap = true;
+
+        const tl = gsap.timeline({
+            delay: 0.5 * 0.25,
+            defaults: { ease: "power1.out", duration: 2 },
+        });
+
+        this._gridGroup.children.forEach((cell, index) => {
+            tl.to(
+                cell.scale,
+                { x: 1.5, y: 1.5, z: 1.5, ease: "power3.inOut" },
+                index * 0.001,
+            ).to(cell.position, { x: -100 }, "<");
+        });
+
+        await tl;
+        tl.revert();
+        this._isAnimatingGsap = false;
+    };
 }
 
 const projectionMap = new ProjectionMap();
 projectionMap.loadVideoTexture();
 
+setTimeout(() => {
+    projectionMap.animageGsapCells();
+}, 500);
 // ===== still undecided if we want canvas background ===== //
 // const backgroundVideo = projectionMap.createVideoElement(
 //     videoSources.backgroundVideo,
