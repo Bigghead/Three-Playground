@@ -307,6 +307,7 @@ class ProjectionMap {
     };
 
     public animageGsapCells = async (): Promise<void> => {
+        const animationIntensity = 10;
         this._isAnimatingGsap = true;
 
         const tl = gsap.timeline({
@@ -314,12 +315,21 @@ class ProjectionMap {
             defaults: { ease: "power1.out", duration: 2 },
         });
 
-        this._gridGroup.children.forEach((cell, index) => {
+        this._gridGroup.children.forEach((cell) => {
+            const { originalX, originalY } = cell.userData;
+            // ===== atan2 gives angle from center origin to move away from  ===== //
+            const angleToFly = Math.atan2(originalY, originalX);
+
+            const newTargetX =
+                originalX + Math.cos(angleToFly) * animationIntensity;
+            const newTargetY =
+                originalY + Math.cos(angleToFly) * -animationIntensity;
+
             tl.to(
                 cell.scale,
-                { x: 1.5, y: 1.5, z: 1.5, ease: "power3.inOut" },
-                index * 0.001,
-            ).to(cell.position, { x: -100 }, "<");
+                { x: 0, y: 0, z: 0, ease: "power3.inOut" },
+                0.001,
+            ).to(cell.position, { x: newTargetX, y: newTargetY, z: 10 }, "<");
         });
 
         await tl;
