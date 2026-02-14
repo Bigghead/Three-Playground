@@ -4,6 +4,9 @@ import {
     INACTIVE_MODEL_EVENT,
     roomConfigDimensions,
     roomConfigTextures,
+    INCREMENT,
+    DECREMENT,
+    ROOM_WIDTH,
 } from "./lib/constants";
 import { DomHandler } from "./lib/UI/dom-handler";
 import type { EditableTextures } from "./lib/types";
@@ -39,6 +42,8 @@ const domHandler = new DomHandler();
     );
 })();
 
+const { modelWidthSlider } = DomEl;
+
 /**
  * ===== Listeners =====
  *
@@ -67,7 +72,7 @@ DomEl.modelRotationSlider.addEventListener("input", (e) => {
     rotateModel(target.value);
 });
 
-DomEl.modelWidthSlider.addEventListener("input", (e) => {
+modelWidthSlider.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     DomEl.modelWidthText.innerText = target.value;
     editWidthModel(target.value);
@@ -110,7 +115,13 @@ DomEl.roomConfigRowElement.addEventListener("click", (e) => {
     if (!contentChild) return;
 
     if (target.matches("button")) {
+        const { dimension } = contentChild.dataset;
+        const { action } = target.dataset;
+
         domHandler.handleEditRoomAction(target, contentChild);
+        if (dimension !== ROOM_WIDTH) return;
+
+        changeWidthSliderRanges(action);
     }
 });
 
@@ -125,3 +136,12 @@ DomEl.floorTextureModal.addEventListener("click", (e) => {
     domHandler.removeCurrentlyActiveElement(".texture-img.active");
     target.classList.add("active");
 });
+
+const changeWidthSliderRanges = (action: string | undefined): void => {
+    const sliderMaxWidth = parseFloat(modelWidthSlider.max);
+    if (action === INCREMENT) {
+        modelWidthSlider.max = Math.min(20, sliderMaxWidth + 1.0).toString();
+    } else if (action === DECREMENT) {
+        modelWidthSlider.max = Math.max(3, sliderMaxWidth - 1.0).toString();
+    }
+};

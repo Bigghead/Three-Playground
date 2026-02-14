@@ -2,13 +2,14 @@ export const ACTIVE_MODEL_CLICKED = "active model clicked";
 export const INACTIVE_MODEL_EVENT = "inactive model event";
 
 export const WALL_DIVIDER = "wall divider";
-export const ROOM_CONFIG_ACTION_ADD = "room config action add";
-export const ROOM_CONFIG_ACTION_SUBTRACT = "room config action subtract";
 export const ROOM_WIDTH = "room-width";
 export const ROOM_DEPTH = "room-depth";
 export const ROOM_HEIGHT = "room-height";
 export const ROOM_SIZE = "room-size";
 export const FLOOR_TEXTURE = "floor-texture";
+
+export const INCREMENT = "increment";
+export const DECREMENT = "decrement";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
@@ -69,17 +70,17 @@ export const DomEl = {
     },
     get configuratorContent() {
         return document.querySelector(
-            ".configurator-content"
+            ".configurator-content",
         ) as HTMLDivElement;
     },
     get configSidebar() {
         return document.querySelector(
-            ".configurator-sidebar"
+            ".configurator-sidebar",
         ) as HTMLDivElement;
     },
     get configSidebarMenu() {
         return document.querySelectorAll(
-            ".configurator-sidebar > .menu"
+            ".configurator-sidebar > .menu",
         ) as NodeListOf<HTMLDivElement>;
     },
 
@@ -89,28 +90,28 @@ export const DomEl = {
     },
     get modelRotationSlider() {
         return document.querySelector(
-            ".config-modal input#model-rotation"
+            ".config-modal input#model-rotation",
         ) as HTMLInputElement;
     },
     get modelRotationText() {
         return document.querySelector(
-            ".config-modal .item-rotation"
+            ".config-modal .item-rotation",
         ) as HTMLSpanElement;
     },
 
     get modelWidthSliderContainer() {
         return document.querySelector(
-            ".config-modal-slider--container__hidden"
+            ".config-modal-slider--container__hidden",
         ) as HTMLDivElement;
     },
     get modelWidthSlider() {
         return document.querySelector(
-            ".config-modal input#model-width"
+            ".config-modal input#model-width",
         ) as HTMLInputElement;
     },
     get modelWidthText() {
         return document.querySelector(
-            ".config-modal .item-width"
+            ".config-modal .item-width",
         ) as HTMLSpanElement;
     },
 
@@ -129,7 +130,7 @@ export const DomEl = {
 
     get roomConfigRowElement() {
         return document.querySelector(
-            ".room-configurator .content"
+            ".room-configurator .content",
         ) as HTMLDivElement;
     },
 
