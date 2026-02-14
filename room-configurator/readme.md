@@ -4,8 +4,6 @@
 
 ### All components functionally working, just need to make it pretty and deployed
 
-![alt text](521671420-4f126618-de7d-46df-aba2-fde1d7c9e085.png)
-
 ---
 
 ### Todos:
