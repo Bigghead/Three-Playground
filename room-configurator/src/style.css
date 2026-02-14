@@ -73,6 +73,12 @@ button.close {
     }
 }
 
+input[type="range"] {
+    width: 100%;
+    accent-color: #8affc8;
+    cursor: pointer;
+}
+
 /* ---------------- Configurator ---------------- */
 
 .configurator {
@@ -324,6 +330,14 @@ button.close {
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
     margin: 1rem auto;
+
+    > div {
+        margin-bottom: 1rem;
+
+        > h4 {
+            margin-bottom: 0.5rem;
+        }
+    }
 }
 
 .config-modal-slider--container__hidden {
