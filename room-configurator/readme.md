@@ -1,8 +1,9 @@
-## Room Configurator
+## Room Configurator: https://room-config.netlify.app/
 
 - Interactive 3D models loading with Three.js and use raycasting drag controls to position them anywhere in your room.
 
-### All components functionally working, just need to make it pretty and deployed
+### All components functionally working, just need to make it pretty
+<img width="2547" height="1454" alt="demo-room-config" src="https://github.com/user-attachments/assets/ad64e505-4367-4da8-90c3-7cd0f88d1be3" />
 
 ---
 
