@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -69,20 +69,22 @@
                     Selected: <span class="item-name"></span>
                 </div>
                 <div class="config-modal-description">
-                    <div>Rotation: <span class="item-rotation">0</span>°</div>
-                    <div class="config-modal-slider rotation">
-                        <input
-                            type="range"
-                            id="model-rotation"
-                            name="model rotation"
-                            value="0"
-                            min="0"
-                            max="360"
-                            step="5"
-                        />
+                    <div>
+                        <h4>Rotation: <span class="item-rotation">0</span>°</h4>
+                        <div class="config-modal-slider rotation">
+                            <input
+                                type="range"
+                                id="model-rotation"
+                                name="model rotation"
+                                value="0"
+                                min="0"
+                                max="360"
+                                step="5"
+                            />
+                        </div>
                     </div>
                     <div class="config-modal-slider--container__hidden">
-                        <div>Width: <span class="item-width">0</span>m</div>
+                        <h4>Width: <span class="item-width">0</span>m</h4>
                         <div class="config-modal-slider width">
                             <input
                                 type="range"
@@ -115,7 +117,7 @@
             </div>
         </div>
 
-        <script type="module" src="/src/canvas.ts"></script>
-        <script type="module" src="/src/main.ts"></script>
+        <script type="module" src="./src/canvas.ts"></script>
+        <script type="module" src="./src/main.ts"></script>
     </body>
 </html>

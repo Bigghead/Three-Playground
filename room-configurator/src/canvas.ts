@@ -208,7 +208,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed.bed1, 15);
+const bed = await loadModel(models.bed.bed1, 30);
 
 room.matrixAutoUpdate = false;
 scene.add(room, bed);
