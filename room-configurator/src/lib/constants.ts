@@ -10,6 +10,8 @@ export const FLOOR_TEXTURE = "floor-texture";
 
 export const INCREMENT = "increment";
 export const DECREMENT = "decrement";
+export const BUTTON_ACTION_RESET = "reset";
+export const BUTTON_ACTION_DELETE = "delete";
 
 export const defaultWallHeight = 2.5;
 export const defaultWallDepth = 0.1;
