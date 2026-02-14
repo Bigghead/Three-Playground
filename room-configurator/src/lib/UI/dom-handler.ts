@@ -161,7 +161,7 @@ export class DomHandler {
         activeMenu?.classList.remove("active");
     };
 
-    handleMenuClick = (e: PointerEvent): void => {
+    handleMenuClick = (e: MouseEvent): void => {
         e.stopPropagation();
 
         const target = e.target as HTMLElement;
@@ -217,7 +217,7 @@ export class DomHandler {
             targetElement.classList.contains("add-btn") && INCREMENT;
 
         const valueEl = containerElement.querySelector(".value") as HTMLElement;
-        const value = parseFloat(valueEl.textContent);
+        const value = parseFloat(valueEl.textContent ?? "0");
 
         const {
             dimension: dimensionToChange,

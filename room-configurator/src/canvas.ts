@@ -27,11 +27,10 @@ if (!canvas) {
     console.error("Canvas element with class 'webgl' not found.");
 }
 
-const { textureMaps, scene, modelLoader, threeRaycaster, threeCamera } =
-    new ThreeCanvas({
-        canvas,
-        initShadow: false,
-    });
+const { textureMaps, scene, modelLoader, threeRaycaster } = new ThreeCanvas({
+    canvas,
+    initShadow: false,
+});
 
 scene.background = new three.Color("#0A2342");
 
