@@ -4,6 +4,11 @@ import {
     INACTIVE_MODEL_EVENT,
     roomConfigDimensions,
     roomConfigTextures,
+    INCREMENT,
+    DECREMENT,
+    ROOM_WIDTH,
+    BUTTON_ACTION_RESET,
+    BUTTON_ACTION_DELETE,
 } from "./lib/constants";
 import { DomHandler } from "./lib/UI/dom-handler";
 import type { EditableTextures } from "./lib/types";
@@ -18,6 +23,17 @@ const {
 } = await import("./canvas");
 
 const domHandler = new DomHandler();
+const {
+    menuButton,
+    configSidebarMenu,
+    canvas,
+    modelRotationSlider,
+    modelWidthSlider,
+    configModalAction,
+    roomConfigurator,
+    roomConfigRowElement,
+    floorTextureModal,
+} = DomEl;
 
 /**
  * ===== Init HTML Renders =====
@@ -43,52 +59,52 @@ const domHandler = new DomHandler();
  * ===== Listeners =====
  *
  */
-DomEl.menuButton.addEventListener("click", (e) => {
+menuButton.addEventListener("click", (e) => {
     domHandler.toggleSidebar(e.currentTarget as HTMLButtonElement);
 });
 
-DomEl.configSidebarMenu.forEach((menu): void => {
+configSidebarMenu.forEach((menu): void => {
     menu.addEventListener("click", (e) => {
         domHandler.handleMenuClick(e);
     });
 });
 
-DomEl.canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
+canvas.addEventListener(ACTIVE_MODEL_CLICKED, (e) => {
     domHandler.handleActiveModelClick(e as CustomEvent);
 });
 
-DomEl.canvas.addEventListener(INACTIVE_MODEL_EVENT, () => {
+canvas.addEventListener(INACTIVE_MODEL_EVENT, () => {
     domHandler.hideConfigModal();
 });
 
-DomEl.modelRotationSlider.addEventListener("input", (e) => {
+modelRotationSlider.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     DomEl.modelRotationText.innerText = target.value;
     rotateModel(target.value);
 });
 
-DomEl.modelWidthSlider.addEventListener("input", (e) => {
+modelWidthSlider.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     DomEl.modelWidthText.innerText = target.value;
     editWidthModel(target.value);
 });
 
-DomEl.configModalAction.addEventListener("click", (e) => {
+configModalAction.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     if (!target.matches("button")) return;
 
     const { actionType: btnAction } = target.dataset;
 
-    if (btnAction === "reset") {
+    if (btnAction === BUTTON_ACTION_RESET) {
         resetModelChanges();
-    } else if (btnAction === "delete") {
+    } else if (btnAction === BUTTON_ACTION_DELETE) {
         removeActiveModel();
     }
 
     domHandler.resetSliders();
 });
 
-DomEl.roomConfigurator.addEventListener("click", (e) => {
+roomConfigurator.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     if (!target.matches("button")) return;
 
@@ -102,19 +118,24 @@ DomEl.roomConfigurator.addEventListener("click", (e) => {
     domHandler.handleRenderConfigModals(configuratorAction);
 });
 
-// ===== Todo: edit max wall divider width to match new max width / depth ===== //
-DomEl.roomConfigRowElement.addEventListener("click", (e) => {
+roomConfigRowElement.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     const contentChild = target.closest(".content-child") as HTMLElement;
 
     if (!contentChild) return;
 
     if (target.matches("button")) {
+        const { dimension } = contentChild.dataset;
+        const { action } = target.dataset;
+
         domHandler.handleEditRoomAction(target, contentChild);
+        if (dimension !== ROOM_WIDTH) return;
+
+        changeWidthSliderRanges(action);
     }
 });
 
-DomEl.floorTextureModal.addEventListener("click", (e) => {
+floorTextureModal.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
 
     if (!target.matches("img")) return;
@@ -125,3 +146,16 @@ DomEl.floorTextureModal.addEventListener("click", (e) => {
     domHandler.removeCurrentlyActiveElement(".texture-img.active");
     target.classList.add("active");
 });
+
+/**
+ * ===== Actions =====
+ *
+ */
+const changeWidthSliderRanges = (action: string | undefined): void => {
+    const sliderMaxWidth = parseFloat(modelWidthSlider.max);
+    if (action === INCREMENT) {
+        modelWidthSlider.max = Math.min(20, sliderMaxWidth + 1.0).toString();
+    } else if (action === DECREMENT) {
+        modelWidthSlider.max = Math.max(3, sliderMaxWidth - 1.0).toString();
+    }
+};
