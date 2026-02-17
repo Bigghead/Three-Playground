@@ -2,9 +2,10 @@ import * as three from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
-import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
-import { GammaCorrectionShader } from "three/addons/shaders/GammaCorrectionShader.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { GammaCorrectionShader } from "three/examples/jsm/shaders/GammaCorrectionShader.js";
+
 import { ACTIVE_MODEL_CLICKED, INACTIVE_MODEL_EVENT } from "../constants";
 
 // room wall has a thickness of 0.1

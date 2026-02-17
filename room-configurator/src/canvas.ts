@@ -1,5 +1,5 @@
 import * as three from "three";
-import { ThreeCanvas } from "./lib/THREE/three-manager";
+import { ThreeCanvasLocal as ThreeCanvas } from "@/src/lib/THREE/three-manager";
 import {
     models,
     type ModelConfig,
@@ -27,10 +27,11 @@ if (!canvas) {
     console.error("Canvas element with class 'webgl' not found.");
 }
 
-const { textureMaps, scene, modelLoader, threeRaycaster } = new ThreeCanvas({
-    canvas,
-    initShadow: false,
-});
+const { textureMaps, scene, modelLoader, threeRaycasterLocal } =
+    new ThreeCanvas({
+        canvas,
+        initShadow: false,
+    });
 
 scene.background = new three.Color("#0A2342");
 
@@ -115,7 +116,7 @@ const createRoom = ({
 const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
     const roomBox = new three.Box3().setFromObject(roomMesh);
     roomSize = roomBox.getSize(new three.Vector3());
-    threeRaycaster.setRoomBoundingBox(roomSize);
+    threeRaycasterLocal.setRoomBoundingBox(roomSize);
 };
 
 /**
@@ -213,20 +214,20 @@ const bed = await loadModel(models.bed.bed1, 30);
 room.matrixAutoUpdate = false;
 scene.add(room, bed);
 
-threeRaycaster.addDraggableModel(bed);
+threeRaycasterLocal.addDraggableModel(bed);
 
 window.addEventListener("mousedown", (event: MouseEvent) => {
     if (event.button !== 0) return;
-    threeRaycaster.onMouseDown(event);
+    threeRaycasterLocal.onMouseDown(event);
 });
 
 window.addEventListener("mouseup", (event: MouseEvent) => {
     if (event.button !== 0) return;
-    threeRaycaster.onMouseUp();
+    threeRaycasterLocal.onMouseUp();
 });
 
 window.addEventListener("mousemove", (event: MouseEvent) => {
-    threeRaycaster.onMouseMove(event);
+    threeRaycasterLocal.onMouseMove(event);
 });
 
 export const renderModel = async ({
@@ -248,7 +249,7 @@ export const renderModel = async ({
 
     if (addToScene) {
         scene.add(model);
-        threeRaycaster.addDraggableModel(model);
+        threeRaycasterLocal.addDraggableModel(model);
     }
 };
 
@@ -262,23 +263,23 @@ export const createWall = (): void => {
 
     // ===== add wall into scene, not into room cause we reset room when we change dimensions ===== //
     scene.add(wall);
-    threeRaycaster.addDraggableModel(wall);
+    threeRaycasterLocal.addDraggableModel(wall);
 };
 
 export const rotateModel = (value: string): void => {
-    threeRaycaster.rotateModel(value);
+    threeRaycasterLocal.rotateModel(value);
 };
 
 export const editWidthModel = (value: string): void => {
-    threeRaycaster.editWidthModel(value);
+    threeRaycasterLocal.editWidthModel(value);
 };
 
 export const resetModelChanges = () => {
-    threeRaycaster.resetModelChanges();
+    threeRaycasterLocal.resetModelChanges();
 };
 
 export const removeActiveModel = () => {
-    threeRaycaster.removeActiveModel();
+    threeRaycasterLocal.removeActiveModel();
 };
 
 export const editRoomDimensions = (
