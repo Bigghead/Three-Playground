@@ -99,8 +99,6 @@ export class ThreeCanvasLocal extends ThreeCanvas {
             this.resizeCameraAndRenderer(canvas),
         );
         window.addEventListener("scroll", this.handleScroll);
-
-        this.animationTick();
     }
 
     private initTextureMap(): void {
@@ -183,31 +181,6 @@ export class ThreeCanvasLocal extends ThreeCanvas {
             );
         };
 
-    /**
-     * Animate
-     */
-    public animationTick = (): void => {
-        // Update controls
-        this.controls.update();
-
-        this.renderCallbacks.forEach((callback) => callback());
-
-        // Render
-        this.threeRaycasterLocal.animate();
-        // Call tick again on the next frame
-        window.requestAnimationFrame(this.animationTick);
-    };
-
-    public addRenderCallback(callback: () => void) {
-        this.renderCallbacks.push(callback);
-    }
-
-    public dispose = (): void => {
-        window.removeEventListener("scroll", this.handleScroll);
-        this.controls.dispose();
-        this.threeRenderer.renderer.dispose();
-    };
-
     private updateCanvasSize(canvas: HTMLCanvasElement) {
         const fullscreenSizeMax = 0.65;
         const isMobile = window.innerWidth <= 768;
@@ -239,5 +212,16 @@ export class ThreeCanvasLocal extends ThreeCanvas {
         this.threeRenderer.renderer.setPixelRatio(
             Math.min(window.devicePixelRatio, 2),
         );
+    }
+
+    /**
+     * Overrides standard renderer, using raycaster's composer
+     */
+    protected override renderFrame(): void {
+        if (this.threeRaycasterLocal) {
+            this.threeRaycasterLocal.animate();
+        } else {
+            super.renderFrame();
+        }
     }
 }
