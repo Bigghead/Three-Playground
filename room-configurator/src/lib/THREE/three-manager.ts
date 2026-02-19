@@ -72,10 +72,6 @@ export class ThreeCanvasLocal extends ThreeCanvas {
     modelLoader: ThreeModelLoader;
     threeRaycasterLocal: ThreeRaycaster;
 
-    scene = new three.Scene();
-    textureLoader = new three.TextureLoader();
-    clock = new three.Clock();
-
     textureMaps: TextureMap = {};
     renderCallbacks: Array<() => void> = [];
 

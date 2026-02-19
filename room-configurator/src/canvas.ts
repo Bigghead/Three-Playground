@@ -27,7 +27,7 @@ if (!canvas) {
     console.error("Canvas element with class 'webgl' not found.");
 }
 
-const { textureMaps, scene, modelLoader, threeRaycasterLocal } =
+const { scene, modelLoader, threeRaycasterLocal, loadTexture } =
     new ThreeCanvas({
         canvas,
         initShadow: false,
@@ -66,51 +66,68 @@ const removeGroupChildren = (group: three.Group): void => {
     }
 };
 
-const createRoom = ({
+const createDefaultFloor = ({
+    texture,
+    normal,
+    arm,
+}: {
+    texture: three.Texture | undefined;
+    normal: three.Texture | undefined;
+    arm: three.Texture | undefined;
+}): three.MeshStandardMaterial => {
+    return new three.MeshStandardMaterial({
+        side: three.DoubleSide,
+        map: texture,
+        normalMap: normal,
+        aoMap: arm,
+        roughnessMap: arm,
+        metalnessMap: arm,
+    });
+};
+
+const createRoom = async ({
+    parentGroup, // the room in this case
     floorWidth,
     floorDepth,
-    parentGroup,
     wallHeight,
 }: {
+    parentGroup: three.Group;
     floorWidth: number;
     floorDepth: number;
-    parentGroup: three.Group;
     wallHeight?: number;
-}): void => {
+}): Promise<void> => {
     removeGroupChildren(parentGroup);
 
-    // ===== use default floor 1st time page loads, use last floor when room dimension is updated ===== //
-    const currentFloorMesh = floorMesh?.material as three.MeshLambertMaterial;
-    const defaultFloorTexture = textureMaps["wood-floor"];
-    const defaultFloorMaterial = {
-        texture: currentFloorMesh?.map || defaultFloorTexture.texture,
-        normal: currentFloorMesh?.normalMap || defaultFloorTexture.normal,
-        arm: currentFloorMesh?.aoMap || defaultFloorTexture.arm,
-    };
+    try {
+        // ===== use default floor 1st time page loads, use last floor when room dimension is updated ===== //
+        const currentFloorMesh =
+            floorMesh?.material as three.MeshLambertMaterial;
+        const { textureMap, normalMap, armMap } =
+            await loadTexture("wood-floor");
+        const defaultFloorMaterial = {
+            texture: currentFloorMesh?.map || textureMap,
+            normal: currentFloorMesh?.normalMap || normalMap,
+            arm: currentFloorMesh?.aoMap || armMap,
+        };
 
-    const floorMaterial = new three.MeshStandardMaterial({
-        side: three.DoubleSide,
-        map: defaultFloorMaterial.texture,
-        normalMap: defaultFloorMaterial.normal,
-        aoMap: defaultFloorMaterial.arm,
-        roughnessMap: defaultFloorMaterial.arm,
-        metalnessMap: defaultFloorMaterial.arm,
-    });
+        const floorMaterial = createDefaultFloor(defaultFloorMaterial);
+        const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
+        floorMesh = new three.Mesh(floorGeo, floorMaterial);
 
-    const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
+        floorMesh.rotation.x = Math.PI / 2;
 
-    floorMesh = new three.Mesh(floorGeo, floorMaterial);
-    floorMesh.rotation.x = Math.PI / 2;
+        wallBuilder = new WallBuilder({
+            floorWidth,
+            floorDepth,
+            textureMap: (await loadTexture("plaster-wall")).textureMap!!,
+            wallHeight,
+        });
 
-    wallBuilder = new WallBuilder({
-        floorWidth,
-        floorDepth,
-        textureMap: textureMaps["plaster-wall"].texture,
-        wallHeight,
-    });
-
-    const { roomWalls } = wallBuilder.createWalls();
-    parentGroup.add(floorMesh, roomWalls);
+        const { roomWalls } = wallBuilder.createWalls();
+        parentGroup.add(floorMesh, roomWalls);
+    } catch (e) {
+        console.error("Error in creating room, Error: ", e);
+    }
 };
 
 const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
@@ -122,18 +139,23 @@ const calculateRoomBoundingBox = (roomMesh: three.Group = room): void => {
 /**
  * This is called everytime room dimensions are changed
  */
-const initRoom = ({
+const initRoom = async ({
+    parentGroup = room,
     floorWidth = defaultFloorDimension,
     floorDepth = defaultFloorDimension,
-    parentGroup = room,
     wallHeight,
 }: {
+    parentGroup?: three.Group;
     floorWidth?: number;
     floorDepth?: number;
-    parentGroup?: three.Group;
     wallHeight?: number;
-}): void => {
-    createRoom({ floorWidth, floorDepth, parentGroup, wallHeight });
+}): Promise<void> => {
+    /**
+     * calculateRoomBoundingBox was returning all 0s vector3
+     * cause we forgot we made createRoom async and it sets the room
+     * then we took hours figuring out why everything broke.........
+     */
+    await createRoom({ parentGroup, floorWidth, floorDepth, wallHeight });
     calculateRoomBoundingBox();
 };
 
@@ -190,7 +212,6 @@ const loadModel = async (
 ): Promise<three.Group> => {
     try {
         // need each model in a group for the mouse drag / raycaster
-        console.log(modelConfig);
         const wrapper = new three.Group();
         const { url, offset } = modelConfig;
         const model = await modelLoader.initModel(url, progressCallback);
@@ -209,7 +230,7 @@ const loadModel = async (
 };
 
 // ----- Models ----- //
-const bed = await loadModel(models.bed.bed1, 30);
+const bed = await loadModel(models.bed.bed2, 30);
 
 room.matrixAutoUpdate = false;
 scene.add(room, bed);
@@ -300,16 +321,19 @@ export const editRoomDimensions = (
     });
 };
 
-export const updateFloorTexture = (newTexture: EditableTextures): void => {
+export const updateFloorTexture = async (
+    newTexture: EditableTextures,
+): Promise<void> => {
     try {
-        const { texture, normal, arm } = textureMaps[newTexture];
+        let { textureMap, normalMap, armMap } = await loadTexture(newTexture);
+
         const newFloorMaterial = new three.MeshStandardMaterial({
             side: three.DoubleSide,
-            map: texture,
-            normalMap: normal,
-            aoMap: arm,
-            roughnessMap: arm,
-            metalnessMap: arm,
+            map: textureMap,
+            normalMap: normalMap,
+            aoMap: armMap,
+            roughnessMap: armMap,
+            metalnessMap: armMap,
         });
 
         removeMeshMaterial(floorMesh);
