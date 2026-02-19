@@ -9,13 +9,31 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { ThreeCanvas } from "@/../Shared/three-canvas";
 import { ThreeRaycaster } from "./three-raycaster";
 
-type TextureMap = {
-    [key: string]: {
-        texture: three.Texture;
-        normal?: three.Texture;
-        arm?: three.Texture;
-    };
+type TextureCache = {
+    textureMap?: three.Texture;
+    normalMap?: three.Texture;
+    armMap?: three.Texture;
 };
+
+type TextureEntry = {
+    texture: string;
+    normal?: string;
+    arm?: string;
+    hasCached: boolean;
+    loadedMaps: TextureCache;
+};
+
+type TextureMap = {
+    [key: string]: TextureEntry;
+};
+
+const createTextureEntry = (
+    data: Partial<TextureEntry> & { texture: string },
+): TextureEntry => ({
+    hasCached: false,
+    loadedMaps: {},
+    ...data,
+});
 
 class ThreeModelLoader {
     gltfLoader: GLTFLoader = new GLTFLoader();
@@ -103,70 +121,69 @@ export class ThreeCanvasLocal extends ThreeCanvas {
 
     private initTextureMap(): void {
         this.textureMaps = {
-            "beige-wall": {
-                texture: this.textureLoader.load(
-                    "textures/beige_wall/beige_wall_001_diff_1k.webp",
-                ),
-            },
-            "plaster-wall": {
-                texture: this.textureLoader.load(
+            "beige-wall": createTextureEntry({
+                texture: "textures/beige_wall/beige_wall_001_diff_1k.webp",
+            }),
+            "plaster-wall": createTextureEntry({
+                texture:
                     "textures/plaster_wall/painted_plaster_wall_diff_1k.webp",
-                ),
-            },
-            "rosewood-floor": {
-                texture: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_arm_1k.webp",
-                ),
-            },
-            "laminate-floor": {
-                texture: this.textureLoader.load(
+            }),
+            "rosewood-floor": createTextureEntry({
+                texture: "textures/rosewood/rosewood_veneer1_diff_1k.webp",
+                normal: "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp",
+                arm: "textures/rosewood/rosewood_veneer1_arm_1k.webp",
+            }),
+            "laminate-floor": createTextureEntry({
+                texture:
                     "/textures/laminate_floor/laminate_floor_02_diff_2k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/laminate_floor/laminate_floor_02_arm_1k.webp",
-                ),
-            },
-            "wood-floor": {
-                texture: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_nor_dx_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_arm_1k.webp",
-                ),
-            },
-            "granite-tile": {
-                texture: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_nor_dx_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_arm_1k.webp",
-                ),
-            },
+                normal: "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp",
+                arm: "/textures/laminate_floor/laminate_floor_02_arm_1k.webp",
+            }),
+            "wood-floor": createTextureEntry({
+                texture: "/textures/wood_floor/wood_floor_diff_1k.webp",
+                normal: "/textures/wood_floor/wood_floor_nor_dx_1k.webp",
+                arm: "/textures/wood_floor/wood_floor_arm_1k.webp",
+            }),
+            "granite-tile": createTextureEntry({
+                texture: "/textures/granite_tile/granite_tile_diff_1k.webp",
+                normal: "/textures/granite_tile/granite_tile_nor_dx_1k.webp",
+                arm: "/textures/granite_tile/granite_tile_arm_1k.webp",
+            }),
         };
-
-        for (const map in this.textureMaps) {
-            const { texture } = this.textureMaps[map];
-            texture.colorSpace = three.SRGBColorSpace;
-            texture.wrapS = three.RepeatWrapping;
-            texture.wrapT = three.RepeatWrapping;
-            texture.repeat.set(4, 4);
-        }
     }
+
+    public normalizeTextureMap(texture: three.Texture): void {
+        texture.colorSpace = three.SRGBColorSpace;
+        texture.wrapS = three.RepeatWrapping;
+        texture.wrapT = three.RepeatWrapping;
+        texture.repeat.set(4, 4);
+    }
+
+    public loadTexture = async (key: string): Promise<TextureCache> => {
+        const entry = this.textureMaps[key];
+
+        if (entry.hasCached) {
+            return entry.loadedMaps;
+        }
+
+        const loader = this.textureLoader;
+
+        const [textureMap, normalMap, armMap] = await Promise.all([
+            loader.loadAsync(entry.texture),
+            entry.normal
+                ? loader.loadAsync(entry.normal)
+                : Promise.resolve(undefined),
+            entry.arm
+                ? loader.loadAsync(entry.arm)
+                : Promise.resolve(undefined),
+        ]);
+
+        this.normalizeTextureMap(textureMap);
+        entry.loadedMaps = { textureMap, normalMap, armMap };
+        entry.hasCached = true;
+
+        return entry.loadedMaps;
+    };
 
     /**
      * Event Actions
