@@ -76,7 +76,6 @@ const createDefaultFloor = ({
     arm: three.Texture | undefined;
 }): three.MeshStandardMaterial => {
     return new three.MeshStandardMaterial({
-        side: three.DoubleSide,
         map: texture,
         normalMap: normal,
         aoMap: arm,
@@ -114,7 +113,7 @@ const createRoom = async ({
         const floorGeo = new three.PlaneGeometry(floorWidth, floorDepth);
         floorMesh = new three.Mesh(floorGeo, floorMaterial);
 
-        floorMesh.rotation.x = Math.PI / 2;
+        floorMesh.rotation.x = -Math.PI / 2;
 
         wallBuilder = new WallBuilder({
             floorWidth,
