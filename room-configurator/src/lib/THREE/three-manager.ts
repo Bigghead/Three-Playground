@@ -68,7 +68,6 @@ class ThreeModelLoader {
 }
 
 export class ThreeCanvasLocal extends ThreeCanvas {
-    cursor = { x: 0, y: 0 };
     modelLoader: ThreeModelLoader;
     threeRaycasterLocal: ThreeRaycaster;
 

@@ -6,8 +6,6 @@ const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
-let { scrollY } = window;
-
 type Dimensions = {
     width: number;
     height: number;

@@ -20,10 +20,15 @@
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
+
         "baseUrl": ".",
         "paths": {
-            "@/*": ["*"]
+            "@/*": ["./*"],
+            "three": ["./node_modules/@types/three/index.d.ts"],
+            "three/examples/jsm/*": [
+                "./node_modules/@types/three/examples/jsm/*"
+            ]
         }
     },
-    "include": ["src"]
+    "include": ["src/**/*", "../Shared/**/*.ts"]
 }
