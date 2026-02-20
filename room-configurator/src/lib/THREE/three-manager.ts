@@ -1,152 +1,39 @@
 import * as three from "three";
-import Stats from "stats.js";
 
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { type GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import {
+    GLTFLoader,
+    type GLTF,
+} from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
+import { ThreeCanvas } from "@/../Shared/three-canvas";
 import { ThreeRaycaster } from "./three-raycaster";
 
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+type TextureCache = {
+    textureMap?: three.Texture;
+    normalMap?: three.Texture;
+    armMap?: three.Texture;
+};
 
-type Dimensions = {
-    width: number;
-    height: number;
+type TextureEntry = {
+    texture: string;
+    normal?: string;
+    arm?: string;
+    hasCached: boolean;
+    loadedMaps: TextureCache;
 };
 
 type TextureMap = {
-    [key: string]: {
-        texture: three.Texture;
-        normal?: three.Texture;
-        arm?: three.Texture;
-    };
+    [key: string]: TextureEntry;
 };
 
-class Sizes {
-    fullscreenSizeMax = 0.65;
-    width: number = 0;
-    height = window.innerHeight;
-
-    constructor() {
-        this.width = this.getWidth();
-    }
-
-    private getWidth(): number {
-        const isMobile = window.innerWidth <= 768;
-
-        return isMobile
-            ? window.innerWidth
-            : window.innerWidth * this.fullscreenSizeMax;
-    }
-
-    public resize() {
-        this.width = this.getWidth();
-        this.height = window.innerHeight;
-    }
-}
-
-class ThreeCamera {
-    camera: three.PerspectiveCamera;
-    sizes: Dimensions;
-
-    constructor(sizes: Sizes) {
-        this.sizes = sizes;
-        this.camera = new three.PerspectiveCamera(
-            75,
-            this.sizes.width / this.sizes.height,
-            0.1,
-            100,
-        );
-        this.camera.position.set(0, 7, 10);
-    }
-
-    public resize() {
-        this.camera.aspect = this.sizes.width / this.sizes.height;
-        this.camera.updateProjectionMatrix();
-    }
-}
-
-class ThreeRenderer {
-    renderer: three.WebGLRenderer;
-    sizes: Dimensions;
-
-    constructor(canvas: HTMLCanvasElement, sizes: Sizes) {
-        this.renderer = new three.WebGLRenderer({
-            canvas,
-            // alpha: true,
-        });
-        this.sizes = sizes;
-        this.renderer.setSize(this.sizes.width, this.sizes.height);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    }
-
-    public resize() {
-        this.renderer?.setSize(this.sizes.width, this.sizes.height);
-        this.renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    }
-}
-
-class ThreeControls {
-    controls: OrbitControls;
-
-    constructor(camera: three.PerspectiveCamera, canvas: HTMLCanvasElement) {
-        this.controls = new OrbitControls(camera, canvas);
-        this.controls.enableDamping = true;
-    }
-}
-
-class ThreeLighting {
-    ambientLight = new three.AmbientLight("#FFDBBB", 2.1);
-    directionalLight = new three.DirectionalLight("#ffffff", 2);
-    scene: three.Scene;
-    renderer: three.WebGLRenderer;
-    directionalLighthelper: three.DirectionalLightHelper | null = null;
-    shadowHelper: three.CameraHelper | null = null;
-
-    constructor({
-        scene,
-        renderer,
-        initShadow = false,
-    }: {
-        scene: three.Scene;
-        renderer: three.WebGLRenderer;
-        initShadow?: boolean;
-    }) {
-        this.scene = scene;
-        this.renderer = renderer;
-        this.directionalLight.position.set(-10, 10, -10);
-        if (initShadow) {
-            this.initShadow();
-        }
-    }
-
-    initShadow = (): void => {
-        this.directionalLight.castShadow = true;
-        this.directionalLight.shadow.mapSize.set(1024, 1024);
-        this.directionalLight.shadow.camera.far = 40;
-        this.directionalLight.shadow.camera.left = -10;
-        this.directionalLight.shadow.camera.top = 10;
-        this.directionalLight.shadow.camera.right = 10;
-        this.directionalLight.shadow.camera.bottom = -10;
-
-        this.directionalLight.shadow.camera.updateProjectionMatrix();
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = three.PCFSoftShadowMap;
-
-        this.directionalLighthelper = new three.DirectionalLightHelper(
-            this.directionalLight,
-        );
-        this.shadowHelper = new three.CameraHelper(
-            this.directionalLight.shadow.camera,
-        );
-        this.directionalLighthelper.update();
-        this.shadowHelper.update();
-        this.scene.add(this.directionalLighthelper);
-        this.scene.add(this.shadowHelper);
-    };
-}
+const createTextureEntry = (
+    data: Partial<TextureEntry> & { texture: string },
+): TextureEntry => ({
+    hasCached: false,
+    loadedMaps: {},
+    ...data,
+});
 
 class ThreeModelLoader {
     gltfLoader: GLTFLoader = new GLTFLoader();
@@ -180,19 +67,9 @@ class ThreeModelLoader {
     }
 }
 
-export class ThreeCanvas {
-    cursor = { x: 0, y: 0 };
-    sizes: Sizes;
-    threeCamera: ThreeCamera;
-    controls: OrbitControls;
-    threeRenderer: ThreeRenderer;
-    lighting: ThreeLighting;
+export class ThreeCanvasLocal extends ThreeCanvas {
     modelLoader: ThreeModelLoader;
-    threeRaycaster: ThreeRaycaster;
-
-    scene = new three.Scene();
-    textureLoader = new three.TextureLoader();
-    clock = new three.Clock();
+    threeRaycasterLocal: ThreeRaycaster;
 
     textureMaps: TextureMap = {};
     renderCallbacks: Array<() => void> = [];
@@ -204,26 +81,24 @@ export class ThreeCanvas {
         canvas: HTMLCanvasElement;
         initShadow: boolean;
     }) {
-        this.sizes = new Sizes();
-        this.threeCamera = new ThreeCamera(this.sizes);
-        this.controls = new ThreeControls(
-            this.threeCamera.camera,
+        super({
             canvas,
-        ).controls;
-        this.threeRenderer = new ThreeRenderer(canvas, this.sizes);
-        this.lighting = new ThreeLighting({
-            scene: this.scene,
-            renderer: this.threeRenderer.renderer,
             initShadow,
         });
+
+        this.threeCamera.camera.position.set(0, 7, 10);
         this.modelLoader = new ThreeModelLoader();
-        this.threeRaycaster = new ThreeRaycaster({
+        this.threeRaycasterLocal = new ThreeRaycaster({
             canvas,
             camera: this.threeCamera.camera,
             scene: this.scene,
             controls: this.controls,
             renderer: this.threeRenderer.renderer,
         });
+        this.lighting.ambientLight.color.set("#FFDBBB");
+        this.lighting.directionalLight.color.set("#ffffff");
+
+        this.resizeCameraAndRenderer(canvas);
 
         this.initTextureMap();
 
@@ -233,125 +108,132 @@ export class ThreeCanvas {
             this.threeCamera.camera,
         );
 
-        // Add event listeners (important for functionality)
-        window.addEventListener("resize", this.resizeCanvas(canvas));
+        window.addEventListener("resize", () =>
+            this.resizeCameraAndRenderer(canvas),
+        );
         window.addEventListener("scroll", this.handleScroll);
-
-        this.animationTick();
     }
 
     private initTextureMap(): void {
         this.textureMaps = {
-            "beige-wall": {
-                texture: this.textureLoader.load(
-                    "textures/beige_wall/beige_wall_001_diff_1k.webp",
-                ),
-            },
-            "plaster-wall": {
-                texture: this.textureLoader.load(
+            "beige-wall": createTextureEntry({
+                texture: "textures/beige_wall/beige_wall_001_diff_1k.webp",
+            }),
+            "plaster-wall": createTextureEntry({
+                texture:
                     "textures/plaster_wall/painted_plaster_wall_diff_1k.webp",
-                ),
-            },
-            "rosewood-floor": {
-                texture: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "textures/rosewood/rosewood_veneer1_arm_1k.webp",
-                ),
-            },
-            "laminate-floor": {
-                texture: this.textureLoader.load(
+            }),
+            "rosewood-floor": createTextureEntry({
+                texture: "textures/rosewood/rosewood_veneer1_diff_1k.webp",
+                normal: "textures/rosewood/rosewood_veneer1_nor_gl_1k.webp",
+                arm: "textures/rosewood/rosewood_veneer1_arm_1k.webp",
+            }),
+            "laminate-floor": createTextureEntry({
+                texture:
                     "/textures/laminate_floor/laminate_floor_02_diff_2k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/laminate_floor/laminate_floor_02_arm_1k.webp",
-                ),
-            },
-            "wood-floor": {
-                texture: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_nor_dx_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/wood_floor/wood_floor_arm_1k.webp",
-                ),
-            },
-            "granite-tile": {
-                texture: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_diff_1k.webp",
-                ),
-                normal: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_nor_dx_1k.webp",
-                ),
-                arm: this.textureLoader.load(
-                    "/textures/granite_tile/granite_tile_arm_1k.webp",
-                ),
-            },
+                normal: "/textures/laminate_floor/laminate_floor_02_nor_gl_1k.webp",
+                arm: "/textures/laminate_floor/laminate_floor_02_arm_1k.webp",
+            }),
+            "wood-floor": createTextureEntry({
+                texture: "/textures/wood_floor/wood_floor_diff_1k.webp",
+                normal: "/textures/wood_floor/wood_floor_nor_dx_1k.webp",
+                arm: "/textures/wood_floor/wood_floor_arm_1k.webp",
+            }),
+            "granite-tile": createTextureEntry({
+                texture: "/textures/granite_tile/granite_tile_diff_1k.webp",
+                normal: "/textures/granite_tile/granite_tile_nor_dx_1k.webp",
+                arm: "/textures/granite_tile/granite_tile_arm_1k.webp",
+            }),
         };
-
-        for (const map in this.textureMaps) {
-            const { texture } = this.textureMaps[map];
-            texture.colorSpace = three.SRGBColorSpace;
-            texture.wrapS = three.RepeatWrapping;
-            texture.wrapT = three.RepeatWrapping;
-            texture.repeat.set(4, 4);
-        }
     }
+
+    public normalizeTextureMap(texture: three.Texture): void {
+        texture.colorSpace = three.SRGBColorSpace;
+        texture.wrapS = three.RepeatWrapping;
+        texture.wrapT = three.RepeatWrapping;
+        texture.repeat.set(4, 4);
+    }
+
+    public loadTexture = async (key: string): Promise<TextureCache> => {
+        const entry = this.textureMaps[key];
+
+        if (entry.hasCached) {
+            return entry.loadedMaps;
+        }
+
+        const loader = this.textureLoader;
+
+        const [textureMap, normalMap, armMap] = await Promise.all([
+            loader.loadAsync(entry.texture),
+            entry.normal
+                ? loader.loadAsync(entry.normal)
+                : Promise.resolve(undefined),
+            entry.arm
+                ? loader.loadAsync(entry.arm)
+                : Promise.resolve(undefined),
+        ]);
+
+        this.normalizeTextureMap(textureMap);
+        entry.loadedMaps = { textureMap, normalMap, armMap };
+        entry.hasCached = true;
+
+        return entry.loadedMaps;
+    };
 
     /**
      * Event Actions
      */
-    public resizeCanvas =
+    public resizeCanvasLocal =
         (canvas: HTMLCanvasElement): (() => void) =>
         () => {
-            // Update sizes
-            this.sizes.resize();
-            // Update camera
-            this.threeCamera.resize();
-            // Update renderer
-            this.threeRenderer.resize();
+            this.resizeCanvas();
 
-            this.threeRaycaster.collisionManager.setNewCanvasBounds(canvas);
+            this.threeRaycasterLocal.collisionManager.setNewCanvasBounds(
+                canvas,
+            );
         };
 
-    public handleScroll = (): void => {
-        scrollY = window.scrollY;
-    };
+    private updateCanvasSize(canvas: HTMLCanvasElement) {
+        const fullscreenSizeMax = 0.65;
+        const isMobile = window.innerWidth <= 768;
 
-    /**
-     * Animate
-     */
-    public animationTick = (): void => {
-        stats.begin();
+        const width = isMobile
+            ? window.innerWidth
+            : window.innerWidth * fullscreenSizeMax;
+        const height = window.innerHeight;
 
-        // Update controls
-        this.controls.update();
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
 
-        this.renderCallbacks.forEach((callback) => callback());
+        this.threeRaycasterLocal.collisionManager.setNewCanvasBounds(canvas);
 
-        // Render
-        this.threeRaycaster.animate();
-        stats.end();
-        // Call tick again on the next frame
-        window.requestAnimationFrame(this.animationTick);
-    };
-
-    public addRenderCallback(callback: () => void) {
-        this.renderCallbacks.push(callback);
+        return { width, height };
     }
 
-    public dispose = (): void => {
-        window.removeEventListener("scroll", this.handleScroll);
-        this.controls.dispose();
-        this.threeRenderer.renderer.dispose();
-    };
+    private resizeCameraAndRenderer(canvas: HTMLCanvasElement) {
+        const { width, height } = this.updateCanvasSize(canvas);
+
+        // Update camera
+        this.threeCamera.camera.aspect = width / height;
+        this.threeCamera.camera.updateProjectionMatrix();
+
+        // Update renderer
+        this.threeRenderer.renderer.setSize(width, height, false);
+        this.threeRenderer.renderer.setPixelRatio(
+            Math.min(window.devicePixelRatio, 2),
+        );
+    }
+
+    /**
+     * Overrides standard renderer, using raycaster's composer
+     */
+    protected override renderFrame(): void {
+        if (this.threeRaycasterLocal) {
+            this.threeRaycasterLocal.animate();
+        } else {
+            super.renderFrame();
+        }
+    }
 }

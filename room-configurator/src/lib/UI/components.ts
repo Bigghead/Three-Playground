@@ -36,6 +36,7 @@ export const TextureCard = (
     childTextureImage.dataset.textureMap = texture.map;
     childTextureImage.className = "texture-img";
     childTextureImage.classList.toggle("active", isActive);
+    childTextureImage.loading = "lazy";
 
     container.appendChild(childTextureName);
     container.appendChild(childTextureImage);
