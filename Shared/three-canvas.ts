@@ -178,7 +178,7 @@ export class ThreeCanvas {
     textureLoader = new three.TextureLoader();
     clock = new three.Clock();
 
-    animationCallbacks: Array<(time: number) => void> = [];
+    animationCallbacks: Map<string, (time: number) => void> = new Map();
 
     constructor({
         canvas,
@@ -257,8 +257,15 @@ export class ThreeCanvas {
         window.requestAnimationFrame(this.animationTick);
     };
 
-    public addAnimationCallback(callback: (time: number) => void) {
-        this.animationCallbacks.push(callback);
+    public addAnimationCallback(
+        callbackId: string,
+        callback: (time: number) => void,
+    ): void {
+        this.animationCallbacks.set(callbackId, callback);
+    }
+
+    public removeAnimationCallback(callbackId: string): void {
+        this.animationCallbacks.delete(callbackId);
     }
 
     public dispose = (): void => {
