@@ -1,6 +1,7 @@
 import * as three from "three";
 import { gsap } from "gsap";
 import { ThreeCanvas } from "../../Shared/three-canvas";
+import { generateUUID } from "three/src/math/MathUtils.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -9,6 +10,7 @@ if (!canvas) {
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 const { cursor: mouseCursor, threeCamera, threeRaycaster, scene } = threeCanvas;
+
 threeCamera.updateCameraPosition(new three.Vector3(0, 0, 20));
 scene.background = new three.Color(0x0000ff);
 (scene.background as three.Color).lerpColors(
@@ -19,15 +21,19 @@ scene.background = new three.Color(0x0000ff);
 
 const videoSources = {
     gridVideos: [
-        "/video/tunnel.mp4",
         "/video/colorful-ball.mp4",
+        "/video/tunnel.mp4",
         "/video/infinite-squares.mp4",
-        "/video/stars.mp4",
     ],
     backgroundVideo: "/video/stars.mp4",
 };
 // ===== for looping through video projections since we dont have much ===== //
 let videoIndex = 0;
+
+const ANIMATE_ENTRY = "animate-entry";
+const ANIMATE_EXIT = "animate-exit";
+
+type AnimationType = typeof ANIMATE_ENTRY | typeof ANIMATE_EXIT;
 
 /**
  * Todo: Performance
@@ -45,11 +51,13 @@ class ProjectionMap {
         width: 0,
         height: 0,
     };
+    _projectionMapId: string; // to store and remove animation when we destory this map from canvas renderer
     _isAnimatingGsap = false;
     _defaultHidden = false;
 
     constructor(defaultHidden: boolean = false) {
         this._defaultHidden = defaultHidden;
+        this._projectionMapId = generateUUID();
     }
 
     loadVideoTexture = () =>
@@ -62,7 +70,6 @@ class ProjectionMap {
                         vids[videoIndex % vids.length],
                     );
 
-                    // Increment the static counter for the NEXT map
                     videoIndex++;
                     video.onloadedmetadata = async () => {
                         await document.fonts.ready;
@@ -285,7 +292,7 @@ class ProjectionMap {
 
     // ===== Quick maffs ===== //
     private animateCells = (): void => {
-        threeCanvas.addAnimationCallback((elapsedTime: number) => {
+        threeCanvas.addAnimationCallback(this._projectionMapId, (_: number) => {
             const lerpRadius = 3.0;
             const pullStrength = 5;
             if (!this._gridGroup.children.length || this._isAnimatingGsap)
@@ -339,7 +346,7 @@ class ProjectionMap {
     };
 
     public animateGsapCells = async (
-        animationType: "entry" | "exit",
+        animationType: AnimationType,
     ): Promise<void> => {
         const animationIntensity = 10;
         this._isAnimatingGsap = true;
@@ -363,7 +370,7 @@ class ProjectionMap {
             const startTime = index * 0.001;
 
             const endOfExit = startTime + exitDuration;
-            if (animationType === "entry") {
+            if (animationType === ANIMATE_ENTRY) {
                 // ===== re-entry from outside screen ===== //
                 tl.set(
                     cell.position,
@@ -387,7 +394,7 @@ class ProjectionMap {
                 );
             }
 
-            if (animationType === "exit") {
+            if (animationType === ANIMATE_EXIT) {
                 // ===== exit animation ===== //
                 tl.to(
                     cell.scale,
@@ -422,6 +429,38 @@ class ProjectionMap {
         await tl;
         this._isAnimatingGsap = false;
     };
+
+    destroyMap(): void {
+        threeCanvas.removeAnimationCallback(this._projectionMapId);
+
+        this._gridGroup.traverse((child) => {
+            if (child instanceof three.Mesh) {
+                child.geometry.dispose();
+
+                if (child.material.map) {
+                    child.material.map.dispose();
+                }
+                child.material.dispose();
+            }
+        });
+
+        threeCanvas.scene.remove(this._gridGroup);
+
+        if (this._gridMaterial.map) {
+            // ===== Clear the video stream cause this still runs in background ===== //
+            const video = (this._gridMaterial.map as three.VideoTexture).image;
+            if (video instanceof HTMLVideoElement) {
+                video.pause();
+                video.src = "";
+                video.load();
+                video.remove();
+            }
+            this._gridMaterial.map.dispose();
+        }
+
+        this._pixelData = new Uint8ClampedArray(0);
+        this._gridGroup = null!;
+    }
 }
 
 let currentMap = new ProjectionMap(false);
@@ -430,14 +469,15 @@ await currentMap.loadVideoTexture();
 // ===== todo: actually destroy previous map ===== //
 async function loadNextMap(): Promise<void> {
     if (currentMap) {
-        currentMap.animateGsapCells("exit");
+        await currentMap.animateGsapCells(ANIMATE_EXIT);
+        currentMap.destroyMap();
     }
 
     currentMap = new ProjectionMap(true);
     await currentMap.loadVideoTexture();
-    currentMap.animateGsapCells("entry");
+    currentMap.animateGsapCells(ANIMATE_ENTRY);
 }
 
 setInterval(async () => {
     await loadNextMap();
-}, 5000);
+}, 8000);
