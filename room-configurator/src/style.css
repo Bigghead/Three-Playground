@@ -61,6 +61,24 @@ body {
     display: none;
 }
 
+button.close {
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 0.3rem;
+    background-color: coral;
+
+    &:hover {
+        color: #fff;
+        border-color: #fff;
+    }
+}
+
+input[type="range"] {
+    width: 100%;
+    accent-color: #8affc8;
+    cursor: pointer;
+}
+
 /* ---------------- Configurator ---------------- */
 
 .configurator {
@@ -193,18 +211,6 @@ body {
         padding: 0.5rem;
     }
 
-    button.close {
-        cursor: pointer;
-        padding: 0.3rem;
-        border-radius: 0.3rem;
-        background-color: coral;
-
-        &:hover {
-            color: #fff;
-            border-color: #fff;
-        }
-    }
-
     .content-child {
         display: flex;
         flex-direction: row;
@@ -324,6 +330,14 @@ body {
     color: #ffffff;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
     margin: 1rem auto;
+
+    > div {
+        margin-bottom: 1rem;
+
+        > h4 {
+            margin-bottom: 0.5rem;
+        }
+    }
 }
 
 .config-modal-slider--container__hidden {

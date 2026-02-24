@@ -10,11 +10,17 @@
 
 ### Example Screenshots for the memes:
 
-( Work in Progress, help me with UI suggestions for this ):
-<img width="2547" height="1454" alt="image" src="https://github.com/user-attachments/assets/4f126618-de7d-46df-aba2-fde1d7c9e085" />
+( Current Work in Progress ):  
+![demo2](https://github.com/user-attachments/assets/14524efd-9520-43b4-a407-c1a80c49f9c0)
+![demo3](https://github.com/user-attachments/assets/2baf7350-9745-4235-85ad-aadce2aa1755)  
+![demo5](https://github.com/user-attachments/assets/ab1fdacb-988c-44b9-b6a6-137bd5be7970)
+
+
+
 
 
 ---
+<img width="2547" height="1454" alt="image" src="https://github.com/user-attachments/assets/4f126618-de7d-46df-aba2-fde1d7c9e085" />
 
 ![Screenshot 2025-07-07 170457](https://github.com/user-attachments/assets/9747ed93-bac4-452d-a931-32c34412b21e)
 
