@@ -18,7 +18,13 @@ scene.background = new three.Color(0x0000ff);
 );
 
 const videoSources = {
-    gridVideo: "/video/tunnel.mp4",
+    gridVideos: [
+        "/video/tunnel.mp4",
+        "/video/colorful-ball.mp4",
+        "/video/infinite-squares.mp4",
+
+        "/video/stars.mp4",
+    ],
     backgroundVideo: "/video/stars.mp4",
 };
 
@@ -39,11 +45,18 @@ class ProjectionMap {
         height: 0,
     };
     _isAnimatingGsap = false;
-    constructor() {}
+    _defaultHidden = false;
+
+    constructor(defaultHidden: boolean = false) {
+        this._defaultHidden = defaultHidden;
+        this.loadVideoTexture();
+    }
 
     loadVideoTexture = () => {
         try {
-            const video = this.createVideoElement(videoSources.gridVideo);
+            const video = this.createVideoElement(
+                videoSources.gridVideos.pop(),
+            );
             video.onloadedmetadata = async () => {
                 await document.fonts.ready;
                 this.resizeGridAspect(video);
@@ -116,8 +129,8 @@ class ProjectionMap {
 
     private getRandomUnicodeShape = (): string => {
         const unicodeShapes = ["❤", "★", "♣", "♠", "❄", "✽", "❣", "❧"];
-
-        return unicodeShapes[Math.floor(Math.random() * unicodeShapes.length)];
+        const randomIndex = Math.floor(Math.random() * unicodeShapes.length);
+        return unicodeShapes.splice(randomIndex, 1)[0];
     };
 
     /**
@@ -233,14 +246,24 @@ class ProjectionMap {
                     three.MeshBasicMaterial
                 > = new three.Mesh(geometry, this._gridMaterial);
 
-                cube.position.x = (x - (width - 1) / 2) * this._gridSpacing;
+                const defaultX = (x - (width - 1) / 2) * this._gridSpacing;
                 // Flip Y: Canvas (0 is top) vs Three.js (0 is center, positive is up)
-                cube.position.y = -(y - (height - 1) / 2) * this._gridSpacing;
-                cube.position.z = 0;
+                const defaultY = -(y - (height - 1) / 2) * this._gridSpacing;
+                const defaultZ = 0;
 
-                cube.userData.originalX = cube.position.x;
-                cube.userData.originalY = cube.position.y;
-                cube.userData.originalZ = cube.position.z;
+                cube.userData.originalX = defaultX;
+                cube.userData.originalY = defaultY;
+                cube.userData.originalZ = defaultZ;
+
+                if (this._defaultHidden) {
+                    // Start scattered and invisible outside screen
+                    cube.position.x = defaultX * 20;
+                    cube.position.y = defaultY * 20;
+                    cube.position.z = defaultZ + 50;
+                    cube.scale.set(0, 0, 0);
+                } else {
+                    cube.position.set(defaultX, defaultY, defaultZ);
+                }
 
                 this._gridGroup.add(cube);
             }
@@ -297,16 +320,16 @@ class ProjectionMap {
 
     private renderGrid = (): void => {
         this.animateCells();
-
         // ===== center origin point in middle of canvas ===== //
-        const box = new three.Box3().setFromObject(this._gridGroup);
-        const center = new three.Vector3();
-        box.getCenter(center);
-        this._gridGroup.position.sub(center);
+        this._gridGroup.position.x = 0;
+        this._gridGroup.position.y = 0;
+
         threeCanvas.scene.add(this._gridGroup);
     };
 
-    public animageGsapCells = async (): Promise<void> => {
+    public animateGsapCells = async (
+        animationType: "entry" | "exit",
+    ): Promise<void> => {
         const animationIntensity = 10;
         this._isAnimatingGsap = true;
 
@@ -329,37 +352,14 @@ class ProjectionMap {
             const startTime = index * 0.001;
 
             const endOfExit = startTime + exitDuration;
-
-            // ===== exit animation ===== //
-            tl.to(
-                cell.scale,
-                {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    duration: exitDuration,
-                    ease: "power3.inOut",
-                },
-                startTime,
-            ).to(
-                cell.position,
-                {
-                    x: newTargetX,
-                    y: newTargetY,
-                    z: 10,
-                    duration: exitDuration,
-                },
-                startTime,
-            );
-
-            // ===== move cells asap to outside screen ===== //
-            tl.set(
-                cell.position,
-                { x: originalX * 20, y: originalY * 20, z: 30 },
-                endOfExit,
-            )
+            if (animationType === "entry") {
                 // ===== re-entry from outside screen ===== //
-                .to(
+                tl.set(
+                    cell.position,
+                    { x: originalX * 20, y: originalY * 20, z: 30 },
+                    endOfExit,
+                );
+                tl.to(
                     cell.position,
                     {
                         x: originalX,
@@ -369,25 +369,61 @@ class ProjectionMap {
                         ease: "power2.out",
                     },
                     endOfExit,
-                )
-                .to(cell.scale, { x: 1, y: 1, z: 1, duration: 1.5 }, endOfExit);
+                ).to(
+                    cell.scale,
+                    { x: 1, y: 1, z: 1, duration: 1.5 },
+                    endOfExit,
+                );
+            }
+
+            if (animationType === "exit") {
+                // ===== exit animation ===== //
+                tl.to(
+                    cell.scale,
+                    {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        duration: exitDuration,
+                        ease: "power3.inOut",
+                    },
+                    startTime,
+                ).to(
+                    cell.position,
+                    {
+                        x: newTargetX,
+                        y: newTargetY,
+                        z: 10,
+                        duration: exitDuration,
+                    },
+                    startTime,
+                );
+
+                // ===== move cells asap to outside screen ===== //
+                tl.set(
+                    cell.position,
+                    { x: originalX * 20, y: originalY * 20, z: 30 },
+                    endOfExit,
+                );
+            }
         });
 
         await tl;
-        tl.revert();
         this._isAnimatingGsap = false;
     };
 }
 
-const projectionMap = new ProjectionMap();
-projectionMap.loadVideoTexture();
+const maps = [
+    new ProjectionMap(false),
+    new ProjectionMap(true),
+    new ProjectionMap(true),
+    new ProjectionMap(true),
+];
 
-// setInterval(() => {
-//     projectionMap.animageGsapCells();
-// }, 5000);
-// ===== still undecided if we want canvas background ===== //
-// const backgroundVideo = projectionMap.createVideoElement(
-//     videoSources.backgroundVideo,
-// );
-// const backgroundTexture = projectionMap.createVideoTexture(backgroundVideo);
-// scene.background = backgroundTexture;
+let currentIndex = 0;
+
+setInterval(() => {
+    maps[currentIndex].animateGsapCells("exit");
+    currentIndex = (currentIndex + 1) % maps.length;
+    maps[currentIndex].animateGsapCells("entry");
+}, 10000);
