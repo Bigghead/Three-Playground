@@ -22,11 +22,12 @@ const videoSources = {
         "/video/tunnel.mp4",
         "/video/colorful-ball.mp4",
         "/video/infinite-squares.mp4",
-
         "/video/stars.mp4",
     ],
     backgroundVideo: "/video/stars.mp4",
 };
+// ===== for looping through video projections since we dont have much ===== //
+let videoIndex = 0;
 
 /**
  * Todo: Performance
@@ -49,35 +50,46 @@ class ProjectionMap {
 
     constructor(defaultHidden: boolean = false) {
         this._defaultHidden = defaultHidden;
-        this.loadVideoTexture();
     }
 
-    loadVideoTexture = () => {
-        try {
-            const video = this.createVideoElement(
-                videoSources.gridVideos.pop(),
-            );
-            video.onloadedmetadata = async () => {
-                await document.fonts.ready;
-                this.resizeGridAspect(video);
+    loadVideoTexture = () =>
+        new Promise<void>((resolve, reject) => {
+            {
+                try {
+                    const vids = videoSources.gridVideos;
 
-                /**
-                 * kinda need this to avoid a "pause" / lag spike on first load
-                 * since onloadedmetadata does heavy video computation stuff, alongside our grid rendering stuff
-                 */
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        this.createVideoMap();
-                        this.createGrid();
-                    }, 100);
-                });
-            };
-            const videoTexture = this.createVideoTexture(video);
-            this._gridMaterial.map = videoTexture;
-        } catch (e) {
-            console.error(`Error in loading video texture. Error: ${e}`);
-        }
-    };
+                    const video = this.createVideoElement(
+                        vids[videoIndex % vids.length],
+                    );
+
+                    // Increment the static counter for the NEXT map
+                    videoIndex++;
+                    video.onloadedmetadata = async () => {
+                        await document.fonts.ready;
+                        this.resizeGridAspect(video);
+
+                        /**
+                         * kinda need this to avoid a "pause" / lag spike on first load
+                         * since onloadedmetadata does heavy video computation stuff, alongside our grid rendering stuff
+                         */
+                        requestAnimationFrame(() => {
+                            setTimeout(() => {
+                                this.createVideoMap();
+                                this.createGrid();
+                                resolve();
+                            }, 100);
+                        });
+                    };
+                    const videoTexture = this.createVideoTexture(video);
+                    this._gridMaterial.map = videoTexture;
+                } catch (e) {
+                    console.error(
+                        `Error in loading video texture. Error: ${e}`,
+                    );
+                    reject(e);
+                }
+            }
+        });
 
     createVideoElement = (videoSource: string): HTMLVideoElement => {
         const video = document.createElement("video");
@@ -129,8 +141,7 @@ class ProjectionMap {
 
     private getRandomUnicodeShape = (): string => {
         const unicodeShapes = ["❤", "★", "♣", "♠", "❄", "✽", "❣", "❧"];
-        const randomIndex = Math.floor(Math.random() * unicodeShapes.length);
-        return unicodeShapes.splice(randomIndex, 1)[0];
+        return unicodeShapes[Math.floor(Math.random() * unicodeShapes.length)];
     };
 
     /**
@@ -413,17 +424,20 @@ class ProjectionMap {
     };
 }
 
-const maps = [
-    new ProjectionMap(false),
-    new ProjectionMap(true),
-    new ProjectionMap(true),
-    new ProjectionMap(true),
-];
+let currentMap = new ProjectionMap(false);
+await currentMap.loadVideoTexture();
 
-let currentIndex = 0;
+// ===== todo: actually destroy previous map ===== //
+async function loadNextMap(): Promise<void> {
+    if (currentMap) {
+        currentMap.animateGsapCells("exit");
+    }
 
-setInterval(() => {
-    maps[currentIndex].animateGsapCells("exit");
-    currentIndex = (currentIndex + 1) % maps.length;
-    maps[currentIndex].animateGsapCells("entry");
-}, 10000);
+    currentMap = new ProjectionMap(true);
+    await currentMap.loadVideoTexture();
+    currentMap.animateGsapCells("entry");
+}
+
+setInterval(async () => {
+    await loadNextMap();
+}, 5000);
