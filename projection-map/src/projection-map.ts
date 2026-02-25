@@ -1,12 +1,7 @@
 import * as three from "three";
 import { gsap } from "gsap";
 import { generateUUID } from "three/src/math/MathUtils.js";
-import {
-    ANIMATE_ENTRY,
-    ANIMATE_EXIT,
-    videoSources,
-    type AnimationType,
-} from "./constants";
+import { ANIMATE_ENTRY, ANIMATE_EXIT, type AnimationType } from "./constants";
 import type { ThreeCanvas } from "../../Shared/three-canvas";
 
 /**
@@ -28,50 +23,45 @@ export class ProjectionMap {
     };
     _projectionMapId: string; // to store and remove animation when we destory this map from canvas renderer
     _isAnimatingGsap = false;
-    _videoIndex = 0;
+    _videoSource: HTMLVideoElement;
     _defaultHidden = false;
 
     constructor({
         threeCanvas,
-        videoIndex,
+        videoSource,
         defaultHidden = false,
     }: {
         threeCanvas: ThreeCanvas;
-        videoIndex: number;
+        videoSource: HTMLVideoElement;
         defaultHidden: boolean;
     }) {
         this._threeCanvas = threeCanvas;
-        this._videoIndex = videoIndex;
+        this._videoSource = videoSource;
         this._defaultHidden = defaultHidden;
         this._projectionMapId = generateUUID();
     }
 
     loadVideoTexture = () =>
-        new Promise<void>((resolve, reject) => {
+        new Promise<void>(async (resolve, reject) => {
             {
                 try {
-                    const vids = videoSources.gridVideos;
+                    const video = this.playVideoElement(this._videoSource);
 
-                    const video = this.createVideoElement(
-                        vids[this._videoIndex % vids.length],
-                    );
+                    await document.fonts.ready;
+                    this.resizeGridAspect(video);
 
-                    video.onloadedmetadata = async () => {
-                        await document.fonts.ready;
-                        this.resizeGridAspect(video);
+                    /**
+                     * kinda need this to avoid a "pause" / lag spike on first load
+                     * since onloadedmetadata does heavy video computation stuff, alongside our grid rendering stuff
+                     */
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            this.createVideoMap();
+                            this.createGrid();
+                            resolve();
+                        }, 100);
+                    });
 
-                        /**
-                         * kinda need this to avoid a "pause" / lag spike on first load
-                         * since onloadedmetadata does heavy video computation stuff, alongside our grid rendering stuff
-                         */
-                        requestAnimationFrame(() => {
-                            setTimeout(() => {
-                                this.createVideoMap();
-                                this.createGrid();
-                                resolve();
-                            }, 100);
-                        });
-                    };
                     const videoTexture = this.createVideoTexture(video);
                     this._gridMaterial.map = videoTexture;
                 } catch (e) {
@@ -83,13 +73,7 @@ export class ProjectionMap {
             }
         });
 
-    createVideoElement = (videoSource: string): HTMLVideoElement => {
-        const video = document.createElement("video");
-        video.src = videoSource;
-        video.crossOrigin = "anonymous";
-        video.loop = true;
-        video.muted = true;
-        video.playbackRate = 0.75;
+    playVideoElement = (video: HTMLVideoElement): HTMLVideoElement => {
         video.addEventListener(
             "canplaythrough",
             () => {
@@ -343,7 +327,6 @@ export class ProjectionMap {
         this._isAnimatingGsap = true;
 
         const tl = gsap.timeline({
-            delay: 0.5 * 0.25,
             defaults: { ease: "power1.out", duration: 2 },
         });
 
@@ -357,17 +340,16 @@ export class ProjectionMap {
             const newTargetY =
                 originalY + Math.cos(angleToFly) * -animationIntensity;
 
-            const exitDuration = 1;
-            const startTime = index * 0.001;
+            const exitDuration = 2;
+            const startTime = index * 0.0000001;
 
-            const endOfExit = startTime + exitDuration;
             if (animationType === ANIMATE_ENTRY) {
                 // ===== re-entry from outside screen ===== //
-                tl.set(
-                    cell.position,
-                    { x: originalX * 20, y: originalY * 20, z: 30 },
-                    endOfExit,
-                );
+                tl.set(cell.position, {
+                    x: originalX * 20,
+                    y: originalY * 20,
+                    z: 30,
+                });
                 tl.to(
                     cell.position,
                     {
@@ -377,11 +359,11 @@ export class ProjectionMap {
                         duration: 1.5,
                         ease: "power2.out",
                     },
-                    endOfExit,
+                    startTime,
                 ).to(
                     cell.scale,
                     { x: 1, y: 1, z: 1, duration: 1.5 },
-                    endOfExit,
+                    startTime,
                 );
             }
 
@@ -412,7 +394,7 @@ export class ProjectionMap {
                 tl.set(
                     cell.position,
                     { x: originalX * 20, y: originalY * 20, z: 30 },
-                    endOfExit,
+                    startTime,
                 );
             }
         });
@@ -442,9 +424,7 @@ export class ProjectionMap {
             const video = (this._gridMaterial.map as three.VideoTexture).image;
             if (video instanceof HTMLVideoElement) {
                 video.pause();
-                video.src = "";
                 video.load();
-                video.remove();
             }
             this._gridMaterial.map.dispose();
         }

@@ -52,9 +52,10 @@ async function loadNextMap(): Promise<void> {
         currentMap.destroyMap();
     }
 
+    const nextIndex = videoIndex % videoCache.length;
     currentMap = new ProjectionMap({
         threeCanvas,
-        videoSource: videoCache[videoIndex % videoCache.length],
+        videoSource: videoCache[nextIndex],
         defaultHidden: true,
     });
 
