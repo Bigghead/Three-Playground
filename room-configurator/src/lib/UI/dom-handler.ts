@@ -2,8 +2,7 @@ import { createWall, editRoomDimensions, renderModel } from "../../canvas";
 import {
     DomEl,
     FLOOR_TEXTURE,
-    ROOM_CONFIG_ACTION_ADD,
-    ROOM_CONFIG_ACTION_SUBTRACT,
+    INCREMENT,
     ROOM_SIZE,
     WALL_DIVIDER,
 } from "../constants";
@@ -119,11 +118,11 @@ export class DomHandler {
             // ===== preload asset on hover ===== //
             div.addEventListener(
                 "mouseenter",
-                this.loadBackgroundModel(modelType, modelKey)
+                this.loadBackgroundModel(modelType, modelKey),
             );
             div.addEventListener(
                 "click",
-                this.handleModelImageClick(modelType, modelKey)
+                this.handleModelImageClick(modelType, modelKey),
             );
 
             DomEl.configuratorContent.append(div);
@@ -162,7 +161,7 @@ export class DomHandler {
         activeMenu?.classList.remove("active");
     };
 
-    handleMenuClick = (e: PointerEvent): void => {
+    handleMenuClick = (e: MouseEvent): void => {
         e.stopPropagation();
 
         const target = e.target as HTMLElement;
@@ -172,7 +171,7 @@ export class DomHandler {
 
         if (content) {
             this.removeCurrentlyActiveElement(
-                ".configurator-sidebar > .menu.active"
+                ".configurator-sidebar > .menu.active",
             );
             this.renderModelImages(content as ModelType);
             target.classList.add("active");
@@ -212,14 +211,13 @@ export class DomHandler {
 
     handleEditRoomAction = (
         targetElement: HTMLElement,
-        containerElement: HTMLElement
+        containerElement: HTMLElement,
     ): void => {
-        const btnAction = targetElement.classList.contains("add-btn")
-            ? ROOM_CONFIG_ACTION_ADD
-            : ROOM_CONFIG_ACTION_SUBTRACT;
+        const btnAction =
+            targetElement.classList.contains("add-btn") && INCREMENT;
 
         const valueEl = containerElement.querySelector(".value") as HTMLElement;
-        const value = parseFloat(valueEl.textContent);
+        const value = parseFloat(valueEl.textContent ?? "0");
 
         const {
             dimension: dimensionToChange,
@@ -228,7 +226,7 @@ export class DomHandler {
             changeMax = "20",
         } = containerElement.dataset;
 
-        const isAdding = btnAction === ROOM_CONFIG_ACTION_ADD;
+        const isAdding = btnAction === INCREMENT;
         const step = parseFloat(changeStep);
         const min = parseFloat(changeMin);
         const max = parseFloat(changeMax);

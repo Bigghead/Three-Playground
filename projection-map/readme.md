@@ -1,6 +1,6 @@
 # Demo at - WIP
 
-![alt text](demo4.gif)
+![alt text](demo4.gif) ![alt text](demo5.gif)
 
 ## Features / What We've Learned
 
