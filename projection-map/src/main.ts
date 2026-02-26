@@ -22,6 +22,7 @@ scene.background = new three.Color(0x0000ff);
 // ===== global for looping through video projections since we dont have much ===== //
 let videoIndex = 0;
 const videoCache: HTMLVideoElement[] = [];
+let isCurrentlyAnimating = false;
 
 const preloadVideos = (sources: string[]) => {
     sources.forEach((src) => {
@@ -47,6 +48,7 @@ videoIndex++;
 
 // ===== todo: actually destroy previous map ===== //
 async function loadNextMap(): Promise<void> {
+    isCurrentlyAnimating = true;
     if (currentMap) {
         await currentMap.animateGsapCells(ANIMATE_EXIT);
         currentMap.destroyMap();
@@ -61,13 +63,15 @@ async function loadNextMap(): Promise<void> {
 
     await currentMap.loadVideoTexture();
     videoIndex++;
-    currentMap.animateGsapCells(ANIMATE_ENTRY);
+    await currentMap.animateGsapCells(ANIMATE_ENTRY);
+    isCurrentlyAnimating = false;
 }
 
 const animateButton = document.querySelector(
     "#animation-btn-container > button",
 );
 animateButton?.addEventListener("click", async () => {
+    if (isCurrentlyAnimating) return;
     try {
         const nextVideo = videoCache[videoIndex % videoCache.length];
 
