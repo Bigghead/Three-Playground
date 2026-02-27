@@ -1,8 +1,8 @@
 import * as three from "three";
-import { ThreeCanvas } from "./canvas";
-
+import { ThreeCanvas } from "@/../Shared/three-canvas";
 import vertexShader from "./shaders/vertex.glsl";
 import fragmentShader from "./shaders/fragment.glsl";
+import { generateUUID } from "three/src/math/MathUtils.js";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -13,11 +13,10 @@ const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
 const { scene, textureLoader } = threeCanvas;
 
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
-console.log(butterflyTexture);
 
 const butterflyGeo = new three.PlaneGeometry(1, 1, 16, 16);
 const butterflyMaterial = new three.ShaderMaterial({
-    // wireframe: true,
+    wireframe: true,
     side: three.DoubleSide,
     transparent: true,
     depthWrite: false,
@@ -89,7 +88,7 @@ for (let i = 0; i < 1; i++) {
     butterflies.push(b);
 }
 
-threeCanvas.addAnimationCallback((elapsedTime) => {
+threeCanvas.addAnimationCallback(generateUUID(), (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
     butterflies.forEach((b) => {
