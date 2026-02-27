@@ -32,50 +32,67 @@ const butterflyMaterial = new three.ShaderMaterial({
 });
 
 butterflyGeo.scale(3, 3, 1.5);
-const butterfly = new three.Mesh(butterflyGeo, butterflyMaterial);
-butterfly.rotation.x = -Math.PI / 2;
-butterfly.rotation.set(
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2
-);
 
-scene.add(butterfly);
+class ButterflyBoid {
+    private _mesh: three.Mesh;
+    private _position: three.Vector3;
+    private _velocity: three.Vector3;
+    private _maxSpeed = 0.005;
 
-// ===== Testing movment with just threejs ===== //
-/**
- * This is wonky, might have to test out boids algo in js
- */
-const start = new three.Vector3(0, 0, 0);
+    constructor(
+        geometry: typeof butterflyGeo,
+        material: typeof butterflyMaterial,
+    ) {
+        this._mesh = new three.Mesh(geometry, material);
+        this._position = this._mesh.position;
+        this._velocity = new three.Vector3(
+            Math.random() - 0.5,
+            Math.random() - 0.5,
+            Math.random() - 0.5,
+        );
+        this._maxSpeed = 0.05;
+        this._position.set(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+        );
+    }
 
-const control = new three.Vector3(
-    Math.random() * 2 - 1,
-    Math.random() * 2,
-    Math.random() * 2 - 1
-);
+    public get mesh() {
+        return this._mesh;
+    }
 
-const end = new three.Vector3(
-    Math.random() * 2 + 2,
-    Math.random() * 1,
-    Math.random() * 2 - 1
-);
+    public update() {
+        // speed governor, how much butterfly moves each frame
+        this._velocity.clampLength(0, this._maxSpeed);
 
-const curve = new three.QuadraticBezierCurve3(start, control, end);
-let move = 0;
+        // this is the 1st magic, we "add" smooth position vs "set" new position
+        this._position.add(this._velocity);
+
+        // 2nd magic, tells the head to look at a direction
+        const target = this._position.clone().add(this._velocity);
+        this._mesh.lookAt(target);
+
+        /**
+         * this "flips" the mesh so its head is pointing towards velocity
+         * we set it last cause "lookAt" above resets the object rotation ( destructive action )
+         */
+        this._mesh.rotateX(Math.PI / 2);
+    }
+}
+
+const butterflies: ButterflyBoid[] = [];
+for (let i = 0; i < 1; i++) {
+    const b = new ButterflyBoid(butterflyGeo, butterflyMaterial);
+
+    scene.add(b.mesh);
+    butterflies.push(b);
+}
 
 threeCanvas.addAnimationCallback((elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
-    // todo - change the mesh position to follow a flight direction following
-    // where its head is pointing
-
-    // kinda works but wonky
-    move += 0.002;
-    if (move > 1) move = 0;
-
-    const point = curve.getPointAt(move);
-    butterfly.position.copy(point);
-
-    const tangent = curve.getTangentAt(move);
-    butterfly.lookAt(point.clone().add(tangent));
+    butterflies.forEach((b) => {
+        b.update();
+    });
 });
