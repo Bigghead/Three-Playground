@@ -10,11 +10,14 @@ if (!canvas) {
 }
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
-const { scene, textureLoader } = threeCanvas;
+const { scene, textureLoader, threeCamera } = threeCanvas;
+threeCamera.camera.position.set(0, 0, 20);
 
+/**
+ * Butterfly Setup
+ */
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
-
-const butterflyGeo = new three.PlaneGeometry(1, 1, 16, 16);
+const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
 
 const butterflyMaterial = new three.ShaderMaterial({
     side: three.DoubleSide,
@@ -31,18 +34,18 @@ const butterflyMaterial = new three.ShaderMaterial({
 });
 
 /**
- * Instanced Mesh
+ * Instanced Meshing
  */
-const instancedMeshCount = 1;
+const instancedMeshCount = 1000;
 const dummyInstance = new three.Object3D();
 const dummyTempPosition = new three.Vector3(0, 0, 0);
 
-const instanceMesh = new three.InstancedMesh(
+const instancedMesh = new three.InstancedMesh(
     butterflyGeo,
     butterflyMaterial,
     instancedMeshCount,
 );
-scene.add(instanceMesh);
+scene.add(instancedMesh);
 
 class ButterflyBoid {
     private _position: three.Vector3 = new three.Vector3(
@@ -111,8 +114,8 @@ threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
         b.update();
 
         const matrix = b.getMatrix(dummyInstance);
-        // instanceMesh.setMatrixAt(i, matrix);
+        instancedMesh.setMatrixAt(i, matrix);
     });
 
-    instanceMesh.instanceMatrix.needsUpdate = true;
+    instancedMesh.instanceMatrix.needsUpdate = true;
 });

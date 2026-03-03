@@ -11,8 +11,8 @@ void main () {
 
     float wave = sin(uTime * uFlapSpeed - (newPosition.y * 0.8));
     float influence = pow(abs(uv.x - 0.5) * 2.0, 2.0);
-    float zOffset = wave * influence * uFlapMagnitude;
-    newPosition.z += zOffset;
+    float zOffset = wave * influence * uFlapMagnitude * 0.5;
+    newPosition += normal * zOffset;
 
     vec4 modelPosition = instanceMatrix * vec4(newPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
