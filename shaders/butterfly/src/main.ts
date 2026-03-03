@@ -1,5 +1,5 @@
 import * as three from "three";
-import { ThreeCanvas } from "@/../Shared/three-canvas";
+import { ThreeCanvas } from "../../../Shared/three-canvas";
 import vertexShader from "./shaders/vertex.glsl";
 import fragmentShader from "./shaders/fragment.glsl";
 import { generateUUID } from "three/src/math/MathUtils.js";
@@ -15,8 +15,8 @@ const { scene, textureLoader } = threeCanvas;
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
 
 const butterflyGeo = new three.PlaneGeometry(1, 1, 16, 16);
+
 const butterflyMaterial = new three.ShaderMaterial({
-    wireframe: true,
     side: three.DoubleSide,
     transparent: true,
     depthWrite: false,
@@ -30,35 +30,43 @@ const butterflyMaterial = new three.ShaderMaterial({
     },
 });
 
-butterflyGeo.scale(3, 3, 1.5);
+/**
+ * Instanced Mesh
+ */
+const instancedMeshCount = 1;
+const dummyInstance = new three.Object3D();
+const dummyTempPosition = new three.Vector3(0, 0, 0);
+
+const instanceMesh = new three.InstancedMesh(
+    butterflyGeo,
+    butterflyMaterial,
+    instancedMeshCount,
+);
+scene.add(instanceMesh);
 
 class ButterflyBoid {
-    private _mesh: three.Mesh;
-    private _position: three.Vector3;
-    private _velocity: three.Vector3;
-    private _maxSpeed = 0.005;
+    private _position: three.Vector3 = new three.Vector3(
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10,
+    );
+    private _velocity: three.Vector3 = new three.Vector3(
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+    );
+    private _maxSpeed = 0.02;
 
-    constructor(
-        geometry: typeof butterflyGeo,
-        material: typeof butterflyMaterial,
-    ) {
-        this._mesh = new three.Mesh(geometry, material);
-        this._position = this._mesh.position;
-        this._velocity = new three.Vector3(
-            Math.random() - 0.5,
-            Math.random() - 0.5,
-            Math.random() - 0.5,
-        );
-        this._maxSpeed = 0.05;
-        this._position.set(
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10,
-        );
+    constructor() {
+        dummyInstance.position.copy(this._position);
     }
 
-    public get mesh() {
-        return this._mesh;
+    get position() {
+        return this._position;
+    }
+
+    get velocity() {
+        return this._velocity;
     }
 
     public update() {
@@ -67,31 +75,44 @@ class ButterflyBoid {
 
         // this is the 1st magic, we "add" smooth position vs "set" new position
         this._position.add(this._velocity);
+    }
+
+    public getMatrix(dummy: three.Object3D) {
+        dummy.position.copy(this._position);
+
+        // need to kinda redo the position update cause we're telling the "mesh" to look forward
+        // we're not moving the mesh here
+        const target = dummyTempPosition
+            .copy(this._position)
+            .add(this._velocity);
 
         // 2nd magic, tells the head to look at a direction
-        const target = this._position.clone().add(this._velocity);
-        this._mesh.lookAt(target);
+        dummy.lookAt(target);
 
         /**
          * this "flips" the mesh so its head is pointing towards velocity
          * we set it last cause "lookAt" above resets the object rotation ( destructive action )
          */
-        this._mesh.rotateX(Math.PI / 2);
+        dummy.rotateX(Math.PI / 2);
+        dummy.updateMatrix();
+        return dummy.matrix;
     }
 }
 
-const butterflies: ButterflyBoid[] = [];
-for (let i = 0; i < 1; i++) {
-    const b = new ButterflyBoid(butterflyGeo, butterflyMaterial);
+const butterflies: ButterflyBoid[] = Array.from(
+    { length: instancedMeshCount },
+    () => new ButterflyBoid(),
+);
 
-    scene.add(b.mesh);
-    butterflies.push(b);
-}
-
-threeCanvas.addAnimationCallback(generateUUID(), (elapsedTime) => {
+threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
-    butterflies.forEach((b) => {
+    butterflies.forEach((b, i) => {
         b.update();
+
+        const matrix = b.getMatrix(dummyInstance);
+        // instanceMesh.setMatrixAt(i, matrix);
     });
+
+    instanceMesh.instanceMatrix.needsUpdate = true;
 });
