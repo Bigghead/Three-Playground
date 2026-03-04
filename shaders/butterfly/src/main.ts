@@ -48,20 +48,19 @@ scene.add(instancedMesh);
 
 class ButterflyBoid {
     private _maxSpeed = 0.02;
+    private _meshBoundary = 30;
+    private _boundaryMargin = 5; // where to start slowing down from the boundary, or can hard stop at the boundary
 
     private _position: three.Vector3 = new three.Vector3(
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * this._meshBoundary,
+        (Math.random() - 0.5) * this._meshBoundary,
+        (Math.random() - 0.5) * this._meshBoundary,
     );
     private _velocity: three.Vector3 = new three.Vector3(
         Math.random() - 0.5,
         Math.random() - 0.5,
         Math.random() - 0.5,
     );
-
-    private _meshBoundary = 30;
-    private _boundaryMargin = 5; // where to start slowing down from the boundary, or can hard stop at the boundary
 
     constructor() {
         dummyInstance.position.copy(this._position);
