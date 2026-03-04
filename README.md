@@ -12,6 +12,8 @@
 
 ( Current Work in Progress ):  
 <img width="2557" height="1378" alt="Screenshot from 2026-02-26 17-58-28" src="https://github.com/user-attachments/assets/39619c0d-6a6b-4b61-bbff-e6bbe4b295d7" />
+![butterfly-demo](https://github.com/user-attachments/assets/10d323a7-570d-4e98-a7fe-7c90b3d469fd)
+
 
 ![demo2](https://github.com/user-attachments/assets/14524efd-9520-43b4-a407-c1a80c49f9c0)
 ![demo3](https://github.com/user-attachments/assets/2baf7350-9745-4235-85ad-aadce2aa1755)  
