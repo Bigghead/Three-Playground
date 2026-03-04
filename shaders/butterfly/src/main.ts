@@ -73,9 +73,22 @@ class ButterflyBoid {
     }
 
     public update() {
+        const distance = this._position.length();
+        const boundary = 20;
+        const margin = 8; // Start slowing down 5 units before the wall
+
+        if (distance > boundary - margin) {
+            const force = (distance - (boundary - margin)) / margin;
+            const pushBack = this.getRandomNewVector3(5)
+                .sub(this._position)
+                .normalize();
+
+            // 0.001 means it takes ~20 frames to fully turn around.
+            this._velocity.add(pushBack.multiplyScalar(force * 0.00015));
+        }
+
         // speed governor, how much butterfly moves each frame
         this._velocity.clampLength(0, this._maxSpeed);
-
         // this is the 1st magic, we "add" smooth position vs "set" new position
         this._position.add(this._velocity);
     }
@@ -99,6 +112,14 @@ class ButterflyBoid {
         dummy.rotateX(Math.PI / 2);
         dummy.updateMatrix();
         return dummy.matrix;
+    }
+
+    private getRandomNewVector3(multiplier: number = 5): three.Vector3 {
+        return new three.Vector3(
+            (Math.random() - 0.5) * multiplier,
+            (Math.random() - 0.5) * Math.PI,
+            (Math.random() - 0.5) * Math.PI * 2,
+        );
     }
 }
 
