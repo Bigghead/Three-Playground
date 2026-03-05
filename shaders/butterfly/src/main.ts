@@ -15,8 +15,21 @@ threeCamera.camera.position.set(0, 0, 20);
 /**
  * Butterfly Setup
  */
+const instancedMeshCount = 1000;
+
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
 const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
+
+// for having the diff "meshes" have different flapping timing
+const offsets = new Float32Array(instancedMeshCount);
+for (let i = 0; i < instancedMeshCount; i++) {
+    offsets[i] = Math.random() * Math.PI * 2;
+}
+
+butterflyGeo.setAttribute(
+    "instanceOffset",
+    new three.InstancedBufferAttribute(offsets, 1),
+);
 
 const butterflyMaterial = new three.ShaderMaterial({
     side: three.DoubleSide,
@@ -35,7 +48,6 @@ const butterflyMaterial = new three.ShaderMaterial({
 /**
  * Instanced Meshing
  */
-const instancedMeshCount = 5000;
 const dummyInstance = new three.Object3D();
 const dummyTempPosition = new three.Vector3(0, 0, 0);
 

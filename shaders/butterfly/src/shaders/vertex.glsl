@@ -1,3 +1,5 @@
+attribute float instanceOffset;
+
 varying vec2 vUv;
 
 uniform float uTime;
@@ -9,7 +11,7 @@ void main () {
 
     vec3 newPosition = position;
 
-    float wave = sin(uTime * uFlapSpeed - (newPosition.y * 0.8));
+    float wave = sin(uTime * uFlapSpeed - (newPosition.y * 0.8) + instanceOffset);
     float influence = pow(abs(uv.x - 0.5) * 2.0, 2.0);
     float zOffset = wave * influence * uFlapMagnitude * 0.5;
     newPosition += normal * zOffset;
