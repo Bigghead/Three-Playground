@@ -1,6 +1,7 @@
 attribute float instanceOffset;
 
 varying vec2 vUv;
+varying vec3 vColor;
 
 uniform float uTime;
 uniform float uFlapSpeed;
@@ -23,4 +24,5 @@ void main () {
     gl_Position = projectedPosition;
 
     vUv = uv;
+    vColor = instanceColor;
 }

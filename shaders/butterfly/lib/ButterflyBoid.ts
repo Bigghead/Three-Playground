@@ -35,18 +35,11 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
-    public update(): void {
+    public update(butterflies: ButterflyBoid[]): void {
         const distance = this._position.length();
 
         if (distance > this._meshBoundary - this._boundaryMargin) {
-            const pushBack = this.getRandomNewVector3(15)
-                .clone()
-                .sub(this._position)
-                .normalize();
-
-            // change direction
-            // 0.001 means it takes ~20 frames to fully turn around.
-            this._velocity.add(pushBack.multiplyScalar(0.000035));
+            this.steerOff(15);
         }
 
         // speed governor, how much butterfly moves each frame
@@ -77,11 +70,30 @@ export class ButterflyBoid {
         return dummy.matrix;
     }
 
+    closeToNeighbor(butterflies: ButterflyBoid[]) {
+        return butterflies.some((boid) => {
+            // skip checking its own position
+            if (boid === this) return false;
+            return boid.position.distanceTo(this._position) < 2;
+        });
+    }
+
     private getRandomNewVector3(multiplier: number = 5): three.Vector3 {
         return new three.Vector3(
             (Math.random() - 0.5) * multiplier,
             (Math.random() - 0.5) * multiplier,
             (Math.random() - 0.5) * multiplier,
         );
+    }
+
+    private steerOff(multiplier: number = 5) {
+        const pushBack = this.getRandomNewVector3(multiplier)
+            .clone()
+            .sub(this._position)
+            .normalize();
+
+        // change direction
+        // 0.001 means it takes ~20 frames to fully turn around.
+        this._velocity.add(pushBack.multiplyScalar(0.000035));
     }
 }

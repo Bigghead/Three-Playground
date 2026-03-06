@@ -16,7 +16,7 @@ threeCamera.camera.position.set(0, 0, 20);
 /**
  * Butterfly Setup
  */
-const instancedMeshCount = 5000;
+const instancedMeshCount = 1000;
 
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
 const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
@@ -56,8 +56,13 @@ const instancedMesh = new three.InstancedMesh(
     butterflyMaterial,
     instancedMeshCount,
 );
+instancedMesh.instanceColor = new three.InstancedBufferAttribute(
+    new Float32Array(instancedMeshCount * 3),
+    3,
+);
 scene.add(instancedMesh);
 
+const tempColor = new three.Color();
 const butterflies: ButterflyBoid[] = Array.from(
     { length: instancedMeshCount },
     () => new ButterflyBoid(dummyInstance),
@@ -66,12 +71,19 @@ const butterflies: ButterflyBoid[] = Array.from(
 threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
-    butterflies.forEach((b, i) => {
-        b.update();
+    butterflies.forEach((boid, i) => {
+        boid.update(butterflies);
+        if (boid.closeToNeighbor(butterflies)) {
+            tempColor.set(0xff0000);
+        } else {
+            tempColor.set(0xffffff);
+        }
 
-        const matrix = b.getMatrix(dummyInstance);
+        const matrix = boid.getMatrix(dummyInstance);
         instancedMesh.setMatrixAt(i, matrix);
+        instancedMesh.setColorAt(i, tempColor);
     });
 
     instancedMesh.instanceMatrix.needsUpdate = true;
+    instancedMesh.instanceColor.needsUpdate = true;
 });
