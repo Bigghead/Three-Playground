@@ -14,16 +14,24 @@
 <img width="2557" height="1378" alt="Screenshot from 2026-02-26 17-58-28" src="https://github.com/user-attachments/assets/39619c0d-6a6b-4b61-bbff-e6bbe4b295d7" />
 ![butterfly-demo](https://github.com/user-attachments/assets/10d323a7-570d-4e98-a7fe-7c90b3d469fd)
 
+( With naive neighbor checking )
+![butterfly-neighbors](https://github.com/user-attachments/assets/22233037-5fbd-4fb4-9595-6fa57f029e1d)
 
-![demo2](https://github.com/user-attachments/assets/14524efd-9520-43b4-a407-c1a80c49f9c0)
-![demo3](https://github.com/user-attachments/assets/2baf7350-9745-4235-85ad-aadce2aa1755)  
-![demo5](https://github.com/user-attachments/assets/ab1fdacb-988c-44b9-b6a6-137bd5be7970)
+
+
+
 
 
 
 
 
 ---
+
+
+![demo2](https://github.com/user-attachments/assets/14524efd-9520-43b4-a407-c1a80c49f9c0)
+![demo3](https://github.com/user-attachments/assets/2baf7350-9745-4235-85ad-aadce2aa1755)  
+![demo5](https://github.com/user-attachments/assets/ab1fdacb-988c-44b9-b6a6-137bd5be7970)
+
 <img width="2547" height="1454" alt="image" src="https://github.com/user-attachments/assets/4f126618-de7d-46df-aba2-fde1d7c9e085" />
 
 ![Screenshot 2025-07-07 170457](https://github.com/user-attachments/assets/9747ed93-bac4-452d-a931-32c34412b21e)
