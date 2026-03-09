@@ -36,10 +36,7 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
-    public update(
-        butterflies: ButterflyBoid[],
-        quadrants: QuadrantCheck,
-    ): void {
+    public update(): void {
         const distance = this._position.length();
 
         if (distance > this._meshBoundary - this._boundaryMargin) {
@@ -72,14 +69,6 @@ export class ButterflyBoid {
         dummy.rotateX(Math.PI / 2);
         dummy.updateMatrix();
         return dummy.matrix;
-    }
-
-    closeToNeighbor(butterflies: ButterflyBoid[]) {
-        return butterflies.some((boid) => {
-            // skip checking its own position
-            if (boid === this) return false;
-            return boid.position.distanceTo(this._position) < 2;
-        });
     }
 
     private getRandomNewVector3(multiplier: number = 5): three.Vector3 {
