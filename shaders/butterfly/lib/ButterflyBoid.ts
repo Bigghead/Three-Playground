@@ -1,4 +1,5 @@
 import * as three from "three";
+import type { QuadrantCheck } from "./QuadrantCheck";
 
 const dummyTempPosition = new three.Vector3(0, 0, 0);
 
@@ -35,7 +36,10 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
-    public update(butterflies: ButterflyBoid[]): void {
+    public update(
+        butterflies: ButterflyBoid[],
+        quadrants: QuadrantCheck,
+    ): void {
         const distance = this._position.length();
 
         if (distance > this._meshBoundary - this._boundaryMargin) {

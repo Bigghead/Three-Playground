@@ -2,6 +2,7 @@ import * as three from "three";
 import { ThreeCanvas } from "../../../Shared/three-canvas";
 import vertexShader from "./shaders/vertex.glsl";
 import fragmentShader from "./shaders/fragment.glsl";
+import { QuadrantCheck } from "../lib/QuadrantCheck";
 import { ButterflyBoid } from "../lib/ButterflyBoid";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -16,7 +17,7 @@ threeCamera.camera.position.set(0, 0, 20);
 /**
  * Butterfly Setup
  */
-const instancedMeshCount = 1000;
+const instancedMeshCount = 50;
 
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
 const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
@@ -62,17 +63,24 @@ instancedMesh.instanceColor = new three.InstancedBufferAttribute(
 );
 scene.add(instancedMesh);
 
+const Quadrants = new QuadrantCheck();
 const tempColor = new three.Color();
 const butterflies: ButterflyBoid[] = Array.from(
     { length: instancedMeshCount },
-    () => new ButterflyBoid(dummyInstance),
+    () => {
+        const boid = new ButterflyBoid(dummyInstance);
+        Quadrants.setBoidQuadrant(boid.position);
+        return boid;
+    },
 );
+
+console.log(Quadrants.quadrants);
 
 threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
-    butterflies.forEach((boid, i) => {
-        boid.update(butterflies);
+    butterflies.forEach((boid, i, Quadrants) => {
+        boid.update(butterflies, Quadrants);
         if (boid.closeToNeighbor(butterflies)) {
             tempColor.set(0xff0000);
         } else {
