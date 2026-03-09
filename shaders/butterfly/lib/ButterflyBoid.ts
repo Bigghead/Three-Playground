@@ -36,6 +36,9 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
+    /**
+     * todo: update the quadrant cells / grid every frame for every boid
+     */
     public update(): void {
         const distance = this._position.length();
 
