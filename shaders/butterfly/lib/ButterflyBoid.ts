@@ -1,4 +1,5 @@
 import * as three from "three";
+import type { QuadrantCheck } from "./QuadrantCheck";
 
 const dummyTempPosition = new three.Vector3(0, 0, 0);
 
@@ -9,7 +10,7 @@ const dummyTempPosition = new three.Vector3(0, 0, 0);
  */
 export class ButterflyBoid {
     private _maxSpeed = 0.02;
-    private _meshBoundary = 30;
+    private _meshBoundary = 50;
     private _boundaryMargin = 5; // where to start slowing down from the boundary, or can hard stop at the boundary
 
     private _position: three.Vector3 = new three.Vector3(
@@ -35,7 +36,10 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
-    public update(butterflies: ButterflyBoid[]): void {
+    /**
+     * todo: update the quadrant cells / grid every frame for every boid
+     */
+    public update(): void {
         const distance = this._position.length();
 
         if (distance > this._meshBoundary - this._boundaryMargin) {
@@ -68,14 +72,6 @@ export class ButterflyBoid {
         dummy.rotateX(Math.PI / 2);
         dummy.updateMatrix();
         return dummy.matrix;
-    }
-
-    closeToNeighbor(butterflies: ButterflyBoid[]) {
-        return butterflies.some((boid) => {
-            // skip checking its own position
-            if (boid === this) return false;
-            return boid.position.distanceTo(this._position) < 2;
-        });
     }
 
     private getRandomNewVector3(multiplier: number = 5): three.Vector3 {

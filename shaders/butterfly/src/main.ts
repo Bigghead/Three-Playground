@@ -2,6 +2,7 @@ import * as three from "three";
 import { ThreeCanvas } from "../../../Shared/three-canvas";
 import vertexShader from "./shaders/vertex.glsl";
 import fragmentShader from "./shaders/fragment.glsl";
+import { QuadrantCheck } from "../lib/QuadrantCheck";
 import { ButterflyBoid } from "../lib/ButterflyBoid";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
@@ -62,18 +63,34 @@ instancedMesh.instanceColor = new three.InstancedBufferAttribute(
 );
 scene.add(instancedMesh);
 
+const Quadrants = new QuadrantCheck();
 const tempColor = new three.Color();
 const butterflies: ButterflyBoid[] = Array.from(
     { length: instancedMeshCount },
-    () => new ButterflyBoid(dummyInstance),
+    () => {
+        const boid = new ButterflyBoid(dummyInstance);
+        Quadrants.setBoidQuadrant(boid);
+        return boid;
+    },
 );
+
+console.log(Quadrants.quadrants);
 
 threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
+    Quadrants.clearQuadrant();
+
+    for (const boid of butterflies) {
+        Quadrants.setBoidQuadrant(boid);
+    }
+
     butterflies.forEach((boid, i) => {
-        boid.update(butterflies);
-        if (boid.closeToNeighbor(butterflies)) {
+        boid.update();
+        const { hasNeighbors } = Quadrants.checkNeigbors(boid);
+
+        // ===== Todo: check neighbors in the boid and checnge color / steer off there ===== //
+        if (hasNeighbors) {
             tempColor.set(0xff0000);
         } else {
             tempColor.set(0xffffff);
