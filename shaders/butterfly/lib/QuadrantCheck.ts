@@ -8,11 +8,9 @@ export class QuadrantCheck {
     }
 
     public setBoidQuadrant(boid: ButterflyBoid): void {
-        const x = Math.floor(boid.position.x);
-        const y = Math.floor(boid.position.y);
-        const z = Math.floor(boid.position.z);
+        const { baseX, baseY, baseZ } = this.normalizePosition(boid);
 
-        const quadrantPosition = this.getQuadrantKey(x, y, z);
+        const quadrantPosition = this.getQuadrantKey(baseX, baseY, baseZ);
 
         const list = this._quadrants.get(quadrantPosition) ?? [];
         list.push(boid);
@@ -26,9 +24,7 @@ export class QuadrantCheck {
     public checkNeigbors(boid: ButterflyBoid): { hasNeighbors: boolean } {
         let neighbors: ButterflyBoid[] = [];
 
-        const baseX = Math.floor(boid.position.x);
-        const baseY = Math.floor(boid.position.y);
-        const baseZ = Math.floor(boid.position.z);
+        const { baseX, baseY, baseZ } = this.normalizePosition(boid);
 
         /**
          * check 27 "surrounding" cell faces from current boid quadrant
@@ -67,10 +63,21 @@ export class QuadrantCheck {
         };
     }
 
+    private normalizePosition(boid: ButterflyBoid): {
+        baseX: number;
+        baseY: number;
+        baseZ: number;
+    } {
+        return {
+            baseX: Math.floor(boid.position.x),
+            baseY: Math.floor(boid.position.y),
+            baseZ: Math.floor(boid.position.z),
+        };
+    }
+
     /**
      * this is amazing, we're using integer spatial hashing instead of strings
      * cause checking string keys in the map is slooooow
-     * thank you, chatgeepeetee
      */
     private getQuadrantKey(x: number, y: number, z: number): number {
         const PRIME1 = 73856093;

@@ -88,6 +88,8 @@ threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflies.forEach((boid, i) => {
         boid.update();
         const { hasNeighbors } = Quadrants.checkNeigbors(boid);
+
+        // ===== Todo: check neighbors in the boid and checnge color / steer off there ===== //
         if (hasNeighbors) {
             tempColor.set(0xff0000);
         } else {
