@@ -79,9 +79,15 @@ console.log(Quadrants.quadrants);
 threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
+    Quadrants.clearQuadrant();
+
+    for (const boid of butterflies) {
+        Quadrants.setBoidQuadrant(boid);
+    }
+
     butterflies.forEach((boid, i) => {
         boid.update();
-        const { hasNeighbors, neighbors } = Quadrants.checkNeigbors(boid);
+        const { hasNeighbors } = Quadrants.checkNeigbors(boid);
         if (hasNeighbors) {
             tempColor.set(0xff0000);
         } else {

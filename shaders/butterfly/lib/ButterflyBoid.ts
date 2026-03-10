@@ -10,7 +10,7 @@ const dummyTempPosition = new three.Vector3(0, 0, 0);
  */
 export class ButterflyBoid {
     private _maxSpeed = 0.02;
-    private _meshBoundary = 30;
+    private _meshBoundary = 50;
     private _boundaryMargin = 5; // where to start slowing down from the boundary, or can hard stop at the boundary
 
     private _position: three.Vector3 = new three.Vector3(

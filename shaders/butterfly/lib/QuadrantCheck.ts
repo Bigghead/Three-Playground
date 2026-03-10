@@ -1,4 +1,3 @@
-import * as three from "three";
 import type { ButterflyBoid } from "./ButterflyBoid";
 
 export class QuadrantCheck {
@@ -18,6 +17,10 @@ export class QuadrantCheck {
         const list = this._quadrants.get(quadrantPosition) ?? [];
         list.push(boid);
         this._quadrants.set(quadrantPosition, list);
+    }
+
+    public clearQuadrant() {
+        this._quadrants.clear();
     }
 
     public checkNeigbors(boid: ButterflyBoid): { hasNeighbors: boolean } {
