@@ -17,7 +17,7 @@ threeCamera.camera.position.set(0, 0, 20);
 /**
  * Butterfly Setup
  */
-const instancedMeshCount = 1000;
+const instancedMeshCount = 1500;
 
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
 const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
@@ -73,8 +73,6 @@ const butterflies: ButterflyBoid[] = Array.from(
         return boid;
     },
 );
-
-console.log(Quadrants.quadrants);
 
 threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;

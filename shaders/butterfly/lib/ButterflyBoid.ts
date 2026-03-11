@@ -1,5 +1,4 @@
 import * as three from "three";
-import type { QuadrantCheck } from "./QuadrantCheck";
 
 const dummyTempPosition = new three.Vector3(0, 0, 0);
 
@@ -10,22 +9,16 @@ const dummyTempPosition = new three.Vector3(0, 0, 0);
  */
 export class ButterflyBoid {
     private _maxSpeed = 0.02;
-    private _meshBoundary = 50;
+    private _meshBoundary = 30;
     private _boundaryMargin = 5; // where to start slowing down from the boundary, or can hard stop at the boundary
 
-    private _position: three.Vector3 = new three.Vector3(
-        (Math.random() - 0.5) * this._meshBoundary,
-        (Math.random() - 0.5) * this._meshBoundary,
-        (Math.random() - 0.5) * this._meshBoundary,
-    );
-    private _velocity: three.Vector3 = new three.Vector3(
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-    );
+    private _position: three.Vector3;
+    private _velocity: three.Vector3;
 
     constructor(dummyInstance: three.Object3D) {
+        this._position = this.getRandomNewVector3(this._meshBoundary);
         dummyInstance.position.copy(this._position);
+        this._velocity = this.getRandomNewVector3(1);
     }
 
     get position() {
@@ -36,9 +29,6 @@ export class ButterflyBoid {
         return this._velocity;
     }
 
-    /**
-     * todo: update the quadrant cells / grid every frame for every boid
-     */
     public update(): void {
         const distance = this._position.length();
 

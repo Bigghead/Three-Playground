@@ -22,7 +22,7 @@ export class QuadrantCheck {
     }
 
     public checkNeigbors(boid: ButterflyBoid): { hasNeighbors: boolean } {
-        let neighbors: ButterflyBoid[] = [];
+        let neighbors: number = 0;
 
         const { baseX, baseY, baseZ } = this.normalizePosition(boid);
 
@@ -46,20 +46,18 @@ export class QuadrantCheck {
                     if (!quadrant) continue;
 
                     for (const cell of quadrant) {
-                        if (cell !== boid) {
-                            neighbors.push(cell);
+                        if (cell === boid) continue;
+                        if (
+                            cell.position.distanceToSquared(boid.position) < 2
+                        ) {
+                            neighbors++;
                         }
                     }
                 }
             }
         }
         return {
-            hasNeighbors: neighbors.some((neighbor) => {
-                return (
-                    neighbor !== boid &&
-                    boid.position.distanceToSquared(neighbor.position) < 2
-                );
-            }),
+            hasNeighbors: neighbors > 0,
         };
     }
 
