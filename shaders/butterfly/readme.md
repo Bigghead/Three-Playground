@@ -1,4 +1,25 @@
-# Demo at - WIP
+# Demo at - WIP ( example screenshots here though ):
+<img width="2557" height="1378" alt="butterfly image" src="https://github.com/user-attachments/assets/e697bab2-3198-4d5b-ad23-3bad0a6a4b82" />
+
+<p>&nbsp;</p>
+( GPU Instancing, 10k Instances / 240fps )
+
+![butterfly-demo](https://github.com/user-attachments/assets/36186088-8f2f-4d66-8e08-a2468729c80d)
+
+<p>&nbsp;</p>
+( GPU Instancing, 500 Instances / naive neighbor collision )
+
+![butterfly-neighbors](https://github.com/user-attachments/assets/5cba46e8-d519-4778-a06a-70917cbb43f1)
+
+<p>&nbsp;</p>
+( GPU Instancing, 2000 Instances / / quadrant split neighbor checking / 240fps )
+
+![butterfly-quadrants-2](https://github.com/user-attachments/assets/9e3ff318-ff5c-41f7-8bd5-4a75d89744db)
+
+
+
+
+
 
 ## Features / What We've Learned
 
