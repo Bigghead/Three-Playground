@@ -11,20 +11,22 @@ import type { ThreeCanvas } from "../../Shared/three-canvas";
  * - Shaders for the uv projection in grid?
  */
 export class ProjectionMap {
-    _threeCanvas: ThreeCanvas;
-    _gridSize = 75;
-    _gridSpacing = 0.65;
-    _gridGroup = new three.Group();
-    _gridMaterial = new three.MeshBasicMaterial({ side: three.FrontSide });
-    _pixelData: ImageDataArray = new Uint8ClampedArray(0);
-    _videoRatio = {
+    private _threeCanvas: ThreeCanvas;
+    private _gridSize = 75;
+    private _gridSpacing = 0.65;
+    private _gridGroup = new three.Group();
+    private _gridMaterial = new three.MeshBasicMaterial({
+        side: three.FrontSide,
+    });
+    private _pixelData: ImageDataArray = new Uint8ClampedArray(0);
+    private _videoRatio = {
         width: 0,
         height: 0,
     };
-    _projectionMapId: string; // to store and remove animation when we destory this map from canvas renderer
-    _isAnimatingGsap = false;
-    _videoSource: HTMLVideoElement;
-    _defaultHidden = false;
+    private _projectionMapId: string; // to store and remove animation when we destory this map from canvas renderer
+    private _isAnimatingGsap = false;
+    private _videoSource: HTMLVideoElement;
+    private _defaultHidden = false;
 
     constructor({
         threeCanvas,
@@ -228,30 +230,18 @@ export class ProjectionMap {
 
                     uv.setXY(i, u, v);
                 }
-                const cube: three.Mesh<
-                    three.BoxGeometry,
-                    three.MeshBasicMaterial
-                > = new three.Mesh(geometry, this._gridMaterial);
 
                 const defaultX = (x - (width - 1) / 2) * this._gridSpacing;
                 // Flip Y: Canvas (0 is top) vs Three.js (0 is center, positive is up)
                 const defaultY = -(y - (height - 1) / 2) * this._gridSpacing;
                 const defaultZ = 0;
 
-                cube.userData.originalX = defaultX;
-                cube.userData.originalY = defaultY;
-                cube.userData.originalZ = defaultZ;
-
-                if (this._defaultHidden) {
-                    // Start scattered and invisible outside screen
-                    cube.position.x = defaultX * 20;
-                    cube.position.y = defaultY * 20;
-                    cube.position.z = defaultZ + 50;
-                    cube.scale.set(0, 0, 0);
-                } else {
-                    cube.position.set(defaultX, defaultY, defaultZ);
-                }
-
+                const cube = this.createCube({
+                    defaultX,
+                    defaultY,
+                    defaultZ,
+                    geometry,
+                });
                 this._gridGroup.add(cube);
             }
         }
@@ -259,18 +249,47 @@ export class ProjectionMap {
         this.renderGrid();
     };
 
+    private createCube({
+        defaultX,
+        defaultY,
+        defaultZ,
+        geometry,
+    }: {
+        defaultX: number;
+        defaultY: number;
+        defaultZ: number;
+        geometry: three.BoxGeometry;
+    }): three.Mesh {
+        const cube: three.Mesh<three.BoxGeometry, three.MeshBasicMaterial> =
+            new three.Mesh(geometry, this._gridMaterial);
+
+        cube.userData.originalX = defaultX;
+        cube.userData.originalY = defaultY;
+        cube.userData.originalZ = defaultZ;
+
+        if (this._defaultHidden) {
+            // Start scattered and invisible outside screen
+            cube.position.x = defaultX * 20;
+            cube.position.y = defaultY * 20;
+            cube.position.z = defaultZ + 50;
+            cube.scale.set(0, 0, 0);
+        } else {
+            cube.position.set(defaultX, defaultY, defaultZ);
+        }
+        return cube;
+    }
+
     // ===== Quick maffs ===== //
     private animateCells = (): void => {
         const { threeRaycaster, cursor, threeCamera } = this._threeCanvas;
+        const lerpRadius = 2.0;
+        const pullStrength = 10;
 
         this._threeCanvas.addAnimationCallback(
             this._projectionMapId,
             (_: number) => {
                 if (!this._gridGroup.children.length || this._isAnimatingGsap)
                     return;
-
-                const lerpRadius = 3.0;
-                const pullStrength = 5;
 
                 const { x: mouseX, y: mouseY } =
                     threeRaycaster.getNormalizedDeviceCoords(
@@ -286,8 +305,8 @@ export class ProjectionMap {
                      */
                     const dx = mouseX - cube.position.x;
                     const dy = mouseY - cube.position.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
                     const distSq = dx * dx + dy * dy;
+                    const dist = Math.sqrt(distSq);
 
                     // ===== this "eases" the animation ===== //
                     const offset = Math.max(0, 5 - dist);
@@ -316,6 +335,7 @@ export class ProjectionMap {
         // ===== center origin point in middle of canvas ===== //
         this._gridGroup.position.x = 0;
         this._gridGroup.position.y = 0;
+        this._gridGroup.position.z = -5;
 
         this._threeCanvas.scene.add(this._gridGroup);
     };
@@ -384,7 +404,7 @@ export class ProjectionMap {
                     {
                         x: newTargetX,
                         y: newTargetY,
-                        z: 10,
+                        z: 25,
                         duration: exitDuration,
                     },
                     startTime,
