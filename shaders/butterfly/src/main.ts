@@ -1,8 +1,9 @@
 import * as three from "three";
-import { ThreeCanvas } from "./canvas";
-
+import { ThreeCanvas } from "../../../Shared/three-canvas";
 import vertexShader from "./shaders/vertex.glsl";
 import fragmentShader from "./shaders/fragment.glsl";
+import { QuadrantCheck } from "../lib/QuadrantCheck";
+import { ButterflyBoid } from "../lib/ButterflyBoid";
 
 const canvas = document.querySelector("canvas.webgl") as HTMLCanvasElement;
 if (!canvas) {
@@ -10,14 +11,29 @@ if (!canvas) {
 }
 
 const threeCanvas = new ThreeCanvas({ canvas, initShadow: false });
-const { scene, textureLoader } = threeCanvas;
+const { scene, textureLoader, threeCamera } = threeCanvas;
+threeCamera.camera.position.set(0, 0, 20);
+
+/**
+ * Butterfly Setup
+ */
+const instancedMeshCount = 1000;
 
 const butterflyTexture = textureLoader.load("/butterfly-transparent.webp");
-console.log(butterflyTexture);
+const butterflyGeo = new three.PlaneGeometry(1, 1, 2, 2);
 
-const butterflyGeo = new three.PlaneGeometry(1, 1, 16, 16);
+// for having the diff "meshes" have different flapping timing
+const offsets = new Float32Array(instancedMeshCount);
+for (let i = 0; i < instancedMeshCount; i++) {
+    offsets[i] = Math.random() * Math.PI * 2;
+}
+
+butterflyGeo.setAttribute(
+    "instanceOffset",
+    new three.InstancedBufferAttribute(offsets, 1),
+);
+
 const butterflyMaterial = new three.ShaderMaterial({
-    // wireframe: true,
     side: three.DoubleSide,
     transparent: true,
     depthWrite: false,
@@ -31,51 +47,60 @@ const butterflyMaterial = new three.ShaderMaterial({
     },
 });
 
-butterflyGeo.scale(3, 3, 1.5);
-const butterfly = new three.Mesh(butterflyGeo, butterflyMaterial);
-butterfly.rotation.x = -Math.PI / 2;
-butterfly.rotation.set(
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2
-);
-
-scene.add(butterfly);
-
-// ===== Testing movment with just threejs ===== //
 /**
- * This is wonky, might have to test out boids algo in js
+ * Instanced Meshing
  */
-const start = new three.Vector3(0, 0, 0);
+const dummyInstance = new three.Object3D();
 
-const control = new three.Vector3(
-    Math.random() * 2 - 1,
-    Math.random() * 2,
-    Math.random() * 2 - 1
+const instancedMesh = new three.InstancedMesh(
+    butterflyGeo,
+    butterflyMaterial,
+    instancedMeshCount,
+);
+instancedMesh.instanceColor = new three.InstancedBufferAttribute(
+    new Float32Array(instancedMeshCount * 3),
+    3,
+);
+scene.add(instancedMesh);
+
+const Quadrants = new QuadrantCheck();
+const tempColor = new three.Color();
+const butterflies: ButterflyBoid[] = Array.from(
+    { length: instancedMeshCount },
+    () => {
+        const boid = new ButterflyBoid(dummyInstance);
+        Quadrants.setBoidQuadrant(boid);
+        return boid;
+    },
 );
 
-const end = new three.Vector3(
-    Math.random() * 2 + 2,
-    Math.random() * 1,
-    Math.random() * 2 - 1
-);
+console.log(Quadrants.quadrants);
 
-const curve = new three.QuadraticBezierCurve3(start, control, end);
-let move = 0;
-
-threeCanvas.addAnimationCallback((elapsedTime) => {
+threeCanvas.addAnimationCallback("butterfly-update", (elapsedTime) => {
     butterflyMaterial.uniforms.uTime.value = elapsedTime;
 
-    // todo - change the mesh position to follow a flight direction following
-    // where its head is pointing
+    Quadrants.clearQuadrant();
 
-    // kinda works but wonky
-    move += 0.002;
-    if (move > 1) move = 0;
+    for (const boid of butterflies) {
+        Quadrants.setBoidQuadrant(boid);
+    }
 
-    const point = curve.getPointAt(move);
-    butterfly.position.copy(point);
+    butterflies.forEach((boid, i) => {
+        boid.update();
+        const { hasNeighbors } = Quadrants.checkNeigbors(boid);
 
-    const tangent = curve.getTangentAt(move);
-    butterfly.lookAt(point.clone().add(tangent));
+        // ===== Todo: check neighbors in the boid and checnge color / steer off there ===== //
+        if (hasNeighbors) {
+            tempColor.set(0xff0000);
+        } else {
+            tempColor.set(0xffffff);
+        }
+
+        const matrix = boid.getMatrix(dummyInstance);
+        instancedMesh.setMatrixAt(i, matrix);
+        instancedMesh.setColorAt(i, tempColor);
+    });
+
+    instancedMesh.instanceMatrix.needsUpdate = true;
+    instancedMesh.instanceColor.needsUpdate = true;
 });

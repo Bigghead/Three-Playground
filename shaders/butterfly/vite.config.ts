@@ -1,21 +1,26 @@
+import { defineConfig } from "vite";
+import path from "path";
 import glsl from "vite-plugin-glsl";
 
-export default {
-    root: "src/",
-    publicDir: "../public/",
-    base: "./",
+export default defineConfig({
+    plugins: [glsl()],
+    resolve: {
+        alias: [
+            { find: /^@\/(.*)$/, replacement: path.resolve(__dirname, "$1") },
+            {
+                find: /^three\/(.*)$/,
+                replacement: path.resolve(__dirname, "node_modules/three/$1"),
+            },
+            {
+                find: "three",
+                replacement: path.resolve(__dirname, "node_modules/three"),
+            },
+        ],
+        preserveSymlinks: false,
+    },
     server: {
-        host: true, // Open to local network and display URL
-        open: !(
-            "SANDBOX_URL" in process.env || "CODESANDBOX_HOST" in process.env
-        ), // Open if it's not a CodeSandbox
+        fs: {
+            allow: [".."],
+        },
     },
-    build: {
-        outDir: "../dist", // Output in the dist/ folder
-        emptyOutDir: true, // Empty the folder first
-        sourcemap: true, // Add sourcemap
-    },
-    plugins: [
-        glsl(), // Handle shader files
-    ],
-};
+});
