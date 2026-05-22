@@ -90,6 +90,12 @@ export const DomEl = {
     get configModal() {
         return document.querySelector(".config-modal") as HTMLDivElement;
     },
+
+    get modelConfigInput() {
+        return document.querySelector(
+            ".config-modal input",
+        ) as HTMLInputElement;
+    },
     get modelRotationSlider() {
         return document.querySelector(
             ".config-modal input#model-rotation",
