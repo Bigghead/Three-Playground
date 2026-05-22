@@ -27,7 +27,7 @@ const {
     menuButton,
     configSidebarMenu,
     canvas,
-    modelRotationSlider,
+    modelConfigInput,
     modelWidthSlider,
     configModalAction,
     roomConfigurator,
@@ -77,16 +77,18 @@ canvas.addEventListener(INACTIVE_MODEL_EVENT, () => {
     domHandler.hideConfigModal();
 });
 
-modelRotationSlider.addEventListener("input", (e) => {
-    const target = e.target as HTMLInputElement;
-    DomEl.modelRotationText.innerText = target.value;
-    rotateModel(target.value);
-});
+modelConfigInput.addEventListener("input", (e) => {
+    const target = e.target;
 
-modelWidthSlider.addEventListener("input", (e) => {
-    const target = e.target as HTMLInputElement;
-    DomEl.modelWidthText.innerText = target.value;
-    editWidthModel(target.value);
+    if (!(target instanceof HTMLInputElement)) return;
+
+    if (target.id === "model-rotation") {
+        DomEl.modelRotationText.innerText = target.value;
+        rotateModel(target.value);
+    } else if (target.id === "model-width") {
+        DomEl.modelWidthText.innerText = target.value;
+        editWidthModel(target.value);
+    }
 });
 
 configModalAction.addEventListener("click", (e) => {
@@ -122,17 +124,15 @@ roomConfigRowElement.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     const contentChild = target.closest(".content-child") as HTMLElement;
 
-    if (!contentChild) return;
+    if (!contentChild || !target.matches("button")) return;
 
-    if (target.matches("button")) {
-        const { dimension } = contentChild.dataset;
-        const { action } = target.dataset;
+    const { dimension } = contentChild.dataset;
+    const { action } = target.dataset;
 
-        domHandler.handleEditRoomAction(target, contentChild);
-        if (dimension !== ROOM_WIDTH) return;
+    domHandler.handleEditRoomAction(target, contentChild);
+    if (dimension !== ROOM_WIDTH) return;
 
-        changeWidthSliderRanges(action);
-    }
+    changeWidthSliderRanges(action);
 });
 
 floorTextureModal.addEventListener("click", (e) => {
