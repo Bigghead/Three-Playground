@@ -458,7 +458,7 @@ export class ThreeRaycaster {
         }
     }
 
-    onMouseMove(event: MouseEvent): void {
+    onPointerMove(event: PointerEvent): void {
         const { activeModel, isDraggingModel } = this.dragManager;
         if (!activeModel || !isDraggingModel) return;
 
@@ -474,7 +474,7 @@ export class ThreeRaycaster {
         this.collisionManager.handleCollidingModel(activeModel, models);
     }
 
-    onMouseDown(event: MouseEvent): void {
+    onPointerDown(event: PointerEvent): void {
         if (!(event.target instanceof HTMLCanvasElement)) return;
         this.collisionManager.setRaycastingPointer(event);
         const models = this.dragManager.draggableModels;
@@ -495,7 +495,7 @@ export class ThreeRaycaster {
         }
     }
 
-    onMouseUp(): void {
+    onPointerUp(): void {
         document.body.style.cursor = "default";
         const activeModel = this.dragManager.activeModel;
         if (!activeModel) return;
