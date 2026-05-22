@@ -236,17 +236,17 @@ scene.add(room, bed);
 
 threeRaycasterLocal.addDraggableModel(bed);
 
-window.addEventListener("mousedown", (event: MouseEvent) => {
+window.addEventListener("pointerdown", (event: MouseEvent) => {
     if (event.button !== 0) return;
     threeRaycasterLocal.onMouseDown(event);
 });
 
-window.addEventListener("mouseup", (event: MouseEvent) => {
+window.addEventListener("pointerup", (event: MouseEvent) => {
     if (event.button !== 0) return;
     threeRaycasterLocal.onMouseUp();
 });
 
-window.addEventListener("mousemove", (event: MouseEvent) => {
+window.addEventListener("pointermove", (event: MouseEvent) => {
     threeRaycasterLocal.onMouseMove(event);
 });
 
